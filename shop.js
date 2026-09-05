@@ -17,8 +17,19 @@
  state.hints=Math.max(0,Number(state.hints)||0);
  state.games=Number(state.games)||0;state.wins=Number(state.wins)||0;state.losses=Number(state.losses)||0;state.draws=Number(state.draws)||0;
  const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
- const owned=id=>id==='default'||state.owned.includes(id)||state.owned.includes('premium');
- const buy=id=>{if(!catalog[id]||state.owned.includes(id))return false;state.owned.push(id);if(id==='master')state.ai=4;if(id==='hints')state.hints+=50;save();return true};
+ const owned=id=>id==='default'||(id!=='hints'&&state.owned.includes(id))||state.owned.includes('premium');
+ const buy=id=>{
+  if(!catalog[id])return false;
+  if(id==='hints'){
+   state.hints+=50;
+   if(!state.owned.includes('hints'))state.owned.push('hints');
+   save();return true;
+  }
+  if(state.owned.includes(id))return false;
+  state.owned.push(id);
+  if(id==='master')state.ai=4;
+  save();return true;
+ };
  window.CheckersShop={catalog,state,save,owned,buy,selectBoard(id){if(owned(id)){state.selectedBoard=id;save();return true}return false},selectPieces(id){if(owned(id)){state.selectedPieces=id;save();return true}return false},setAI(n){n=Math.max(1,Math.min(4,Number(n)||1));if(n===1||owned('master')){state.ai=n;save();return true}return false},getProfile(){return {...state}}};
  save();
 })();
