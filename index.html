@@ -153,7 +153,7 @@
     }).join('') : '<div class="shop-item"><div class="shop-info"><b>Пока ничего нет</b><span>Открой первый предмет в магазине.</span></div></div>';
   }
 
-  // Не заменяем обработчик игры из russian-checkers.js — только синхронизируем оформление.
+  // Игровой запуск уже управляется russian-checkers.js. Здесь только синхронизируем оформление.
   q('play-btn').addEventListener('click', syncBoardAppearance);
   q('rules-play').addEventListener('click', syncBoardAppearance);
 
@@ -163,7 +163,6 @@
   q('profile-back').onclick = () => screen('menu-screen');
   q('rules-btn').onclick = () => screen('rules-screen');
   q('rules-back').onclick = () => screen('menu-screen');
-  q('rules-play').addEventListener('click', () => q('play-btn').click());
 
   document.addEventListener('click', event => {
     const button = event.target.closest('[data-shop-action]');
