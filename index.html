@@ -17,13 +17,9 @@
 </head>
 <body>
 <div id="app">
-
   <section class="screen active" id="menu-screen">
     <div class="menu-screen">
-      <div>
-        <div class="menu__title">♛ Русские шашки</div>
-        <div class="menu__subtitle">Классические правила • против компьютера</div>
-      </div>
+      <div><div class="menu__title">♛ Русские шашки</div><div class="menu__subtitle">Классические правила • против компьютера</div></div>
       <div class="menu__buttons">
         <button class="btn btn--primary" id="play-btn">▶ Играть</button>
         <button class="btn btn--secondary" id="shop-btn">🛍 Магазин</button>
@@ -37,33 +33,15 @@
   <section class="screen game-screen" id="game-screen">
     <header class="game-header glass-card">
       <button class="icon-btn" id="back-btn" aria-label="Назад">‹</button>
-      <div class="turn-box">
-        <span>Ход</span>
-        <strong id="turn-indicator">Белые</strong>
-        <small>№ <b id="move-count">0</b></small>
-      </div>
-      <div class="score" aria-label="Счёт">
-        <b id="white-score">12</b>
-        <span>:</span>
-        <b id="black-score">12</b>
-      </div>
+      <div class="turn-box"><span>Ход</span><strong id="turn-indicator">Белые</strong><small>№ <b id="move-count">0</b></small></div>
+      <div class="score" aria-label="Счёт"><b id="white-score">12</b><span>:</span><b id="black-score">12</b></div>
       <button class="icon-btn" id="new-game-btn" aria-label="Новая игра">↻</button>
     </header>
-
     <main class="game-container">
-      <div class="player-label">
-        <span>Вы</span>
-        <span id="capture-info"></span>
-      </div>
-      <div class="board-wrapper">
-        <div class="board" id="board" aria-label="Игровая доска"></div>
-      </div>
-      <div class="player-label opponent">
-        <span>Компьютер</span>
-        <span id="thinking"></span>
-      </div>
+      <div class="player-label"><span>Вы</span><span id="capture-info"></span></div>
+      <div class="board-wrapper"><div class="board" id="board" aria-label="Игровая доска"></div></div>
+      <div class="player-label opponent"><span>Компьютер</span><span id="thinking"></span></div>
     </main>
-
     <footer class="bottom-controls glass-card">
       <button class="ctrl-btn" id="undo-btn" aria-label="Отменить ход">↶</button>
       <button class="ctrl-btn" id="hint-btn" aria-label="Подсказка">💡</button>
@@ -72,38 +50,19 @@
 
   <section class="screen" id="shop-screen">
     <div class="shop-card">
-      <div class="shop-top">
-        <button class="icon-btn" id="shop-back" aria-label="Назад">‹</button>
-        <div>
-          <h2>Магазин</h2>
-          <small>Купи и сразу используй в игре</small>
-        </div>
-      </div>
-      <div class="shop-balance">
-        <div><small>Твои подсказки</small><b id="shop-hints">3</b></div>
-        <div>🪙 <b id="shop-coins">0</b></div>
-      </div>
-      <div class="shop-section-title">Премиум</div>
-      <div id="premium-list"></div>
-      <div class="shop-section-title">Оформление</div>
-      <div id="style-list"></div>
-      <div class="shop-section-title">Игра</div>
-      <div id="game-list"></div>
+      <div class="shop-top"><button class="icon-btn" id="shop-back" aria-label="Назад">‹</button><div><h2>Магазин</h2><small>Купи и сразу используй в игре</small></div></div>
+      <div class="shop-balance"><div><small>Твои подсказки</small><b id="shop-hints">3</b></div><div>🪙 <b id="shop-coins">0</b></div></div>
+      <div class="shop-section-title">Премиум</div><div id="premium-list"></div>
+      <div class="shop-section-title">Оформление</div><div id="style-list"></div>
+      <div class="shop-section-title">Игра</div><div id="game-list"></div>
     </div>
   </section>
 
   <section class="screen" id="profile-screen">
     <div class="shop-card">
-      <div class="shop-top">
-        <button class="icon-btn" id="profile-back" aria-label="Назад">‹</button>
-        <div>
-          <h2>Профиль</h2>
-          <small>Твоя статистика</small>
-        </div>
-      </div>
+      <div class="shop-top"><button class="icon-btn" id="profile-back" aria-label="Назад">‹</button><div><h2>Профиль</h2><small>Твоя статистика</small></div></div>
       <div class="profile-panel">
-        <div class="profile-avatar">♟️</div>
-        <div class="profile-name">Игрок</div>
+        <div class="profile-avatar">♟️</div><div class="profile-name">Игрок</div>
         <div class="profile-stats">
           <div class="profile-stat"><b id="stat-games">0</b><span>Игр</span></div>
           <div class="profile-stat"><b id="stat-wins">0</b><span>Побед</span></div>
@@ -112,15 +71,13 @@
           <div class="profile-stat"><b id="stat-owned">0</b><span>Покупок</span></div>
         </div>
       </div>
-      <div class="shop-section-title">Разблокировано</div>
-      <div id="owned-list"></div>
+      <div class="shop-section-title">Разблокировано</div><div id="owned-list"></div>
     </div>
   </section>
 
   <section class="screen" id="rules-screen">
     <div class="rules-card glass-card">
-      <button class="icon-btn" id="rules-back" aria-label="Назад">‹</button>
-      <h2>Русские шашки</h2>
+      <button class="icon-btn" id="rules-back" aria-label="Назад">‹</button><h2>Русские шашки</h2>
       <p>Вы играете белыми против компьютера. Первый ход делают белые.</p>
       <ul>
         <li>Взятие обязательно — вперёд и назад.</li>
@@ -134,20 +91,15 @@
       <button class="btn btn--primary" id="rules-play">Начать игру</button>
     </div>
   </section>
-
 </div>
 
 <script src="russian-checkers.js?v=20260906"></script>
 <script>
 (() => {
   'use strict';
-
   const ids = ['menu-screen','game-screen','shop-screen','profile-screen','rules-screen'];
   const q = id => document.getElementById(id);
-  const screen = id => {
-    ids.forEach(x => q(x)?.classList.toggle('active', x === id));
-  };
-
+  const screen = id => ids.forEach(x => q(x)?.classList.toggle('active', x === id));
   const boardIds = ['wood','neon','marble'];
   const pieceIds = ['gold'];
 
@@ -160,8 +112,7 @@
   }
 
   function actionLabel(id, item) {
-    const shop = window.CheckersShop;
-    const state = shop.state;
+    const shop = window.CheckersShop, state = shop.state;
     if (id === 'premium') return shop.owned(id) ? '✓ Открыто' : item.price + ' ₽';
     if (boardIds.includes(id)) return shop.owned(id) ? (state.selectedBoard === id ? '✓ Выбрано' : 'Выбрать') : item.price + ' ₽';
     if (id === 'gold') return shop.owned(id) ? (state.selectedPieces === id ? '✓ Выбрано' : 'Выбрать') : item.price + ' ₽';
@@ -169,17 +120,9 @@
     return shop.owned(id) ? '✓ Добавлено' : item.price + ' ₽';
   }
 
-  function item(id, itemData) {
+  function item(id, data) {
     const owned = window.CheckersShop.owned(id);
-    return `<div class="shop-item ${owned ? 'owned' : ''}">
-      <div class="shop-icon">${itemData.icon}</div>
-      <div class="shop-info">
-        <b>${itemData.title}</b>
-        <span class="shop-tag">${itemData.tag}</span>
-        <span>${itemData.desc}</span>
-      </div>
-      <button class="buy-btn" data-shop-action="${id}">${actionLabel(id, itemData)}</button>
-    </div>`;
+    return `<div class="shop-item ${owned ? 'owned' : ''}"><div class="shop-icon">${data.icon}</div><div class="shop-info"><b>${data.title}</b><span class="shop-tag">${data.tag}</span><span>${data.desc}</span></div><button class="buy-btn" data-shop-action="${id}">${actionLabel(id, data)}</button></div>`;
   }
 
   function renderShop() {
@@ -203,22 +146,16 @@
     q('stat-losses').textContent = state.losses || 0;
     q('stat-draws').textContent = state.draws || 0;
     q('stat-owned').textContent = state.owned.length;
-    q('owned-list').innerHTML = state.owned.length
-      ? state.owned.map(id => {
-          const data = shop.catalog[id];
-          if (!data) return '';
-          return `<div class="shop-item owned">
-            <div class="shop-icon">${data.icon}</div>
-            <div class="shop-info"><b>${data.title}</b><span>Разблокировано</span></div>
-          </div>`;
-        }).join('')
-      : '<div class="shop-item"><div class="shop-info"><b>Пока ничего нет</b><span>Открой первый предмет в магазине.</span></div></div>';
+    q('owned-list').innerHTML = state.owned.length ? state.owned.map(id => {
+      const data = shop.catalog[id];
+      if (!data) return '';
+      return `<div class="shop-item owned"><div class="shop-icon">${data.icon}</div><div class="shop-info"><b>${data.title}</b><span>Разблокировано</span></div></div>`;
+    }).join('') : '<div class="shop-item"><div class="shop-info"><b>Пока ничего нет</b><span>Открой первый предмет в магазине.</span></div></div>';
   }
 
-  q('play-btn').onclick = () => {
-    syncBoardAppearance();
-    if (window.startCheckersGame) window.startCheckersGame();
-  };
+  // Не заменяем обработчик игры из russian-checkers.js — только синхронизируем оформление.
+  q('play-btn').addEventListener('click', syncBoardAppearance);
+  q('rules-play').addEventListener('click', syncBoardAppearance);
 
   q('shop-btn').onclick = () => { renderShop(); screen('shop-screen'); };
   q('shop-back').onclick = () => screen('menu-screen');
@@ -226,27 +163,18 @@
   q('profile-back').onclick = () => screen('menu-screen');
   q('rules-btn').onclick = () => screen('rules-screen');
   q('rules-back').onclick = () => screen('menu-screen');
-
-  q('rules-play').onclick = () => {
-    q('play-btn').click();
-  };
+  q('rules-play').addEventListener('click', () => q('play-btn').click());
 
   document.addEventListener('click', event => {
     const button = event.target.closest('[data-shop-action]');
     if (!button || !window.CheckersShop) return;
-
     const id = button.dataset.shopAction;
     const data = window.CheckersShop.catalog[id];
     if (!data) return;
 
     if (window.CheckersShop.owned(id)) {
-      if (boardIds.includes(id)) {
-        window.CheckersShop.selectBoard(id);
-        renderShop();
-      } else if (pieceIds.includes(id)) {
-        window.CheckersShop.selectPieces(id);
-        renderShop();
-      }
+      if (boardIds.includes(id)) { window.CheckersShop.selectBoard(id); renderShop(); }
+      else if (pieceIds.includes(id)) { window.CheckersShop.selectPieces(id); renderShop(); }
       return;
     }
 
@@ -254,9 +182,7 @@
       window.CheckersShop.buy(id);
       if (boardIds.includes(id)) window.CheckersShop.selectBoard(id);
       if (pieceIds.includes(id)) window.CheckersShop.selectPieces(id);
-      renderShop();
-      renderProfile();
-      window.alert('Товар разблокирован и активирован.');
+      renderShop(); renderProfile(); window.alert('Товар разблокирован и активирован.');
     }
   });
 
