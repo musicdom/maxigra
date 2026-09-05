@@ -55,6 +55,7 @@
       <div class="shop-section-title">Премиум</div><div id="premium-list"></div>
       <div class="shop-section-title">Оформление</div><div id="style-list"></div>
       <div class="shop-section-title">Игра</div><div id="game-list"></div>
+      <div class="shop-section-title">Уровень компьютера</div><div id="ai-level-list"></div>
     </div>
   </section>
 
@@ -102,6 +103,12 @@
   const screen = id => ids.forEach(x => q(x)?.classList.toggle('active', x === id));
   const boardIds = ['wood','neon','marble'];
   const pieceIds = ['gold'];
+  const aiLevels = [
+    {id:1,title:'Легко',icon:'🟢',desc:'Быстрый и спокойный соперник.'},
+    {id:2,title:'Средне',icon:'🟡',desc:'Более внимательная игра.'},
+    {id:3,title:'Сложно',icon:'🟠',desc:'Сильный соперник с более глубоким расчётом.'},
+    {id:4,title:'Гроссмейстер',icon:'🔴',desc:'Максимальная глубина расчёта.'}
+  ];
 
   function syncBoardAppearance() {
     const board = q('board');
@@ -116,13 +123,25 @@
     if (id === 'premium') return shop.owned(id) ? '✓ Открыто' : item.price + ' ₽';
     if (boardIds.includes(id)) return shop.owned(id) ? (state.selectedBoard === id ? '✓ Выбрано' : 'Выбрать') : item.price + ' ₽';
     if (id === 'gold') return shop.owned(id) ? (state.selectedPieces === id ? '✓ Выбрано' : 'Выбрать') : item.price + ' ₽';
-    if (id === 'master') return shop.owned(id) ? '✓ ИИ активен' : item.price + ' ₽';
+    if (id === 'master') return shop.owned(id) ? '✓ Открыто' : item.price + ' ₽';
     return shop.owned(id) ? '✓ Добавлено' : item.price + ' ₽';
   }
 
   function item(id, data) {
     const owned = window.CheckersShop.owned(id);
     return `<div class="shop-item ${owned ? 'owned' : ''}"><div class="shop-icon">${data.icon}</div><div class="shop-info"><b>${data.title}</b><span class="shop-tag">${data.tag}</span><span>${data.desc}</span></div><button class="buy-btn" data-shop-action="${id}">${actionLabel(id, data)}</button></div>`;
+  }
+
+  function renderAILevels() {
+    const shop = window.CheckersShop;
+    if (!shop) return;
+    const unlocked = shop.owned('master');
+    q('ai-level-list').innerHTML = aiLevels.map(level => {
+      const active = shop.state.ai === level.id;
+      const available = level.id === 1 || unlocked;
+      const label = active ? '✓ Выбрано' : available ? 'Выбрать' : '🔒 Закрыто';
+      return `<div class="shop-item ${active ? 'owned' : ''}"><div class="shop-icon">${level.icon}</div><div class="shop-info"><b>${level.title}</b><span class="shop-tag">ИИ • уровень ${level.id}</span><span>${level.desc}</span></div><button class="buy-btn" data-ai-level="${level.id}" ${available ? '' : 'disabled'}>${label}</button></div>`;
+    }).join('');
   }
 
   function renderShop() {
@@ -134,6 +153,7 @@
     q('premium-list').innerHTML = item('premium', catalog.premium);
     q('style-list').innerHTML = ['wood','neon','marble','gold'].map(id => item(id, catalog[id])).join('');
     q('game-list').innerHTML = ['master','hints'].map(id => item(id, catalog[id])).join('');
+    renderAILevels();
     syncBoardAppearance();
   }
 
@@ -153,9 +173,6 @@
     }).join('') : '<div class="shop-item"><div class="shop-info"><b>Пока ничего нет</b><span>Открой первый предмет в магазине.</span></div></div>';
   }
 
-  // Запуск партии полностью контролирует russian-checkers.js.
-  // Здесь намеренно нет обработчиков play-btn/rules-play, чтобы партия не запускалась дважды.
-
   q('shop-btn').onclick = () => { renderShop(); screen('shop-screen'); };
   q('shop-back').onclick = () => screen('menu-screen');
   q('profile-btn').onclick = () => { renderProfile(); screen('profile-screen'); };
@@ -164,6 +181,12 @@
   q('rules-back').onclick = () => screen('menu-screen');
 
   document.addEventListener('click', event => {
+    const aiButton = event.target.closest('[data-ai-level]');
+    if (aiButton && window.CheckersShop) {
+      const level = Number(aiButton.dataset.aiLevel);
+      if (window.CheckersShop.setAI(level)) renderShop();
+      return;
+    }
     const button = event.target.closest('[data-shop-action]');
     if (!button || !window.CheckersShop) return;
     const id = button.dataset.shopAction;
