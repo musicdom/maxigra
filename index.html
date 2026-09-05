@@ -153,9 +153,8 @@
     }).join('') : '<div class="shop-item"><div class="shop-info"><b>Пока ничего нет</b><span>Открой первый предмет в магазине.</span></div></div>';
   }
 
-  // Игровой запуск уже управляется russian-checkers.js. Здесь только синхронизируем оформление.
-  q('play-btn').addEventListener('click', syncBoardAppearance);
-  q('rules-play').addEventListener('click', syncBoardAppearance);
+  // Запуск партии полностью контролирует russian-checkers.js.
+  // Здесь намеренно нет обработчиков play-btn/rules-play, чтобы партия не запускалась дважды.
 
   q('shop-btn').onclick = () => { renderShop(); screen('shop-screen'); };
   q('shop-back').onclick = () => screen('menu-screen');
