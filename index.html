@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="russian-checkers.css">
   <link rel="stylesheet" href="shop.css">
   <script src="https://st.max.ru/js/max-web-app.js"></script>
-  <script src="shop.js?v=20260907"></script>
+  <script src="shop.js?v=20260908"></script>
 </head>
 <body>
 <div id="app">
@@ -72,9 +72,12 @@
 
   <section class="screen" id="profile-screen">
     <div class="shop-card">
-      <div class="shop-top"><button class="icon-btn" id="profile-back" aria-label="Назад">‹</button><div><h2>Профиль</h2><small>Твоя статистика</small></div></div>
+      <div class="shop-top"><button class="icon-btn" id="profile-back" aria-label="Назад">‹</button><div><h2>Профиль</h2><small>Твой аккаунт MAX и статистика</small></div></div>
       <div class="profile-panel">
-        <div class="profile-avatar">♟️</div><div class="profile-name">Игрок</div>
+        <div class="max-profile-head">
+          <div class="max-profile-avatar-wrap"><img id="max-profile-avatar" class="max-profile-avatar" alt="" style="display:none"><div id="max-profile-avatar-fallback" class="profile-avatar">♟️</div></div>
+          <div class="max-profile-main"><div id="max-profile-name" class="profile-name">Игрок</div><div id="max-profile-username" class="max-profile-username"></div><div id="max-profile-status" class="max-profile-status">Профиль MAX</div></div>
+        </div>
         <div class="profile-stats">
           <div class="profile-stat"><b id="stat-games">0</b><span>Игр</span></div>
           <div class="profile-stat"><b id="stat-wins">0</b><span>Побед</span></div>
@@ -105,9 +108,9 @@
   </section>
 </div>
 
-<script src="russian-checkers.js?v=20260906"></script>
-<script src="online.js?v=20260907"></script>
-<script src="online-lobby.js?v=20260907"></script>
+<script src="russian-checkers.js?v=20260908"></script>
+<script src="online.js?v=20260908"></script>
+<script src="online-lobby.js?v=20260908"></script>
 <script>
 (() => {
   'use strict';
@@ -127,10 +130,30 @@
   function item(id,data){const owned=window.CheckersShop.owned(id);return `<div class="shop-item ${owned?'owned':''}"><div class="shop-icon">${data.icon}</div><div class="shop-info"><b>${data.title}</b><span class="shop-tag">${data.tag}</span><span>${data.desc}</span></div><button class="buy-btn" data-shop-action="${id}">${actionLabel(id,data)}</button></div>`}
   function renderAILevels(){const shop=window.CheckersShop;if(!shop)return;const unlocked=shop.owned('master');q('ai-level-list').innerHTML=aiLevels.map(level=>{const active=shop.state.ai===level.id,available=level.id===1||unlocked,label=active?'✓ Выбрано':available?'Выбрать':'🔒 Закрыто';return `<div class="shop-item ${active?'owned':''}"><div class="shop-icon">${level.icon}</div><div class="shop-info"><b>${level.title}</b><span class="shop-tag">ИИ • уровень ${level.id}</span><span>${level.desc}</span></div><button class="buy-btn" data-ai-level="${level.id}" ${available?'':'disabled'}>${label}</button></div>`}).join('')}
   function renderShop(){const shop=window.CheckersShop;if(!shop)return;const catalog=shop.catalog;q('shop-hints').textContent=shop.state.hints;q('shop-coins').textContent=shop.state.coins;q('premium-list').innerHTML=item('premium',catalog.premium);q('style-list').innerHTML=['wood','neon','marble','gold'].map(id=>item(id,catalog[id])).join('');q('game-list').innerHTML=['master','hints'].map(id=>item(id,catalog[id])).join('');renderAILevels();syncBoardAppearance()}
-  function renderProfile(){const shop=window.CheckersShop;if(!shop)return;const state=shop.state;q('stat-games').textContent=state.games;q('stat-wins').textContent=state.wins;q('stat-losses').textContent=state.losses||0;q('stat-draws').textContent=state.draws||0;q('stat-owned').textContent=state.owned.length;q('owned-list').innerHTML=state.owned.length?state.owned.map(id=>{const data=shop.catalog[id];if(!data)return'';return `<div class="shop-item owned"><div class="shop-icon">${data.icon}</div><div class="shop-info"><b>${data.title}</b><span>Разблокировано</span></div></div>`}).join(''):'<div class="shop-item"><div class="shop-info"><b>Пока ничего нет</b><span>Открой первый предмет в магазине.</span></div></div>'}
-  q('shop-btn').onclick=()=>{renderShop();screen('shop-screen')};q('shop-back').onclick=()=>screen('menu-screen');q('profile-btn').onclick=()=>{renderProfile();screen('profile-screen')};q('profile-back').onclick=()=>screen('menu-screen');q('rules-btn').onclick=()=>screen('rules-screen');q('rules-back').onclick=()=>screen('menu-screen');
+  function renderProfile(){
+    const shop=window.CheckersShop;if(!shop)return;const state=shop.state;const user=window.CheckersAuth?.user||{};
+    const name=(user.name||'Игрок').trim()||'Игрок';
+    q('max-profile-name').textContent=name;
+    q('max-profile-username').textContent=user.username?'@'+user.username:'';
+    q('max-profile-status').textContent=window.CheckersAuth?.registered?'✓ Профиль MAX подтверждён':'Профиль MAX';
+    const avatar=q('max-profile-avatar'),fallback=q('max-profile-avatar-fallback');
+    if(user.photo){avatar.src=user.photo;avatar.style.display='block';fallback.style.display='none'}else{avatar.removeAttribute('src');avatar.style.display='none';fallback.style.display='grid'}
+    q('stat-games').textContent=state.games;q('stat-wins').textContent=state.wins;q('stat-losses').textContent=state.losses||0;q('stat-draws').textContent=state.draws||0;q('stat-owned').textContent=state.owned.length;
+    q('owned-list').innerHTML=state.owned.length?state.owned.map(id=>{const data=shop.catalog[id];if(!data)return'';return `<div class="shop-item owned"><div class="shop-icon">${data.icon}</div><div class="shop-info"><b>${data.title}</b><span>Разблокировано</span></div></div>`}).join(''):'<div class="shop-item"><div class="shop-info"><b>Пока ничего нет</b><span>Открой первый предмет в магазине.</span></div></div>';
+  }
+  function openOnline(){
+    if(window.CheckersOnline?.start){window.CheckersOnline.start();return}
+    const s=q('online-search-screen');if(s)s.classList.add('active');
+    const t=q('online-search-text');if(t)t.textContent='Подключаем онлайн-игру…';
+  }
+  q('shop-btn').onclick=()=>{renderShop();screen('shop-screen')};q('shop-back').onclick=()=>screen('menu-screen');
+  q('profile-btn').onclick=()=>{renderProfile();screen('profile-screen')};q('profile-back').onclick=()=>screen('menu-screen');
+  q('rules-btn').onclick=()=>screen('rules-screen');q('rules-back').onclick=()=>screen('menu-screen');
+  q('online-play-btn').onclick=openOnline;
+  q('rules-play').onclick=()=>q('play-btn')?.click();
   document.addEventListener('click',event=>{const aiButton=event.target.closest('[data-ai-level]');if(aiButton&&window.CheckersShop){const level=Number(aiButton.dataset.aiLevel);if(window.CheckersShop.setAI(level))renderShop();return}const button=event.target.closest('[data-shop-action]');if(!button||!window.CheckersShop)return;const id=button.dataset.shopAction,data=window.CheckersShop.catalog[id];if(!data)return;if(window.CheckersShop.owned(id)){if(boardIds.includes(id)){window.CheckersShop.selectBoard(id);renderShop()}else if(pieceIds.includes(id)){window.CheckersShop.selectPieces(id);renderShop()}return}if(window.confirm('Открыть «'+data.title+'» за '+data.price+' ₽?')){window.CheckersShop.buy(id);if(boardIds.includes(id))window.CheckersShop.selectBoard(id);if(pieceIds.includes(id))window.CheckersShop.selectPieces(id);renderShop();renderProfile();window.alert('Товар разблокирован и активирован.')}});
   syncBoardAppearance();
+  window.addEventListener('max-profile-ready',renderProfile);
 })();
 </script>
 </body>
