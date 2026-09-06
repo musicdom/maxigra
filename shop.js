@@ -18,13 +18,35 @@ const state=local;
 state.owned=Array.isArray(state.owned)?state.owned:[];
 state.selectedBoard=state.selectedBoard||'default';
 state.selectedPieces=state.selectedPieces||'default';
-state.ai=Math.max(1,Math.min(4,Number(state.ai)||1));state.hints=Math.max(0,Number(state.hints)||0);state.games=Number(state.games)||0;state.wins=Number(state.wins)||0;state.losses=Number(state.losses)||0;state.draws=Number(state.draws)||0;state.coins=Number(state.coins)||0;
+state.ai=Math.max(1,Math.min(4,Number(state.ai)||1));state.hints=Math.max(0,Number(state.hints)||0);state.games=Number(state.games)||0;state.wins=Number(state.wins)||0;state.losses=Number(state.losses)||0;state.draws=Number(state.draws)||0;state.coins=Math.max(0,Number(state.coins)||0);
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
+function getInitData(){
+ const direct=String(window.WebApp?.initData||'').trim();
+ if(direct)return direct;
+ try{
+  const hash=String(location.hash||'');
+  if(hash){
+   const params=new URLSearchParams(hash.replace(/^#/,'').replace(/^.*?&?WebAppData=/,'WebAppData='));
+   const data=params.get('WebAppData');
+   if(data)return data;
+  }
+ }catch(e){}
+ return '';
+}
+async function waitForInitData(timeout=3000){
+ const started=Date.now();
+ while(Date.now()-started<timeout){
+  const data=getInitData();
+  if(data)return data;
+  await new Promise(r=>setTimeout(r,100));
+ }
+ return '';
+}
 let readyPromise=null;
 async function sync(){
  if(readyPromise)return readyPromise;
  readyPromise=(async()=>{
-  const init=window.WebApp?.initData||'';
+  const init=await waitForInitData();
   if(!init)throw new Error('MAX_INIT_DATA_REQUIRED');
   const r=await fetch(window.maxigraApiUrl('/api/shop'),{headers:{'x-max-init-data':init},cache:'no-store'});
   const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));
@@ -35,7 +57,8 @@ async function sync(){
 }
 const owned=id=>id==='default'||state.owned.includes(id)||id==='premium'&&state.owned.includes('premium');
 async function request(action,id){
- const init=window.WebApp?.initData||'';if(!init)throw new Error('MAX_INIT_DATA_REQUIRED');
+ const init=await waitForInitData();
+ if(!init)throw new Error('MAX_INIT_DATA_REQUIRED');
  const r=await fetch(window.maxigraApiUrl('/api/shop'),{method:'POST',headers:{'content-type':'application/json','x-max-init-data':init},body:JSON.stringify({action,id}),cache:'no-store'});
  const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));
  if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);Object.assign(state,d.state||{});save();window.dispatchEvent(new CustomEvent('shop-state-ready',{detail:state}));return true;
@@ -45,6 +68,6 @@ async function selectBoard(id){if(!owned(id))return false;return request('select
 async function selectPieces(id){if(!owned(id))return false;return request('select',id)}
 function setAI(n){return owned('master')&&((state.ai=Math.max(1,Math.min(4,Number(n)||1))),save(),true)}
 function getProfile(){return {...state,owned:[...state.owned]}}
-window.CheckersShop={catalog,state,boardIds,save,owned,buy,selectBoard,selectPieces,setAI,getProfile,sync};
+window.CheckersShop={catalog,state,boardIds,save,owned,buy,selectBoard,selectPieces,setAI,getProfile,sync,getInitData};
 sync().catch(()=>{});
 })();
