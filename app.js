@@ -38,6 +38,10 @@ function bindNavigation(){
   q('shop-back')?.addEventListener('click',()=>show('menu-screen'));
   q('profile-back')?.addEventListener('click',()=>show('menu-screen'));
   q('rules-back')?.addEventListener('click',()=>show('menu-screen'));
+  q('online-play-btn')?.addEventListener('click',()=>{
+    if(window.CheckersOnline?.start)window.CheckersOnline.start();
+    else { show('online-search-screen'); const el=q('online-search-text'); if(el)el.textContent='Подключаем онлайн-игру…'; }
+  });
 }
 
 function boot(){
