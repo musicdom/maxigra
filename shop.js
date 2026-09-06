@@ -61,6 +61,10 @@
     script.src='online.js?v=20260906';
     script.defer=true;
     document.body.appendChild(script);
+    setTimeout(()=>{
+      const newGame=document.getElementById('new-game-btn');
+      if(newGame)newGame.onclick=()=>window.CheckersOnline?.active?window.CheckersOnline.start():document.getElementById('play-btn')?.click();
+    },800);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bootOnlineUI,{once:true});
   else bootOnlineUI();
