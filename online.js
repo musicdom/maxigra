@@ -1,0 +1,134 @@
+(()=>{
+'use strict';
+const W=1,B=2,K=4;
+const board=document.getElementById('board');
+const $=id=>document.getElementById(id);
+const dirs=[[-1,-1],[-1,1],[1,-1],[1,1]];
+let active=false, searching=false, polling=null, game=null, selected=null, busy=false, finishedShown=false;
+const initData=()=>window.WebApp?.initData||'';
+const api=async(path,method='GET',payload)=>{
+  const options={method,headers:{'x-max-init-data':initData(),'content-type':'application/json'}};
+  if(payload)options.body=JSON.stringify(payload);
+  const r=await fetch(path,options);
+  const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));
+  if(!r.ok||d.ok===false)throw new Error(d.error||`HTTP_${r.status}`);
+  return d;
+};
+const inside=(r,c)=>r>=0&&r<8&&c>=0&&c<8;
+const color=p=>p&3;
+const king=p=>(p&K)!==0;
+const copy=b=>b.map(row=>row.slice());
+function captures(b,r,c){
+  const p=b[r]?.[c];if(!p)return[];const side=color(p),out=[];
+  if(!king(p)){
+    for(const [dr,dc] of dirs){const mr=r+dr,mc=c+dc,tr=r+dr*2,tc=c+dc*2;if(inside(tr,tc)&&b[mr]?.[mc]&&color(b[mr][mc])!==side&&!b[tr][tc])out.push({r:tr,c:tc,cap:{r:mr,c:mc}})}
+  }else{
+    for(const [dr,dc] of dirs){let rr=r+dr,cc=c+dc,enemy=null;while(inside(rr,cc)){const q=b[rr][cc];if(!q){if(enemy)out.push({r:rr,c:cc,cap:enemy})}else if(color(q)!==side){if(enemy)break;enemy={r:rr,c:cc}}else break;rr+=dr;cc+=dc}}
+  }
+  return out;
+}
+function simple(b,r,c){const p=b[r]?.[c],out=[];if(!p)return out;if(king(p)){for(const [dr,dc] of dirs){let rr=r+dr,cc=c+dc;while(inside(rr,cc)&&!b[rr][cc]){out.push({r:rr,c:cc});rr+=dr;cc+=dc}}}else{const dr=color(p)===W?-1:1;for(const dc of[-1,1])if(inside(r+dr,c+dc)&&!b[r+dr][c+dc])out.push({r:r+dr,c:c+dc})}return out}
+function pieces(side){const out=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(game.board[r][c]&&color(game.board[r][c])===side)out.push({r,c});return out}
+function hasCapture(side){return pieces(side).some(p=>captures(game.board,p.r,p.c).length)}
+function legalFor(side,r,c){
+  if(game.chain&&(game.chain.r!==r||game.chain.c!==c))return[];
+  return (game.chain||hasCapture(side))?captures(game.board,r,c):simple(game.board,r,c);
+}
+function render(){
+  if(!board||!game)return;
+  board.innerHTML='';const possible=selected?legalFor(game.side,selected.r,selected.c):[];
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    const cell=document.createElement('button');cell.type='button';cell.className='cell '+((r+c)%2?'cell-dark':'cell-light');cell.dataset.r=r;cell.dataset.c=c;
+    if(selected&&selected.r===r&&selected.c===c)cell.classList.add('selected');
+    if(possible.some(m=>m.r===r&&m.c===c))cell.classList.add('possible');
+    if(game.lastMove&&((game.lastMove.from.r===r&&game.lastMove.from.c===c)||(game.lastMove.to.r===r&&game.lastMove.to.c===c)))cell.classList.add('last-move');
+    const p=game.board[r][c];if(p){const piece=document.createElement('span');piece.className='piece '+(color(p)===W?'piece-white':'piece-black')+(king(p)?' piece-king':'');if(window.CheckersShop?.state?.selectedPieces==='gold')piece.classList.add('piece-gold');if(king(p))piece.textContent='♛';cell.appendChild(piece)}
+    board.appendChild(cell);
+  }
+  $('white-score').textContent=pieces(W).length;$('black-score').textContent=pieces(B).length;
+  $('turn-indicator').textContent=game.turn===game.side?'Ваш ход':'Ход соперника';
+  $('move-count').textContent=Math.max(1,Math.floor((game.halfMoves||0)/2)+1);
+  $('capture-info').textContent=game.chain?'⚔ Продолжайте взятие':(game.turn===game.side&&hasCapture(game.side)?'⚔ Взятие обязательно':'');
+  $('thinking').textContent=game.turn===game.side?'':'ждём ход…';
+  const labels=document.querySelectorAll('.game-screen .player-label');
+  if(labels.length>=2){
+    labels[0].firstElementChild.textContent=game.side===W?'Вы':game.opponent.name;
+    labels[1].firstElementChild.textContent=game.side===B?'Вы':game.opponent.name;
+  }
+}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id)?.classList.add('active')}
+function message(text){const el=$('online-search-text');if(el)el.textContent=text}
+function stopPolling(){if(polling){clearInterval(polling);polling=null}}
+async function poll(){
+  if(!active)return;
+  try{
+    const d=await api('/api/matchmaking/status');
+    if(d.status==='waiting'){searching=true;message('Ждём второго игрока. Поиск идёт автоматически…');return}
+    if(d.game){
+      const wasPlaying=game?.status==='playing';
+      game=d.game;searching=false;selected=null;
+      if(game.status==='matched'||game.status==='playing'){showScreen('game-screen');render()}
+      if(wasPlaying&&game.status==='finished')finishOnline();
+      if(game.status==='finished')finishOnline();
+    }
+  }catch(e){
+    if(searching)message(e.message==='MAX_INIT_DATA_REQUIRED'?'Откройте игру внутри MAX — для онлайн-матча нужен профиль MAX.':'Ошибка соединения. Повторяем…');
+  }
+}
+async function startOnline(){
+  if(!initData()){showScreen('online-search-screen');message('Откройте мини-приложение внутри MAX — онлайн-игра использует подтверждённый профиль MAX.');return}
+  active=true;searching=true;finishedShown=false;game=null;selected=null;showScreen('online-search-screen');message('Подключаем вас к случайному игроку MAX…');
+  try{
+    const d=await api('/api/matchmaking/join','POST');
+    if(d.game){game=d.game;searching=false;showScreen('game-screen');render()}
+    else message('Ищем случайного соперника…');
+    stopPolling();polling=setInterval(poll,900);poll();
+  }catch(e){active=false;searching=false;message(e.message==='MAX_BOT_TOKEN_NOT_CONFIGURED'?'На сервере не настроен MAX_BOT_TOKEN.':'Не удалось начать поиск: '+e.message)}
+}
+async function cancelOnline(){
+  stopPolling();searching=false;
+  if(active){try{await api('/api/matchmaking/cancel','POST')}catch{}}
+  active=false;game=null;selected=null;showScreen('menu-screen');
+}
+async function move(from,to){
+  if(busy||!game||game.status!=='playing'||game.turn!==game.side)return;
+  busy=true;
+  try{const d=await api('/api/matchmaking/move','POST',{roomId:game.id,from,to});game=d.game;selected=null;render();if(game.status==='finished')finishOnline()}
+  catch(e){if(e.message!=='NOT_YOUR_TURN'&&e.message!=='BUSY')showToast(e.message==='ILLEGAL_MOVE'?'Недопустимый ход':'Ошибка хода')}
+  finally{busy=false}
+}
+function choose(r,c){
+  if(!active||!game||game.status!=='playing'||game.turn!==game.side||busy)return;
+  const p=game.board[r][c];
+  if(selected){
+    const m=legalFor(game.side,selected.r,selected.c).find(x=>x.r===r&&x.c===c);
+    if(m){move({...selected},{r,c});return}
+    if(!game.chain&&p&&color(p)===game.side){selected={r,c};render();return}
+    selected=null;render();return;
+  }
+  if(p&&color(p)===game.side&&(!hasCapture(game.side)||captures(r,c).length)){selected={r,c};render()}
+}
+function resultText(){
+  if(game.winner==='draw')return '🤝 Ничья';
+  return game.winner===game.side?'🏆 Вы победили!':'⚔️ Победил соперник';
+}
+function finishOnline(){
+  if(finishedShown||!game||game.status!=='finished')return;finishedShown=true;stopPolling();
+  let box=$('game-result');if(!box){box=document.createElement('div');box.id='game-result';box.className='game-result';document.body.appendChild(box)}
+  box.innerHTML='<div class="result-card"><div class="result-title">'+resultText()+'</div><div class="result-sub">Онлайн-партия завершена</div><div class="result-actions"><button class="btn btn--primary" id="online-again">Найти нового соперника</button><button class="btn btn--secondary" id="online-menu">В меню</button></div></div>';box.classList.add('show');
+  $('online-again').onclick=()=>{box.classList.remove('show');startOnline()};
+  $('online-menu').onclick=()=>{box.classList.remove('show');cancelOnline()};
+}
+async function resign(){if(!game||game.status!=='playing')return;if(!confirm('Сдаться и завершить онлайн-партию?'))return;try{const d=await api('/api/matchmaking/resign','POST',{roomId:game.id});game=d.game;render();finishOnline()}catch(e){showToast('Не удалось завершить партию')}}
+function showToast(text){let t=$('checkers-toast');if(!t){t=document.createElement('div');t.id='checkers-toast';t.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%);padding:12px 18px;border-radius:14px;background:rgba(0,0,0,.82);color:#fff;z-index:10000;font-weight:600';document.body.appendChild(t)}t.textContent=text;t.style.display='block';clearTimeout(t._timer);t._timer=setTimeout(()=>t.style.display='none',1800)}
+function setup(){
+  const btn=$('online-play-btn'),cancel=$('online-cancel-btn');if(!btn||!cancel)return;
+  btn.onclick=startOnline;cancel.onclick=cancelOnline;
+  board?.addEventListener('click',e=>{const cell=e.target.closest('.cell');if(cell)choose(Number(cell.dataset.r),Number(cell.dataset.c))});
+  $('hint-btn').onclick=()=>{};$('undo-btn').onclick=()=>{};
+  $('back-btn').onclick=()=>{if(active){if(game?.status==='playing')resign();else cancelOnline()}else showScreen('menu-screen')};
+  $('new-game-btn').onclick=()=>{if(active){if(game?.status==='playing')resign();else startOnline()}else if(window.startGame)window.startGame()};
+  window.CheckersOnline={get active(){return active},start:startOnline,cancel:cancelOnline};
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
+})();
