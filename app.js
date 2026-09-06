@@ -23,7 +23,8 @@ function syncProfile(){
     avatar.removeAttribute('src');avatar.style.display='none';
     if(fallback)fallback.style.display='grid';
   }
-  const stats=JSON.parse(localStorage.getItem('russian-checkers-stats-v1')||'null')||{};
+  let stats={};
+  try{stats=JSON.parse(localStorage.getItem('russian-checkers-stats-v1')||'null')||{}}catch(e){}
   const box=q('profile-stats');
   const items=[['games','Игр'],['wins','Побед'],['losses','Поражений'],['draws','Ничьих'],['rating','Рейтинг']];
   if(box)box.innerHTML=items.map(([key,label])=>`<div class="profile-stat"><b>${Number(stats[key]||0)}</b><span>${label}</span></div>`).join('');
@@ -36,8 +37,6 @@ function bindNavigation(){
   q('shop-back')?.addEventListener('click',()=>show('menu-screen'));
   q('profile-back')?.addEventListener('click',()=>show('menu-screen'));
   q('rules-back')?.addEventListener('click',()=>show('menu-screen'));
-  q('rules-play')?.addEventListener('click',()=>show('game-screen'));
-  q('result-menu')?.addEventListener('click',()=>show('menu-screen'));
 }
 
 function boot(){
