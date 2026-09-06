@@ -13,7 +13,14 @@ local initial = ARGV[3]
 local seed = tonumber(ARGV[4]) or 1
 
 local existing = redis.call('GET', myRoomKey)
-if existing then return {'MATCHED', existing} end
+if existing then
+  local oldRaw = redis.call('GET', 'checkers:room:' .. existing)
+  if oldRaw then
+    local old = cjson.decode(oldRaw)
+    if old.status == 'playing' then return {'MATCHED', existing} end
+  end
+  redis.call('DEL', myRoomKey)
+end
 
 redis.call('SET', myPresenceKey, '1', 'EX', 120)
 redis.call('SET', myProfileKey, profile, 'EX', 120)
