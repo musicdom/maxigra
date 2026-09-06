@@ -20,20 +20,23 @@ state.selectedBoard=state.selectedBoard||'default';
 state.selectedPieces=state.selectedPieces||'default';
 state.ai=Math.max(1,Math.min(4,Number(state.ai)||1));state.hints=Math.max(0,Number(state.hints)||0);state.games=Number(state.games)||0;state.wins=Number(state.wins)||0;state.losses=Number(state.losses)||0;state.draws=Number(state.draws)||0;state.coins=Math.max(0,Number(state.coins)||0);
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
+function readParam(container,name){
+ try{return new URLSearchParams(String(container||'').replace(/^#/,'')).get(name)||''}catch(e){return ''}
+}
 function getInitData(){
  const direct=String(window.WebApp?.initData||'').trim();
  if(direct)return direct;
+ const globals=[window.WebAppData,window.webAppData,window.MAX?.WebAppData,window.MAX?.initData];
+ for(const value of globals){const data=String(value||'').trim();if(data)return data}
  try{
-  const hash=String(location.hash||'');
-  if(hash){
-   const params=new URLSearchParams(hash.replace(/^#/,'').replace(/^.*?&?WebAppData=/,'WebAppData='));
-   const data=params.get('WebAppData');
-   if(data)return data;
-  }
+  const hashData=readParam(location.hash,'WebAppData');
+  if(hashData)return hashData;
+  const queryData=readParam(location.search,'WebAppData');
+  if(queryData)return queryData;
  }catch(e){}
  return '';
 }
-async function waitForInitData(timeout=3000){
+async function waitForInitData(timeout=5000){
  const started=Date.now();
  while(Date.now()-started<timeout){
   const data=getInitData();
