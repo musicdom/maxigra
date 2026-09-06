@@ -20,7 +20,7 @@ if existing then
     local old = cjson.decode(oldRaw)
     if old.status == 'playing' then
       redis.call('SADD', onlineKey, uid)
-      redis.call('SET', myPresenceKey, '1', 'EX', 7200)
+      redis.call('SET', myPresenceKey, '1', 'EX', 120)
       return {'MATCHED', existing}
     end
   end
@@ -28,7 +28,8 @@ if existing then
 end
 
 redis.call('SET', myPresenceKey, '1', 'EX', 120)
-redis.call('SET', myProfileKey, profile, 'EX', 120)
+-- Keep a profile long-lived. Presence is the short-lived online signal.
+redis.call('SET', myProfileKey, profile, 'EX', 2592000)
 redis.call('SADD', onlineKey, uid)
 redis.call('SREM', queue, uid)
 
@@ -60,8 +61,8 @@ local room = {
 redis.call('SET', 'checkers:room:' .. roomId, cjson.encode(room), 'EX', 7200)
 redis.call('SET', 'checkers:room:user:' .. uid, roomId, 'EX', 7200)
 redis.call('SET', 'checkers:room:user:' .. opponent, roomId, 'EX', 7200)
-redis.call('SET', 'checkers:presence:' .. uid, '1', 'EX', 7200)
-redis.call('SET', 'checkers:presence:' .. opponent, '1', 'EX', 7200)
+redis.call('SET', 'checkers:presence:' .. uid, '1', 'EX', 120)
+redis.call('SET', 'checkers:presence:' .. opponent, '1', 'EX', 120)
 redis.call('SADD', onlineKey, uid, opponent)
 return {'MATCHED', roomId}
 `;
