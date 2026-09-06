@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="russian-checkers.css">
   <link rel="stylesheet" href="shop.css">
   <script src="https://st.max.ru/js/max-web-app.js"></script>
-  <script src="shop.js"></script>
+  <script src="shop.js?v=20260907"></script>
 </head>
 <body>
 <div id="app">
@@ -22,6 +22,7 @@
       <div><div class="menu__title">♛ Русские шашки</div><div class="menu__subtitle">Классические правила • против компьютера</div></div>
       <div class="menu__buttons">
         <button class="btn btn--primary" id="play-btn">▶ Играть</button>
+        <button class="btn btn--secondary" id="online-play-btn">🎲 Играть с игроком</button>
         <button class="btn btn--secondary" id="shop-btn">🛍 Магазин</button>
         <button class="btn btn--secondary" id="profile-btn">👤 Профиль</button>
         <button class="btn btn--secondary" id="rules-btn">Правила</button>
@@ -46,6 +47,16 @@
       <button class="ctrl-btn" id="undo-btn" aria-label="Отменить ход">↶</button>
       <button class="ctrl-btn" id="hint-btn" aria-label="Подсказка">💡</button>
     </footer>
+  </section>
+
+  <section class="screen" id="online-search-screen">
+    <div class="online-search-card">
+      <div class="online-search-icon">⚔️</div>
+      <h2>Ищем соперника</h2>
+      <p id="online-search-text">Подключаем вас к случайному игроку MAX…</p>
+      <div class="online-loader"></div>
+      <button class="btn btn--secondary" id="online-cancel-btn">Отменить поиск</button>
+    </div>
   </section>
 
   <section class="screen" id="shop-screen">
@@ -100,7 +111,7 @@
 <script>
 (() => {
   'use strict';
-  const ids = ['menu-screen','game-screen','shop-screen','profile-screen','rules-screen'];
+  const ids = ['menu-screen','game-screen','online-search-screen','shop-screen','profile-screen','rules-screen'];
   const q = id => document.getElementById(id);
   const screen = id => ids.forEach(x => q(x)?.classList.toggle('active', x === id));
   const boardIds = ['wood','neon','marble'];
