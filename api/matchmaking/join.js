@@ -7,6 +7,7 @@ local queue = KEYS[1]
 local myRoomKey = KEYS[2]
 local myPresenceKey = KEYS[3]
 local myProfileKey = KEYS[4]
+local onlineKey = KEYS[5]
 local uid = ARGV[1]
 local profile = ARGV[2]
 local initial = ARGV[3]
@@ -17,13 +18,18 @@ if existing then
   local oldRaw = redis.call('GET', 'checkers:room:' .. existing)
   if oldRaw then
     local old = cjson.decode(oldRaw)
-    if old.status == 'playing' then return {'MATCHED', existing} end
+    if old.status == 'playing' then
+      redis.call('SADD', onlineKey, uid)
+      redis.call('SET', myPresenceKey, '1', 'EX', 7200)
+      return {'MATCHED', existing}
+    end
   end
   redis.call('DEL', myRoomKey)
 end
 
 redis.call('SET', myPresenceKey, '1', 'EX', 120)
 redis.call('SET', myProfileKey, profile, 'EX', 120)
+redis.call('SADD', onlineKey, uid)
 redis.call('SREM', queue, uid)
 
 local candidates = redis.call('SRANDMEMBER', queue, 20)
@@ -56,6 +62,7 @@ redis.call('SET', 'checkers:room:user:' .. uid, roomId, 'EX', 7200)
 redis.call('SET', 'checkers:room:user:' .. opponent, roomId, 'EX', 7200)
 redis.call('SET', 'checkers:presence:' .. uid, '1', 'EX', 7200)
 redis.call('SET', 'checkers:presence:' .. opponent, '1', 'EX', 7200)
+redis.call('SADD', onlineKey, uid, opponent)
 return {'MATCHED', roomId}
 `;
 
@@ -63,7 +70,7 @@ export async function POST(request) {
   try {
     const user = auth(request);
     const result = await redis('EVAL', [
-      SCRIPT, 4, QUEUE, `checkers:room:user:${user.id}`, `checkers:presence:${user.id}`, `checkers:user:${user.id}`,
+      SCRIPT, 5, QUEUE, `checkers:room:user:${user.id}`, `checkers:presence:${user.id}`, `checkers:user:${user.id}`, 'checkers:online',
       user.id, JSON.stringify(user), JSON.stringify(initialBoard()), String(Math.floor(Math.random() * 2147483646) + 1), String(Date.now())
     ]);
     if (result?.[0] === 'MATCHED') {
@@ -72,9 +79,6 @@ export async function POST(request) {
       return reply({ ok: true, status: 'matched', game: publicGame(room, user.id), roomId: result[1] });
     }
     return reply({ ok: true, status: 'waiting' });
-  } catch (error) {
-    return errorResponse(error);
-  }
+  } catch (error) { return errorResponse(error); }
 }
-
 export default { POST };
