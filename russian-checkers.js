@@ -4,8 +4,29 @@ const E=window.CheckersEngine;if(!E)return;
 const {W,B,K,color,isKing,copy,pieces,key,applyMove,captures,simpleMoves,hasCapture,legalFor,allMoves,minimax}=E,$=id=>document.getElementById(id);
 let boardState=[],turn=W,selected=null,chain=null,gameOver=false,thinking=false,history=[],lastMove=null,halfMoves=0,repetitions=new Map(),aiTimer=null,hintTimer=null;
 const board=$('board'),turnEl=$('turn-indicator'),whiteEl=$('white-score'),blackEl=$('black-score'),infoEl=$('capture-info'),thinkingEl=$('thinking');
-function render(){board.innerHTML='';const possible=selected?legalFor(turn,selected.r,selected.c,boardState,!!chain):[];for(let r=0;r<8;r++)for(let c=0;c<8;c++){const cell=document.createElement('button');cell.type='button';cell.className='cell '+((r+c)%2?'cell-dark':'cell-light');cell.dataset.r=r;cell.dataset.c=c;if(selected&&selected.r===r&&selected.c===c)cell.classList.add('selected');if(possible.some(m=>m.r===r&&m.c===c))cell.classList.add('possible');if(lastMove&&((lastMove.from.r===r&&lastMove.from.c===c)||(lastMove.to.r===r&&lastMove.to.c===c)))cell.classList.add('last-move');const p=boardState[r][c];if(p){const piece=document.createElement('span');piece.className='piece '+(color(p)===W?'piece-white':'piece-black')+(isKing(p)?' piece-king':'');if(window.CheckersShop?.state?.selectedPieces==='gold')piece.classList.add('piece-gold');if(isKing(p))piece.textContent='♛';cell.appendChild(piece)}board.appendChild(cell)}}
-function update(){whiteEl.textContent=pieces(W,boardState).length;blackEl.textContent=pieces(B,boardState).length;turnEl.textContent=turn===W?'Белые':'Компьютер';infoEl.textContent=chain?'⚔ Продолжайте взятие':hasCapture(turn,boardState)?'⚔ Взятие обязательно':'';thinkingEl.textContent=thinking?'думает…':'';const mc=$('move-count');if(mc)mc.textContent=Math.floor(halfMoves/2)+1;const h=$('shop-hints');if(h&&window.CheckersShop)h.textContent=window.CheckersShop.state.hints||0;const soundEl=$('sound-toggle');if(soundEl)soundEl.textContent=localStorage.getItem('checkers-sound')==='off'?'🔇':'🔊'}
+function applyTheme(){
+ if(!board)return;
+ const s=window.CheckersShop?.state||{};
+ board.dataset.board=s.selectedBoard||'default';
+ board.dataset.pieces=s.selectedPieces||'default';
+}
+function render(){
+ applyTheme();
+ board.innerHTML='';
+ const possible=selected?legalFor(turn,selected.r,selected.c,boardState,!!chain):[];
+ for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+  const cell=document.createElement('button');cell.type='button';cell.className='cell '+((r+c)%2?'cell-dark':'cell-light');cell.dataset.r=r;cell.dataset.c=c;
+  if(selected&&selected.r===r&&selected.c===c)cell.classList.add('selected');
+  if(possible.some(m=>m.r===r&&m.c===c))cell.classList.add('possible');
+  if(lastMove&&((lastMove.from.r===r&&lastMove.from.c===c)||(lastMove.to.r===r&&lastMove.to.c===c)))cell.classList.add('last-move');
+  const p=boardState[r][c];
+  if(p){const piece=document.createElement('span');piece.className='piece '+(color(p)===W?'piece-white':'piece-black')+(isKing(p)?' piece-king':'');if(window.CheckersShop?.state?.selectedPieces==='gold')piece.classList.add('piece-gold');if(isKing(p))piece.textContent='♛';cell.appendChild(piece)}
+  board.appendChild(cell)
+ }
+}
+function update(){
+ whiteEl.textContent=pieces(W,boardState).length;blackEl.textContent=pieces(B,boardState).length;turnEl.textContent=turn===W?'Белые':'Компьютер';infoEl.textContent=chain?'⚔ Продолжайте взятие':hasCapture(turn,boardState)?'⚔ Взятие обязательно':'';thinkingEl.textContent=thinking?'думает…':'';const mc=$('move-count');if(mc)mc.textContent=Math.floor(halfMoves/2)+1;const h=$('shop-hints');if(h&&window.CheckersShop)h.textContent=window.CheckersShop.state.hints||0;const soundEl=$('sound-toggle');if(soundEl)soundEl.textContent=localStorage.getItem('checkers-sound')==='off'?'🔇':'🔊'
+}
 function snapshot(){return{b:copy(boardState),turn,last:lastMove?JSON.parse(JSON.stringify(lastMove)):null,half:halfMoves,reps:Array.from(repetitions.entries())}}
 function restore(s){clearTimeout(aiTimer);boardState=copy(s.b);turn=s.turn;selected=chain=null;gameOver=false;thinking=false;lastMove=s.last;halfMoves=s.half;repetitions=new Map(s.reps||[]);render();update()}
 function sound(type){if(localStorage.getItem('checkers-sound')==='off')return;try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const ac=new AC(),o=ac.createOscillator(),g=ac.createGain();o.frequency.value={move:420,capture:650,start:260,win:850,draw:300,hint:700}[type]||400;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(.035,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.1);o.start();o.stop(ac.currentTime+.1);setTimeout(()=>ac.close(),150)}catch(e){}}
@@ -22,7 +43,7 @@ function hint(){if(gameOver||thinking||turn!==W)return;const s=window.CheckersSh
 function showToast(text){let t=$('checkers-toast');if(!t){t=document.createElement('div');t.id='checkers-toast';t.className='checkers-toast';document.body.appendChild(t)}t.textContent=text;t.style.display='block';clearTimeout(t._timer);t._timer=setTimeout(()=>t.style.display='none',1800)}
 function resign(){if(gameOver||thinking)return;if(window.confirm('Сдаться и завершить партию?'))finish('Чёрные')}
 function toggleSound(){const off=localStorage.getItem('checkers-sound')==='off';localStorage.setItem('checkers-sound',off?'on':'off');update()}
-function addControls(){const footer=document.querySelector('.bottom-controls');if(!footer)return;if(!$('resign-btn')){const b=document.createElement('button');b.id='resign-btn';b.className='ctrl-btn';b.textContent='🏳';b.setAttribute('aria-label','Сдаться');b.onclick=resign;footer.appendChild(b)}if(!$('sound-toggle')){const b=document.createElement('button');b.id='sound-toggle';b.className='ctrl-btn';b.textContent='🔊';b.setAttribute('aria-label','Звук');b.onclick=toggleSound;footer.appendChild(b)}}
+function addControls(){const footer=document.querySelector('.bottom-controls');if(!footer)return;const soundButton=$('sound-btn')||$('sound-toggle');if(soundButton){soundButton.onclick=toggleSound;soundButton.setAttribute('aria-label','Звук')}const resignButton=$('resign-btn');if(resignButton)resignButton.onclick=resign}
 if(board)board.addEventListener('click',e=>{const cell=e.target.closest('.cell');if(cell)choose(Number(cell.dataset.r),Number(cell.dataset.c))});
 $('play-btn').onclick=startGame;$('rules-play').onclick=startGame;$('rules-back').onclick=()=>showScreen('menu-screen');$('back-btn').onclick=()=>{stopGame();showScreen('menu-screen')};$('new-game-btn').onclick=startGame;$('undo-btn').onclick=()=>{if(thinking||gameOver||!history.length)return;restore(history.pop());if(turn===B&&history.length)restore(history.pop());sound('move')};$('hint-btn').onclick=hint;
 try{window.WebApp?.ready?.();window.WebApp?.expand?.()}catch(e){}
