@@ -1,4 +1,4 @@
-import { auth, body, createGame, errorResponse, initialBoard, redis, reply } from '../_lib.js';
+import { auth, errorResponse, initialBoard, publicGame, redis, reply } from '../_lib.js';
 
 const QUEUE = 'checkers:queue';
 
@@ -13,9 +13,7 @@ local initial = ARGV[3]
 local seed = tonumber(ARGV[4]) or 1
 
 local existing = redis.call('GET', myRoomKey)
-if existing then
-  return {'MATCHED', existing}
-end
+if existing then return {'MATCHED', existing} end
 
 redis.call('SET', myPresenceKey, '1', 'EX', 120)
 redis.call('SET', myProfileKey, profile, 'EX', 120)
@@ -25,20 +23,13 @@ local candidates = redis.call('SRANDMEMBER', queue, 20)
 local opponent = nil
 if type(candidates) == 'table' then
   for _, candidate in ipairs(candidates) do
-    if candidate ~= uid and redis.call('EXISTS', 'checkers:presence:' .. candidate) == 1 then
-      opponent = candidate
-      break
-    end
+    if candidate ~= uid and redis.call('EXISTS', 'checkers:presence:' .. candidate) == 1 then opponent = candidate break end
   end
 elseif candidates and candidates ~= uid and redis.call('EXISTS', 'checkers:presence:' .. candidates) == 1 then
   opponent = candidates
 end
 
-if not opponent then
-  redis.call('SADD', queue, uid)
-  return {'WAITING'}
-end
-
+if not opponent then redis.call('SADD', queue, uid) return {'WAITING'} end
 redis.call('SREM', queue, opponent)
 local opponentProfile = redis.call('GET', 'checkers:user:' .. opponent) or '{}'
 local p1 = cjson.decode(profile)
@@ -53,8 +44,7 @@ local room = {
   turn = 1, chain = cjson.null, halfMoves = 0, reps = {}, winner = cjson.null,
   lastMove = cjson.null, createdAt = tonumber(ARGV[5]), updatedAt = tonumber(ARGV[5])
 }
-local roomJson = cjson.encode(room)
-redis.call('SET', 'checkers:room:' .. roomId, roomJson, 'EX', 7200)
+redis.call('SET', 'checkers:room:' .. roomId, cjson.encode(room), 'EX', 7200)
 redis.call('SET', 'checkers:room:user:' .. uid, roomId, 'EX', 7200)
 redis.call('SET', 'checkers:room:user:' .. opponent, roomId, 'EX', 7200)
 redis.call('SET', 'checkers:presence:' .. uid, '1', 'EX', 7200)
@@ -70,9 +60,9 @@ export async function POST(request) {
       user.id, JSON.stringify(user), JSON.stringify(initialBoard()), String(Math.floor(Math.random() * 2147483646) + 1), String(Date.now())
     ]);
     if (result?.[0] === 'MATCHED') {
-      const roomRaw = await redis('GET', `checkers:room:${result[1]}`);
+      const roomRaw = await redis('GET', [`checkers:room:${result[1]}`]);
       const room = JSON.parse(roomRaw);
-      return reply({ ok: true, status: 'matched', game: room.p1.id === user.id ? createGame(room.id, room.p1, room.p2, room.p1Side, room.p2Side) : room, roomId: result[1] });
+      return reply({ ok: true, status: 'matched', game: publicGame(room, user.id), roomId: result[1] });
     }
     return reply({ ok: true, status: 'waiting' });
   } catch (error) {
