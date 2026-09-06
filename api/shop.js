@@ -1,14 +1,16 @@
 import { auth, body, errorResponse, redis, reply } from './_lib.js';
 
 const CATALOG = {
-  premium: { price: 199 },
-  wood: { price: 49 },
-  neon: { price: 79 },
-  marble: { price: 99 },
-  gold: { price: 69 },
+  board_90s: { price: 79 },
+  board_svo: { price: 99 },
+  board_premium: { price: 199 },
+  board_light: { price: 49 },
+  board_darkwood: { price: 59 },
+  board_lightwood: { price: 59 },
   master: { price: 149 },
   hints: { price: 39 }
 };
+const BOARD_IDS = ['board_90s','board_svo','board_premium','board_light','board_darkwood','board_lightwood'];
 
 function inventoryKey(id) { return `checkers:shop:user:${id}`; }
 function coinsKey(id) { return `checkers:coins:${id}`; }
@@ -21,8 +23,8 @@ async function readState(id) {
   let state = {};
   try { state = raw ? JSON.parse(raw) : {}; } catch {}
   return {
-    owned: Array.isArray(state.owned) ? state.owned.filter(id => CATALOG[id]) : [],
-    selectedBoard: state.selectedBoard || 'default',
+    owned: Array.isArray(state.owned) ? state.owned.filter(itemId => CATALOG[itemId]) : [],
+    selectedBoard: BOARD_IDS.includes(state.selectedBoard) ? state.selectedBoard : 'default',
     selectedPieces: state.selectedPieces || 'default',
     ai: Math.max(1, Math.min(4, Number(state.ai) || 1)),
     hints: Math.max(0, Number(state.hints) || 0),
@@ -56,12 +58,11 @@ export async function POST(request) {
     const action = String(payload?.action || '');
 
     if (action === 'select') {
-      if (id !== 'default' && id !== 'premium' && !state.owned.includes(id)) {
+      if (id !== 'default' && !state.owned.includes(id)) {
         return reply({ ok: false, error: 'ITEM_NOT_OWNED' }, 403);
       }
-      if (['wood', 'neon', 'marble'].includes(id)) state.selectedBoard = id;
+      if (BOARD_IDS.includes(id)) state.selectedBoard = id;
       else if (id === 'gold') state.selectedPieces = id;
-      else if (id === 'premium') { state.selectedBoard = 'default'; state.selectedPieces = 'gold'; }
       else if (id === 'master') state.ai = 4;
       else if (id === 'default') state.selectedBoard = 'default';
       await saveState(user.id, state);
