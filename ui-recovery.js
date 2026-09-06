@@ -6,18 +6,14 @@ function boot(){
   const hideAuth=()=>{const gate=$('max-auth-gate');if(gate){gate.style.display='none';gate.style.pointerEvents='none'}};
   hideAuth();
   setTimeout(hideAuth,700);
-  const click=id=>{const el=$(id);if(el)el.click()};
   document.addEventListener('click',e=>{
     const b=e.target.closest('button');
     if(!b)return;
-    const id=b.id;
-    if(id==='shop-btn'){e.stopImmediatePropagation();show('shop-screen');return}
-    if(id==='profile-btn'){e.stopImmediatePropagation();show('profile-screen');return}
-    if(id==='rules-btn'){e.stopImmediatePropagation();show('rules-screen');return}
-    if(id==='shop-back'||id==='profile-back'||id==='rules-back'){e.stopImmediatePropagation();show('menu-screen');return}
-    if(id==='online-play-btn'){e.stopImmediatePropagation();click('online-play-btn');return}
-    if(id==='online-cancel-btn'){e.stopImmediatePropagation();click('online-cancel-btn');return}
-  },true);
+    if(b.id==='shop-btn'){show('shop-screen');return}
+    if(b.id==='profile-btn'){show('profile-screen');return}
+    if(b.id==='rules-btn'){show('rules-screen');return}
+    if(b.id==='shop-back'||b.id==='profile-back'||b.id==='rules-back'){show('menu-screen');return}
+  });
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
