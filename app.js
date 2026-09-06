@@ -2,6 +2,7 @@
 'use strict';
 const q=id=>document.getElementById(id);
 const show=id=>document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));
+const ACCOUNT_KEY='russian-checkers-account-v2';
 
 function gameBack(){
   if(window.CheckersOnline?.active){ window.CheckersOnline.cancel(); return; }
@@ -24,9 +25,9 @@ function syncProfile(){
     if(fallback)fallback.style.display='grid';
   }
   let stats={};
-  try{stats=JSON.parse(localStorage.getItem('russian-checkers-stats-v1')||'null')||{}}catch(e){}
+  try{stats=JSON.parse(localStorage.getItem(ACCOUNT_KEY)||'null')||{}}catch(e){}
+  const items=[['games','Игр'],['wins','Побед'],['losses','Поражений'],['draws','Ничьих']];
   const box=q('profile-stats');
-  const items=[['games','Игр'],['wins','Побед'],['losses','Поражений'],['draws','Ничьих'],['rating','Рейтинг']];
   if(box)box.innerHTML=items.map(([key,label])=>`<div class="profile-stat"><b>${Number(stats[key]||0)}</b><span>${label}</span></div>`).join('');
 }
 
