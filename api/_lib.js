@@ -16,7 +16,7 @@ export async function redis(command, args = []) {
   return data.result;
 }
 function parseInitData(raw) {
-  const pairs=raw.split('&').map(part=>{const i=part.indexOf('=');return i<0?[part,'']:[part.slice(0,i),decodeURIComponent(part.slice(i+1))]});
+  const pairs=raw.split('&').map(part=>{const i=part.indexOf('=');return i<0?[part,'']:[part.slice(0,i),decodeURIComponent(part.slice(i+1).replace(/\+/g,' '))]});
   const counts={}; for(const [key] of pairs) counts[key]=(counts[key]||0)+1;
   if(counts.hash!==1) throw new Error('INVALID_INIT_DATA');
   const hash=pairs.find(([key])=>key==='hash')[1];
@@ -30,7 +30,7 @@ export function validateInitData(raw) {
   const secretKey=crypto.createHmac('sha256','WebAppData').update(BOT_TOKEN).digest();
   const calculated=crypto.createHmac('sha256',secretKey).update(launchParams).digest('hex');
   const a=Buffer.from(calculated),b=Buffer.from(parsed.hash); if(a.length!==b.length||!crypto.timingSafeEqual(a,b)) throw new Error('INVALID_INIT_DATA');
-  const authDate=Number(parsed.map.auth_date||0); if(!authDate||Math.abs(Math.floor(Date.now()/1000)-authDate)>3600) throw new Error('INIT_DATA_EXPIRED');
+  const authDate=Number(parsed.map.auth_date||0); if(!authDate||Math.abs(Math.floor(Date.now()/1000)-authDate)>86400) throw new Error('INIT_DATA_EXPIRED');
   let user; try{user=JSON.parse(parsed.map.user||'{}')}catch{throw new Error('INVALID_USER_DATA')}; if(!user.id) throw new Error('USER_NOT_FOUND');
   return {id:String(user.id),name:[user.first_name,user.last_name].filter(Boolean).join(' ').trim()||user.username||'Игрок',username:user.username||'',photo:user.photo_url||''};
 }
