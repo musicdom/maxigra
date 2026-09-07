@@ -16,17 +16,31 @@ const ORDER_TTL = 86400;
 const RECEIVER = String(process.env.YOOMONEY_RECEIVER || '').trim();
 const orderKey = id => `checkers:shop:order:${id}`;
 const userOrdersKey = id => `checkers:shop:orders:user:${id}`;
+const inventoryKey = id => `checkers:shop:user:${id}`;
 
 function paymentUrl(orderId, price) {
   if (!RECEIVER) return '';
   const params = new URLSearchParams({
     receiver: RECEIVER,
     'quickpay-form': 'button',
+    paymentType: 'AC',
     targets: `MaxИгра заказ ${orderId}`,
     sum: price.toFixed(2),
     label: orderId
   });
   return `https://yoomoney.ru/quickpay/confirm?${params.toString()}`;
+}
+
+async function alreadyOwned(userId, itemId) {
+  if (itemId === 'hints') return false;
+  const raw = await redis('GET', [inventoryKey(userId)]);
+  if (!raw) return false;
+  try {
+    const state = JSON.parse(raw);
+    return Array.isArray(state.owned) && state.owned.includes(itemId);
+  } catch {
+    return false;
+  }
 }
 
 export async function POST(request) {
@@ -37,6 +51,9 @@ export async function POST(request) {
     const price = CATALOG[itemId];
     if (!price) return reply({ ok: false, error: 'ITEM_NOT_FOUND' }, 404);
     if (!RECEIVER) return reply({ ok: false, error: 'PAYMENT_NOT_CONFIGURED' }, 503);
+    if (await alreadyOwned(user.id, itemId)) {
+      return reply({ ok: false, error: 'ITEM_ALREADY_OWNED' }, 409);
+    }
 
     const orderId = `mx_${crypto.randomUUID().replaceAll('-', '')}`;
     const order = {
