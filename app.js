@@ -42,6 +42,14 @@ function bindNavigation(){
     if(window.CheckersOnline?.start)window.CheckersOnline.start();
     else { show('online-search-screen'); const el=q('online-search-text'); if(el)el.textContent='Подключаем онлайн-игру…'; }
   });
+  const cancel=q('online-cancel-btn');
+  if(cancel&&!window.CheckersOnline){
+    cancel.addEventListener('click',e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      show('menu-screen');
+    });
+  }
 }
 
 function boot(){
