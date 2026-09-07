@@ -1,35 +1,17 @@
 (()=>{
 'use strict';
-const ID='online-players-panel';
-let timer=null;
-function ensure(){
- if(document.getElementById(ID))return document.getElementById(ID);
- const el=document.createElement('div');el.id=ID;el.innerHTML='<div class="online-players-title">Сейчас онлайн</div><div class="online-players-list"></div>';
- document.body.appendChild(el);return el;
-}
-function hide(){const el=document.getElementById(ID);if(el)el.style.display='none';}
-async function refresh(){
- const el=ensure();
- if(!window.CheckersOnline?.active){hide();return;}
- el.style.display='block';
- try{
-  const init=window.CheckersOnlineApi?.initData?.()||window.WebApp?.initData||'';
-  if(!init)return;
-  const url=window.maxigraApiUrl?window.maxigraApiUrl('/api/matchmaking/players'):'/api/matchmaking/players';
-  const r=await fetch(url,{headers:{'x-max-init-data':init,'cache-control':'no-cache'},cache:'no-store'});
-  const d=await r.json().catch(()=>({ok:false}));
-  if(!r.ok||!d.ok)throw new Error('PLAYERS');
-  const list=el.querySelector('.online-players-list');
-  if(!list)return;
-  list.innerHTML=(d.players||[]).map(p=>`<div class="online-player"><span class="online-dot"></span><span>${String(p.name||'Игрок').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}${p.me?' <small>(вы)</small>':''}</span><span class="online-player-state">${p.state==='playing'?'играет':p.state==='searching'?'ищет':'онлайн'}</span></div>`).join('')||'<div class="online-empty">Пока никого нет</div>';
- }catch{ }
-}
-function boot(){
- if(timer)return;
- refresh();
- timer=setInterval(refresh,2500);
- const observer=new MutationObserver(refresh);
- observer.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
-}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+const $=id=>document.getElementById(id); let timer=null,roomId=null;
+const api=(...a)=>window.CheckersOnlineApi.api(...a);
+function esc(v){return String(v||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function ensure(){if($('rooms-screen'))return;const s=document.createElement('section');s.className='screen';s.id='rooms-screen';s.innerHTML='<div class="online-search-card"><div class="online-search-icon">🎮</div><h2>Играть с игроком</h2><p id="rooms-status">Выберите комнату или создайте свою</p><div id="rooms-list" style="width:100%;margin:12px 0"></div><button type="button" class="btn btn--primary" id="room-create-btn">Создать комнату</button><button type="button" class="btn btn--secondary" id="rooms-back-btn">Назад</button></div>';document.getElementById('app').appendChild(s);$('room-create-btn').onclick=create;$('rooms-back-btn').onclick=close}
+function open(){ensure();roomId=null;show();refresh();if(!timer)timer=setInterval(refresh,1500)}
+function show(){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$('rooms-screen').classList.add('active')}
+function close(){if(roomId)void api('/api/rooms/leave','POST',{roomId}).catch(()=>{});roomId=null;showMenu()}
+function showMenu(){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$('menu-screen')?.classList.add('active')}
+async function create(){const b=$('room-create-btn');if(b)b.disabled=true;try{const d=await api('/api/rooms/create','POST');roomId=d.room.id;$('rooms-status').textContent='Комната '+roomId+' создана. Ждём второго игрока…';renderOwn(d.room);if(b)b.textContent='Комната создана'}catch(e){$('rooms-status').textContent='Не удалось создать комнату: '+e.message;if(b)b.disabled=false}}
+function renderOwn(room){$('rooms-list').innerHTML='<div style="padding:14px;border-radius:14px;background:rgba(0,0,0,.06);text-align:center"><b>🎮 '+esc(room.id)+'</b><br><small>Вы создали комнату. Она уже видна другим игрокам.</small></div>'}
+async function refresh(){if(!$('rooms-screen')||!$('rooms-screen').classList.contains('active'))return;try{const init=await window.CheckersOnlineApi.initData();if(!init)return;if(roomId){const d=await api('/api/matchmaking/status');if(d.game){window.__startOnlineRoomGame(d);return}return}const d=await api('/api/rooms/list');const list=$('rooms-list');if(!list)return;list.innerHTML=(d.rooms||[]).map(r=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;margin:7px 0;border-radius:14px;background:rgba(0,0,0,.05)"><div>👤 <b>'+esc(r.name)+'</b><br><small>Комната '+esc(r.id)+'</small></div><button class="btn btn--primary room-join" data-room="'+esc(r.id)+'" style="width:auto;margin:0;padding:9px 14px">Войти</button></div>').join('')||'<div style="padding:18px;opacity:.65;text-align:center">Свободных комнат пока нет</div>';list.querySelectorAll('.room-join').forEach(b=>b.onclick=()=>join(b.dataset.room))}catch(e){$('rooms-status').textContent=e.message==='MAX_INIT_DATA_REQUIRED'?'Откройте игру внутри MAX.':'Ошибка загрузки комнат. Повторяем…'}}
+async function join(id){try{$('rooms-status').textContent='Подключаемся к комнате…';const d=await api('/api/rooms/join','POST',{roomId:id});window.__startOnlineRoomGame(d)}catch(e){$('rooms-status').textContent=e.message==='ROOM_BUSY'?'Комната уже занята. Выберите другую.':'Не удалось войти: '+e.message;refresh()}}
+window.CheckersRooms={open,refresh};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensure,{once:true});else ensure();
 })();
