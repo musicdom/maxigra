@@ -1,17 +1,1 @@
-(()=>{
-'use strict';
-function menu(){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='menu-screen'))}
-function cancel(){
-  menu();
-  try{window.CheckersOnline?.cancel?.()}catch(e){console.warn('online cancel',e)}
-}
-function bind(){
-  const b=document.getElementById('online-cancel-btn');
-  if(!b||b.dataset.cancelBound)return;
-  b.dataset.cancelBound='1';
-  b.addEventListener('touchend',e=>{e.preventDefault();e.stopPropagation();cancel()},{passive:false});
-  b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();cancel()});
-}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
-window.addEventListener('online-search-ready',bind);
-})();
+(()=>{const menu=()=>document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='menu-screen'));const cancel=()=>{menu();try{window.CheckersOnline?.cancel?.()}catch(_){}};function bind(){const b=document.getElementById('online-cancel-btn');if(!b||b.dataset.hardCancel)return;b.dataset.hardCancel='1';const go=e=>{e.preventDefault();e.stopImmediatePropagation();cancel()};b.addEventListener('touchend',go,{capture:true,passive:false});b.addEventListener('pointerup',go,{capture:true,passive:false});b.addEventListener('click',go,{capture:true})}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();})();
