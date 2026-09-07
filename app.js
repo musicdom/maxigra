@@ -31,6 +31,18 @@ function syncProfile(){
   if(box)box.innerHTML=items.map(([key,label])=>`<div class="profile-stat"><b>${Number(stats[key]||0)}</b><span>${label}</span></div>`).join('');
 }
 
+function startOnlineFromButton(){
+  const online=window.CheckersOnline;
+  if(online?.start){
+    void online.start();
+    return;
+  }
+  show('online-search-screen');
+  const el=q('online-search-text');
+  if(el)el.textContent='Подключаем онлайн-игру…';
+  window.addEventListener('checkers-online-ready',()=>window.CheckersOnline?.start?.(),{once:true});
+}
+
 function bindNavigation(){
   q('shop-btn')?.addEventListener('click',()=>show('shop-screen'));
   q('profile-btn')?.addEventListener('click',()=>{syncProfile();show('profile-screen')});
@@ -38,10 +50,14 @@ function bindNavigation(){
   q('shop-back')?.addEventListener('click',()=>show('menu-screen'));
   q('profile-back')?.addEventListener('click',()=>show('menu-screen'));
   q('rules-back')?.addEventListener('click',()=>show('menu-screen'));
-  q('online-play-btn')?.addEventListener('click',()=>{
-    if(window.CheckersOnline?.start)window.CheckersOnline.start();
-    else { show('online-search-screen'); const el=q('online-search-text'); if(el)el.textContent='Подключаем онлайн-игру…'; }
-  });
+  const onlineBtn=q('online-play-btn');
+  if(onlineBtn){
+    onlineBtn.onclick=e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      startOnlineFromButton();
+    };
+  }
   const cancel=q('online-cancel-btn');
   if(cancel&&!window.CheckersOnline){
     cancel.addEventListener('click',e=>{
