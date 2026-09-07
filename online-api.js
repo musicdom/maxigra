@@ -1,8 +1,22 @@
 (()=>{
 'use strict';
-const initData=()=>window.WebApp?.initData||'';
+function readInitData(){
+  const raw=window.WebApp?.initData;
+  return typeof raw==='string'?raw.trim():'';
+}
+async function initData(){
+  let raw=readInitData();
+  if(raw)return raw;
+  // MAX Bridge can finish exposing WebApp immediately after page scripts load.
+  // Give it a short window instead of failing the first online-game click.
+  for(let i=0;i<15&&!raw;i++){
+    await new Promise(resolve=>setTimeout(resolve,200));
+    raw=readInitData();
+  }
+  return raw;
+}
 async function api(path,method='GET',payload){
- const raw=initData();
+ const raw=await initData();
  if(!raw)throw new Error('MAX_INIT_DATA_REQUIRED');
  const options={method,headers:{'x-max-init-data':raw,'content-type':'application/json','cache-control':'no-cache'}};
  if(payload)options.body=JSON.stringify(payload);
