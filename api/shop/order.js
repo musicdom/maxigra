@@ -13,8 +13,22 @@ const CATALOG = {
 };
 
 const ORDER_TTL = 86400;
+const RECEIVER = String(process.env.YOOMONEY_RECEIVER || '').trim();
 const orderKey = id => `checkers:shop:order:${id}`;
 const userOrdersKey = id => `checkers:shop:orders:user:${id}`;
+
+function paymentUrl(orderId, price) {
+  if (!RECEIVER) return '';
+  const params = new URLSearchParams({
+    receiver: RECEIVER,
+    'quickpay-form': 'button',
+    targets: `MaxИгра заказ ${orderId}`,
+    sum: price.toFixed(2),
+    label: orderId,
+    'successURL': 'https://maxigra.vercel.app/'
+  });
+  return `https://yoomoney.ru/quickpay/confirm?${params.toString()}`;
+}
 
 export async function POST(request) {
   try {
@@ -23,6 +37,7 @@ export async function POST(request) {
     const itemId = String(payload?.id || '');
     const price = CATALOG[itemId];
     if (!price) return reply({ ok: false, error: 'ITEM_NOT_FOUND' }, 404);
+    if (!RECEIVER) return reply({ ok: false, error: 'PAYMENT_NOT_CONFIGURED' }, 503);
 
     const orderId = `mx_${crypto.randomUUID().replaceAll('-', '')}`;
     const order = {
@@ -41,9 +56,14 @@ export async function POST(request) {
     await redis('SADD', [userOrdersKey(user.id), orderId]);
     await redis('EXPIRE', [userOrdersKey(user.id), String(ORDER_TTL)]);
 
-    // Payment is deliberately not confirmed here. The item must only be
-    // granted by a trusted payment webhook after provider-side verification.
-    return reply({ ok: true, order: { id: orderId, itemId, price, currency: 'RUB', status: 'pending' } }, 201);
+    return reply({ ok: true, order: {
+      id: orderId,
+      itemId,
+      price,
+      currency: 'RUB',
+      status: 'pending',
+      paymentUrl: paymentUrl(orderId, price)
+    }}, 201);
   } catch (error) {
     return errorResponse(error);
   }
@@ -67,7 +87,8 @@ export async function GET(request) {
       price: order.price,
       currency: order.currency,
       status: order.status,
-      createdAt: order.createdAt
+      createdAt: order.createdAt,
+      paymentUrl: order.status === 'pending' ? paymentUrl(order.id, order.price) : ''
     }});
   } catch (error) {
     return errorResponse(error);
