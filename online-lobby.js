@@ -11,12 +11,14 @@ function hide(){const el=document.getElementById(ID);if(el)el.style.display='non
 async function refresh(){
  const el=ensure();
  if(!window.CheckersOnline?.active){hide();return;}
- // Keep the search/game UI above the informational players panel.
  el.style.display='block';
  try{
-  const init=window.WebApp?.initData||'';if(!init)return;
-  const r=await fetch('/api/matchmaking/players',{headers:{'x-max-init-data':init},cache:'no-store'});
-  const d=await r.json();if(!r.ok||!d.ok)throw new Error('PLAYERS');
+  const init=window.CheckersOnlineApi?.initData?.()||window.WebApp?.initData||'';
+  if(!init)return;
+  const url=window.maxigraApiUrl?window.maxigraApiUrl('/api/matchmaking/players'):'/api/matchmaking/players';
+  const r=await fetch(url,{headers:{'x-max-init-data':init,'cache-control':'no-cache'},cache:'no-store'});
+  const d=await r.json().catch(()=>({ok:false}));
+  if(!r.ok||!d.ok)throw new Error('PLAYERS');
   const list=el.querySelector('.online-players-list');
   if(!list)return;
   list.innerHTML=(d.players||[]).map(p=>`<div class="online-player"><span class="online-dot"></span><span>${String(p.name||'Игрок').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}${p.me?' <small>(вы)</small>':''}</span><span class="online-player-state">${p.state==='playing'?'играет':p.state==='searching'?'ищет':'онлайн'}</span></div>`).join('')||'<div class="online-empty">Пока никого нет</div>';
