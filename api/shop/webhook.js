@@ -6,6 +6,7 @@ const orderKey = id => `checkers:shop:order:${id}`;
 const inventoryKey = id => `checkers:shop:user:${id}`;
 const operationKey = id => `checkers:shop:payment:${id}`;
 const lockKey = id => `checkers:shop:payment-lock:${id}`;
+const grantKey = id => `checkers:shop:grant:${id}`;
 
 function formValue(form, key) {
   const value = form.get(key);
@@ -69,11 +70,13 @@ export async function POST(request) {
   const currency = formValue(form, 'currency');
   const unaccepted = formValue(form, 'unaccepted');
   const codepro = formValue(form, 'codepro');
-  const paid = Number(formValue(form, 'withdraw_amount') || formValue(form, 'amount'));
+  const amount = Number(formValue(form, 'amount'));
+  const withdrawAmount = Number(formValue(form, 'withdraw_amount'));
 
   if (!['p2p-incoming', 'card-incoming'].includes(notificationType)) return reply({ ok: false, error: 'UNSUPPORTED_NOTIFICATION' }, 400);
   if (!operationId || !/^mx_[a-f0-9]{32}$/.test(orderId)) return reply({ ok: false, error: 'INVALID_PAYMENT_REFERENCE' }, 400);
-  if (currency !== '643' || unaccepted === 'true' || codepro === 'true' || !Number.isFinite(paid) || paid <= 0) return reply({ ok: false, error: 'INVALID_PAYMENT' }, 400);
+  if (currency !== '643' || unaccepted === 'true' || codepro === 'true' || !Number.isFinite(amount) || amount <= 0) return reply({ ok: false, error: 'INVALID_PAYMENT' }, 400);
+  if (withdrawAmount !== 0 && !Number.isFinite(withdrawAmount)) return reply({ ok: false, error: 'INVALID_PAYMENT' }, 400);
 
   const orderRaw = await redis('GET', [orderKey(orderId)]);
   if (!orderRaw) return reply({ ok: false, error: 'ORDER_NOT_FOUND' }, 404);
@@ -81,29 +84,43 @@ export async function POST(request) {
   try { order = JSON.parse(orderRaw); } catch { return reply({ ok: false, error: 'ORDER_INVALID' }, 500); }
 
   if (order.status === 'paid') return reply({ ok: true, status: 'paid' });
-  if (Number(paid) < Number(order.price)) return reply({ ok: false, error: 'PAYMENT_AMOUNT_TOO_LOW' }, 400);
+  if (Number(amount) + 0.000001 < Number(order.price)) return reply({ ok: false, error: 'PAYMENT_AMOUNT_TOO_LOW' }, 400);
 
   const lock = await redis('SET', [lockKey(operationId), '1', 'NX', 'EX', '120']);
   if (lock !== 'OK') return reply({ ok: true, status: 'processing' });
 
   try {
     const duplicate = await redis('SET', [operationKey(operationId), orderId, 'NX', 'EX', '2592000']);
-    if (duplicate !== 'OK') return reply({ ok: true, status: 'paid' });
+    if (duplicate !== 'OK') {
+      const currentRaw = await redis('GET', [orderKey(orderId)]);
+      const current = currentRaw ? JSON.parse(currentRaw) : null;
+      return reply({ ok: true, status: current?.status === 'paid' ? 'paid' : 'processing' });
+    }
 
     const latestRaw = await redis('GET', [orderKey(orderId)]);
     const latest = latestRaw ? JSON.parse(latestRaw) : order;
     if (latest.status === 'paid') return reply({ ok: true, status: 'paid' });
 
-    await grant(latest);
-    const paidOrder = {
-      ...latest,
-      status: 'paid',
-      operationId,
-      paidAmount: paid,
-      paidAt: Date.now()
-    };
-    await redis('SET', [orderKey(orderId), JSON.stringify(paidOrder), 'EX', '2592000']);
-    return reply({ ok: true, status: 'paid' });
+    const grantMarker = await redis('SET', [grantKey(orderId), 'processing', 'NX', 'EX', '300']);
+    if (grantMarker !== 'OK') return reply({ ok: true, status: 'processing' });
+
+    try {
+      await grant(latest);
+      const paidOrder = {
+        ...latest,
+        status: 'paid',
+        operationId,
+        paidAmount: amount,
+        withdrawAmount: Number.isFinite(withdrawAmount) ? withdrawAmount : null,
+        paidAt: Date.now()
+      };
+      await redis('SET', [orderKey(orderId), JSON.stringify(paidOrder), 'EX', '2592000']);
+      await redis('SET', [grantKey(orderId), 'done', 'EX', '2592000']);
+      return reply({ ok: true, status: 'paid' });
+    } catch (error) {
+      await redis('DEL', [grantKey(orderId)]).catch(() => {});
+      throw error;
+    }
   } finally {
     await redis('DEL', [lockKey(operationId)]).catch(() => {});
   }
