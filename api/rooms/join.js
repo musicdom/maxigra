@@ -1,4 +1,4 @@
-import { auth, errorResponse, publicGame, reply, redis } from '../_lib.js';
+import { auth, errorResponse, initialBoard, publicGame, reply, redis } from '../_lib.js';
 
 export async function POST(request){
   try{
