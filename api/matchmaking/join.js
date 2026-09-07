@@ -28,22 +28,47 @@ if existing then
 end
 
 redis.call('SET', myPresenceKey, '1', 'EX', 120)
--- Keep a profile long-lived. Presence is the short-lived online signal.
 redis.call('SET', myProfileKey, profile, 'EX', 2592000)
 redis.call('SADD', onlineKey, uid)
 redis.call('SREM', queue, uid)
 
-local candidates = redis.call('SRANDMEMBER', queue, 20)
+-- Find a real waiting opponent. Remove stale queue entries and never
+-- match a player who already has an active game room.
+local candidates = redis.call('SMEMBERS', queue)
 local opponent = nil
-if type(candidates) == 'table' then
-  for _, candidate in ipairs(candidates) do
-    if candidate ~= uid and redis.call('EXISTS', 'checkers:presence:' .. candidate) == 1 then opponent = candidate break end
+for _, candidate in ipairs(candidates) do
+  if candidate ~= uid then
+    local presenceKey = 'checkers:presence:' .. candidate
+    local candidateRoomKey = 'checkers:room:user:' .. candidate
+    local candidateRoom = redis.call('GET', candidateRoomKey)
+    if redis.call('EXISTS', presenceKey) == 0 then
+      redis.call('SREM', queue, candidate)
+    elseif candidateRoom then
+      local candidateRoomRaw = redis.call('GET', 'checkers:room:' .. candidateRoom)
+      if candidateRoomRaw then
+        local candidateGame = cjson.decode(candidateRoomRaw)
+        if candidateGame.status == 'playing' then
+          redis.call('SREM', queue, candidate)
+        else
+          redis.call('DEL', candidateRoomKey)
+          redis.call('SREM', queue, candidate)
+        end
+      else
+        redis.call('DEL', candidateRoomKey)
+        redis.call('SREM', queue, candidate)
+      end
+    else
+      opponent = candidate
+      break
+    end
   end
-elseif candidates and candidates ~= uid and redis.call('EXISTS', 'checkers:presence:' .. candidates) == 1 then
-  opponent = candidates
 end
 
-if not opponent then redis.call('SADD', queue, uid) return {'WAITING'} end
+if not opponent then
+  redis.call('SADD', queue, uid)
+  return {'WAITING'}
+end
+
 redis.call('SREM', queue, opponent)
 local opponentProfile = redis.call('GET', 'checkers:user:' .. opponent) or '{}'
 local p1 = cjson.decode(profile)
