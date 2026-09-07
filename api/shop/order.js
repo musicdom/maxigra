@@ -24,8 +24,7 @@ function paymentUrl(orderId, price) {
     'quickpay-form': 'button',
     targets: `MaxИгра заказ ${orderId}`,
     sum: price.toFixed(2),
-    label: orderId,
-    'successURL': 'https://maxigra.vercel.app/'
+    label: orderId
   });
   return `https://yoomoney.ru/quickpay/confirm?${params.toString()}`;
 }
