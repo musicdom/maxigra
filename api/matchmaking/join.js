@@ -27,37 +27,43 @@ if existing then
   redis.call('DEL', myRoomKey)
 end
 
+-- Being online is NOT a reason to reject a player from matchmaking.
+-- The queue is authoritative: a player in the queue is waiting unless
+-- they already have a real room with status=playing.
 redis.call('SET', myPresenceKey, '1', 'EX', 120)
 redis.call('SET', myProfileKey, profile, 'EX', 2592000)
 redis.call('SADD', onlineKey, uid)
 redis.call('SREM', queue, uid)
 
--- Find a real waiting opponent. Remove stale queue entries and never
--- match a player who already has an active game room.
 local candidates = redis.call('SMEMBERS', queue)
 local opponent = nil
 for _, candidate in ipairs(candidates) do
   if candidate ~= uid then
-    local presenceKey = 'checkers:presence:' .. candidate
     local candidateRoomKey = 'checkers:room:user:' .. candidate
     local candidateRoom = redis.call('GET', candidateRoomKey)
-    if redis.call('EXISTS', presenceKey) == 0 then
-      redis.call('SREM', queue, candidate)
-    elseif candidateRoom then
+
+    if candidateRoom then
       local candidateRoomRaw = redis.call('GET', 'checkers:room:' .. candidateRoom)
       if candidateRoomRaw then
         local candidateGame = cjson.decode(candidateRoomRaw)
         if candidateGame.status == 'playing' then
+          -- Player is already in a real game: remove the stale queue entry.
           redis.call('SREM', queue, candidate)
         else
           redis.call('DEL', candidateRoomKey)
-          redis.call('SREM', queue, candidate)
+          -- The queue entry remains eligible.
+          opponent = candidate
+          break
         end
       else
         redis.call('DEL', candidateRoomKey)
-        redis.call('SREM', queue, candidate)
+        -- Broken room mapping must not block a queued player.
+        opponent = candidate
+        break
       end
     else
+      -- No room mapping means the player is genuinely waiting.
+      -- Do NOT require a separate online/presence check here.
       opponent = candidate
       break
     end
