@@ -3,9 +3,20 @@ import { auth, body, errorResponse, initialBoard, publicGame, reply, redis } fro
 export async function GET(request){
   try{
     const user=auth(request);
+    const url=new URL(request.url);
+    const roomId=String(url.searchParams.get('roomId')||'');
+    if(roomId){
+      if(!/^R[A-Z0-9]{6}$/.test(roomId))throw Object.assign(new Error('ROOM_NOT_FOUND'),{status:404});
+      const raw=await redis('GET',[`checkers:room:${roomId}`]);
+      if(!raw)throw Object.assign(new Error('ROOM_NOT_FOUND'),{status:404});
+      const room=JSON.parse(raw);
+      if(room.p1?.id!==user.id&&room.p2?.id!==user.id)throw Object.assign(new Error('NOT_A_PLAYER'),{status:403});
+      if(room.status==='playing'||room.status==='finished')return reply({ok:true,status:room.status,game:publicGame(room,user.id),roomId});
+      return reply({ok:true,status:'waiting',roomId,room:{id:room.id,name:room.p1?.name||'Игрок'}});
+    }
     const ids=await redis('KEYS',['checkers:room:*']); const rooms=[];
     for(const key of (ids||[])){
-      if(key.includes(':user:'))continue;
+      if(key.includes(':user:')||key.includes(':lock:'))continue;
       const raw=await redis('GET',[key]); if(!raw)continue;
       try{const r=JSON.parse(raw);if(r.status==='waiting'&&r.p1?.id!==user.id)rooms.push({id:r.id,name:r.p1?.name||'Игрок',createdAt:r.createdAt})}catch{}
     }
