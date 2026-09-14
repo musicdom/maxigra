@@ -7,7 +7,7 @@ const CATALOG = {
   board_premium: 199,
   board_light: 49,
   board_darkwood: 59,
-  board_lightwood: 59,
+  board_lightwood: 0,
   master: 149,
   hints: 39
 };
@@ -19,7 +19,7 @@ const userOrdersKey = id => `checkers:shop:orders:user:${id}`;
 const inventoryKey = id => `checkers:shop:user:${id}`;
 
 function paymentUrl(orderId, price, paymentType) {
-  if (!RECEIVER) return '';
+  if (!RECEIVER || price <= 0) return '';
   const params = new URLSearchParams({
     receiver: RECEIVER,
     'quickpay-form': 'button',
@@ -41,12 +41,12 @@ function paymentOptions(orderId, price) {
 async function alreadyOwned(userId, itemId) {
   if (itemId === 'hints') return false;
   const raw = await redis('GET', [inventoryKey(userId)]);
-  if (!raw) return false;
+  if (!raw) return itemId === 'board_lightwood';
   try {
     const state = JSON.parse(raw);
-    return Array.isArray(state.owned) && state.owned.includes(itemId);
+    return itemId === 'board_lightwood' || (Array.isArray(state.owned) && state.owned.includes(itemId));
   } catch {
-    return false;
+    return itemId === 'board_lightwood';
   }
 }
 
@@ -56,7 +56,8 @@ export async function POST(request) {
     const payload = await body(request);
     const itemId = String(payload?.id || '');
     const price = CATALOG[itemId];
-    if (!price) return reply({ ok: false, error: 'ITEM_NOT_FOUND' }, 404);
+    if (price == null) return reply({ ok: false, error: 'ITEM_NOT_FOUND' }, 404);
+    if (price <= 0) return reply({ ok: false, error: 'ITEM_ALREADY_OWNED' }, 409);
     if (!RECEIVER) return reply({ ok: false, error: 'PAYMENT_NOT_CONFIGURED' }, 503);
     if (await alreadyOwned(user.id, itemId)) {
       return reply({ ok: false, error: 'ITEM_ALREADY_OWNED' }, 409);
