@@ -18,17 +18,24 @@ const orderKey = id => `checkers:shop:order:${id}`;
 const userOrdersKey = id => `checkers:shop:orders:user:${id}`;
 const inventoryKey = id => `checkers:shop:user:${id}`;
 
-function paymentUrl(orderId, price) {
+function paymentUrl(orderId, price, paymentType) {
   if (!RECEIVER) return '';
   const params = new URLSearchParams({
     receiver: RECEIVER,
     'quickpay-form': 'button',
-    paymentType: 'AC',
+    paymentType,
     targets: `MaxИгра заказ ${orderId}`,
     sum: price.toFixed(2),
     label: orderId
   });
   return `https://yoomoney.ru/quickpay/confirm?${params.toString()}`;
+}
+
+function paymentOptions(orderId, price) {
+  return {
+    wallet: paymentUrl(orderId, price, 'PC'),
+    card: paymentUrl(orderId, price, 'AC')
+  };
 }
 
 async function alreadyOwned(userId, itemId) {
@@ -78,7 +85,8 @@ export async function POST(request) {
       price,
       currency: 'RUB',
       status: 'pending',
-      paymentUrl: paymentUrl(orderId, price)
+      paymentUrl: paymentUrl(orderId, price, 'PC'),
+      paymentOptions: paymentOptions(orderId, price)
     }}, 201);
   } catch (error) {
     return errorResponse(error);
@@ -104,7 +112,8 @@ export async function GET(request) {
       currency: order.currency,
       status: order.status,
       createdAt: order.createdAt,
-      paymentUrl: order.status === 'pending' ? paymentUrl(order.id, order.price) : ''
+      paymentUrl: order.status === 'pending' ? paymentUrl(order.id, order.price, 'PC') : '',
+      paymentOptions: order.status === 'pending' ? paymentOptions(order.id, order.price) : { wallet: '', card: '' }
     }});
   } catch (error) {
     return errorResponse(error);
