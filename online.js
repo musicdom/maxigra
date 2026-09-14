@@ -21,23 +21,23 @@ function render(){
   board.appendChild(cell);
  }
  $('white-score').textContent=pieces(W).length;$('black-score').textContent=pieces(B).length;$('turn-indicator').textContent=game.turn===game.side?'Ваш ход':'Ход соперника';$('move-count').textContent=Math.max(1,Math.floor((game.halfMoves||0)/2)+1);$('capture-info').textContent=game.chain&&game.chain.side===game.side?'⚔ Продолжайте взятие':(game.turn===game.side&&hasCapture(game.side)?'⚔ Взятие обязательно':'');$('thinking').textContent=game.turn===game.side?'':'ждём ход…';
- const labels=document.querySelectorAll('.game-screen .player-label');if(labels.length>=2){labels[0].firstElementChild.textContent=game.side===W?'Соперник':game.opponent.name;labels[1].firstElementChild.textContent=game.side===B?'Вы':game.opponent.name}
+ // Do not use every .player-label here: capture-info and thinking are also player-label elements.
+ const opponentLabel=document.querySelector('.game-screen .player-label.opponent span');
+ const playerLabel=document.querySelector('.game-screen .game-container > .player-label:not(#capture-info):not(#thinking) span');
+ if(opponentLabel)opponentLabel.textContent=game.side===W?'Соперник':game.opponent.name;
+ if(playerLabel)playerLabel.textContent=game.side===B?'Вы':game.opponent.name;
 }
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id)?.classList.add('active')}
 function stopPolling(){if(polling){clearInterval(polling);polling=null}}
-function startPolling(){stopPolling();polling=setInterval(()=>{void syncGame()},400);void syncGame()}
+function startPolling(){stopPolling();polling=setInterval(()=>{void syncGame()},300);void syncGame()}
 function stateVersion(d){return Number(d?.version||d?.game?.version||d?.game?.updatedAt||0)}
 function sameState(a,b){return JSON.stringify([a.board,a.turn,a.chain,a.lastMove,a.status,a.winner,a.halfMoves,a.updatedAt,a.version])===JSON.stringify([b.board,b.turn,b.chain,b.lastMove,b.status,b.winner,b.halfMoves,b.updatedAt,b.version])}
 async function syncGame(){
  if(!active||!game||!game.id||syncInFlight)return false;syncInFlight=true;
  try{
   let d=null;
-  try{
-   d=await api('/api/rooms','POST',{action:'sync',roomId:game.id,clientVersion:serverVersion,nonce:Date.now()});
-  }catch(postError){
-   // Fallback to GET so an older deployment/proxy cannot block the opponent from receiving moves.
-   d=await api('/api/rooms?roomId='+encodeURIComponent(game.id)+'&_='+Date.now(),'GET');
-  }
+  try{d=await api('/api/rooms','POST',{action:'sync',roomId:game.id,clientVersion:serverVersion,nonce:Date.now()})}
+  catch(postError){d=await api('/api/rooms?roomId='+encodeURIComponent(game.id)+'&_='+Date.now(),'GET')}
   if(!d?.game)return false;
   const incoming=d.game,version=stateVersion(d);
   if(version&&serverVersion&&version<serverVersion)return true;
@@ -49,10 +49,7 @@ async function syncGame(){
   if(changed)window.dispatchEvent(new CustomEvent('online-game-sync',{detail:{game,version:serverVersion}}));
   if(game.status==='finished')finishOnline();
   return true;
- }catch(e){
-  // Keep the last authoritative state; the next heartbeat retries automatically.
-  return false;
- }finally{syncInFlight=false}
+ }catch(e){return false}finally{syncInFlight=false}
 }
 async function move(from,to){
  if(busy||!game||game.status!=='playing'||game.turn!==game.side)return;busy=true;selected=null;
