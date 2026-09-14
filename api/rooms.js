@@ -4,6 +4,8 @@ const roomKey = id => `checkers:room:${id}`;
 const userRoomKey = id => `checkers:room:user:${id}`;
 const lockKey = id => `checkers:room:lock:${id}`;
 
+export function OPTIONS(){ return reply({ok:true}); }
+
 export async function GET(request){
   try{
     const user=auth(request);
@@ -14,7 +16,7 @@ export async function GET(request){
       const raw=await redis('GET',[roomKey(roomId)]);
       if(!raw)throw Object.assign(new Error('ROOM_NOT_FOUND'),{status:404});
       const room=JSON.parse(raw);
-      if(room.p1?.id!==user.id&&room.p2?.id!==user.id)throw Object.assign(new Error('NOT_A_PLAYER'),{status:403});
+      if(String(room.p1?.id)!==String(user.id)&&String(room.p2?.id)!==String(user.id))throw Object.assign(new Error('NOT_A_PLAYER'),{status:403});
       if(room.status==='playing'||room.status==='finished')return reply({ok:true,status:room.status,game:publicGame(room,user.id),roomId});
       return reply({ok:true,status:'waiting',roomId,room:{id:room.id,name:room.p1?.name||'Игрок'}});
     }
@@ -22,7 +24,7 @@ export async function GET(request){
     for(const key of (ids||[])){
       if(key.includes(':user:')||key.includes(':lock:'))continue;
       const raw=await redis('GET',[key]); if(!raw)continue;
-      try{const r=JSON.parse(raw);if(r.status==='waiting'&&r.p1?.id!==user.id)rooms.push({id:r.id,name:r.p1?.name||'Игрок',createdAt:r.createdAt})}catch{}
+      try{const r=JSON.parse(raw);if(r.status==='waiting'&&String(r.p1?.id)!==String(user.id))rooms.push({id:r.id,name:r.p1?.name||'Игрок',createdAt:r.createdAt})}catch{}
     }
     rooms.sort((a,b)=>b.createdAt-a.createdAt);
     return reply({ok:true,rooms:rooms.slice(0,30)});
@@ -41,7 +43,7 @@ export async function POST(request){
       const raw=await redis('GET',[roomKey(id)]);
       if(!raw)throw Object.assign(new Error('ROOM_NOT_FOUND'),{status:404});
       const room=JSON.parse(raw);
-      if(room.p1?.id!==user.id&&room.p2?.id!==user.id)throw Object.assign(new Error('NOT_A_PLAYER'),{status:403});
+      if(String(room.p1?.id)!==String(user.id)&&String(room.p2?.id)!==String(user.id))throw Object.assign(new Error('NOT_A_PLAYER'),{status:403});
       return reply({ok:true,status:room.status,version:Number(room.updatedAt||0),game:publicGame(room,user.id)});
     }
 
@@ -57,7 +59,7 @@ export async function POST(request){
       }
       const id='R'+Math.random().toString(36).slice(2,8).toUpperCase();
       const room={id,status:'waiting',p1:user,p2:null,p1Side:1,p2Side:2,board:initialBoard(),turn:1,chain:null,halfMoves:0,reps:{},winner:null,lastMove:null,createdAt:Date.now(),updatedAt:Date.now()};
-      const ok=await redis('SET',[roomKey(id),JSON.stringify(room),'NX','EX',7200]);
+      const ok=await redis('SET',[roomKey(id),JSON.stringify(room),'NX','EX','7200']);
       if(ok!=='OK')throw new Error('ROOM_CREATE_FAILED');
       await redis('SET',[userRoomKey(user.id),id,'EX',7200]);
       await redis('SET',[`checkers:user:${user.id}`,JSON.stringify(user),'EX',2592000]);
@@ -94,4 +96,4 @@ export async function POST(request){
   finally{if(lockHeld&&lockId)await redis('DEL',[lockKey(lockId)]).catch(()=>{});}
 }
 
-export default {GET,POST};
+export default {GET,POST,OPTIONS};
