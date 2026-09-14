@@ -9,7 +9,7 @@ function hasCapture(side){return pieces(side).some(p=>captures(game.board,p.r,p.
 function legalFor(side,r,c){if(game.chain&&(game.chain.side!==side||game.chain.r!==r||game.chain.c!==c))return[];return game.chain?captures(game.board,r,c):hasCapture(side)?captures(game.board,r,c):simple(game.board,r,c)}
 function applyTheme(){if(!board)return;const s=window.CheckersShop?.state||{};board.dataset.board=s.selectedBoard||'default';board.dataset.pieces=s.selectedPieces||'default'}
 function render(){
- if(!board||!game)return;applyTheme();board.innerHTML='';const possible=selected?legalFor(game.side,selected.r,selected.c):[];
+ if(!board||!game||!Array.isArray(game.board))return;applyTheme();board.innerHTML='';const possible=selected?legalFor(game.side,selected.r,selected.c):[];
  for(let r=0;r<8;r++)for(let c=0;c<8;c++){const cell=document.createElement('button');cell.type='button';cell.className='cell '+((r+c)%2?'cell-dark':'cell-light');cell.dataset.r=r;cell.dataset.c=c;if(selected?.r===r&&selected?.c===c)cell.classList.add('selected');if(possible.some(m=>m.r===r&&m.c===c))cell.classList.add('possible');if(game.lastMove&&((game.lastMove.from.r===r&&game.lastMove.from.c===c)||(game.lastMove.to.r===r&&game.lastMove.to.c===c)))cell.classList.add('last-move');const p=game.board[r][c];if(p){const piece=document.createElement('span');piece.className='piece '+(color(p)===W?'piece-white':'piece-black')+((p&4)?' piece-king':'');if(window.CheckersShop?.state?.selectedPieces==='gold')piece.classList.add('piece-gold');if(p&4)piece.textContent='♛';cell.appendChild(piece)}board.appendChild(cell)}
  $('white-score').textContent=pieces(W).length;$('black-score').textContent=pieces(B).length;$('turn-indicator').textContent=game.turn===game.side?'Ваш ход':'Ход соперника';$('move-count').textContent=Math.max(1,Math.floor((game.halfMoves||0)/2)+1);$('capture-info').textContent=game.chain&&game.chain.side===game.side?'⚔ Продолжайте взятие':(game.turn===game.side&&hasCapture(game.side)?'⚔ Взятие обязательно':'');$('thinking').textContent=game.turn===game.side?'':'ждём ход…';
  const labels=document.querySelectorAll('.game-screen .player-label');if(labels.length>=2){labels[0].firstElementChild.textContent=game.side===W?'Соперник':game.opponent.name;labels[1].firstElementChild.textContent=game.side===B?'Вы':game.opponent.name}
@@ -17,22 +17,24 @@ function render(){
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id)?.classList.add('active')}
 function message(text){const el=$('online-search-text');if(el)el.textContent=text}
 function stopPolling(){if(polling){clearInterval(polling);polling=null}}
-function startPolling(){stopPolling();polling=setInterval(syncGame,1000);void syncGame()}
-function startGame(d){if(!active||!d?.game)return;game=d.game;selected=null;if(game.status==='matched'||game.status==='playing'){showScreen('game-screen');render();startPolling();window.dispatchEvent(new CustomEvent('online-game-started',{detail:{game}}))}else if(game.status==='finished')finishOnline()}
+function startPolling(){stopPolling();polling=setInterval(syncGame,500);void syncGame()}
+function sameState(a,b){return JSON.stringify([a.board,a.turn,a.chain,a.lastMove,a.status,a.winner,a.halfMoves])===JSON.stringify([b.board,b.turn,b.chain,b.lastMove,b.status,b.winner,b.halfMoves])}
 async function syncGame(){
- if(!active||!game||!game.id||syncInFlight||busy)return;syncInFlight=true;
+ if(!active||!game||!game.id||syncInFlight)return;syncInFlight=true;
  try{
-  const d=await api('/api/rooms?roomId='+encodeURIComponent(game.id));
-  if(!d.game)return;
+  const d=await api('/api/rooms?roomId='+encodeURIComponent(game.id)+'&_='+Date.now());
+  if(!d?.game)return;
   const incoming=d.game;
-  // Server is authoritative. Replace the local snapshot after every poll so both players
-  // converge to exactly the same board/turn/chain after every move.
-  const changed=JSON.stringify([game.board,game.turn,game.chain,game.lastMove,game.status,game.winner])!==JSON.stringify([incoming.board,incoming.turn,incoming.chain,incoming.lastMove,incoming.status,incoming.winner]);
+  const changed=!sameState(game,incoming);
+  // Never invent a local state. The room stored in Redis is the single source of truth.
   game=incoming;
   if(selected){const p=game.board[selected.r]?.[selected.c];if(!p||color(p)!==game.side||game.turn!==game.side||game.chain)selected=null}
-  if(changed)render();
+  // Render every successful snapshot. This deliberately does not depend on local move state,
+  // so the second device redraws immediately after the first device commits a move.
+  render();
+  if(changed)window.dispatchEvent(new CustomEvent('online-game-sync',{detail:{game}}));
   if(game.status==='finished')finishOnline();
- }catch(e){/* transient network errors are retried by the next poll */}
+ }catch(e){/* transient network errors are retried by the next heartbeat */}
  finally{syncInFlight=false}
 }
 async function move(from,to){
@@ -40,12 +42,15 @@ async function move(from,to){
  try{
   const d=await api('/api/matchmaking/move','POST',{roomId:game.id,from,to});
   if(!d?.game)throw new Error('BAD_MOVE_RESPONSE');
-  game=d.game;render();if(game.status==='finished')finishOnline();
+  game=d.game;render();
+  // Do an immediate authoritative read after the write. This also catches a stale client snapshot.
+  await syncGame();
+  if(game.status==='finished')finishOnline();
  }catch(e){
   if(e.message==='NOT_YOUR_TURN'){await syncGame();showToast('Сейчас ход соперника');}
   else if(e.message==='BUSY'){await syncGame();}
   else if(e.message==='ILLEGAL_MOVE'){await syncGame();showToast('Недопустимый ход');}
-  else showToast(e.message==='ROOM_NOT_FOUND'?'Комната больше не существует':'Ошибка хода. Повторяем синхронизацию…');
+  else {await syncGame();showToast(e.message==='ROOM_NOT_FOUND'?'Комната больше не существует':'Ошибка хода. Синхронизация…')}
  }finally{busy=false;selected=null;render()}
 }
 function choose(r,c){
@@ -60,5 +65,6 @@ async function resign(){if(!game||game.status!=='playing')return;if(!confirm('С
 function showToast(text){let t=$('checkers-toast');if(!t){t=document.createElement('div');t.id='checkers-toast';t.className='checkers-toast';document.body.appendChild(t)}t.textContent=text;t.style.display='block';clearTimeout(t._timer);t._timer=setTimeout(()=>t.style.display='none',1800)}
 function cancelOnline(){stopPolling();active=false;game=null;selected=null;showScreen('menu-screen')}
 function setup(){if(setupDone)return;setupDone=true;if(board)board.addEventListener('click',e=>{const cell=e.target.closest('.cell');if(cell)choose(Number(cell.dataset.r),Number(cell.dataset.c))});const back=$('game-back');if(back)back.onclick=()=>{if(active&&game?.status==='playing')resign();else cancelOnline()};window.CheckersOnline={get active(){return active},start:()=>window.CheckersRooms?.open?.(),cancel:cancelOnline};window.__startOnlineRoomGame=d=>{active=true;startGame(d)};window.dispatchEvent(new CustomEvent('checkers-online-ready'))}
+function startGame(d){if(!active||!d?.game)return;game=d.game;selected=null;finishedShown=false;if(game.status==='matched'||game.status==='playing'){showScreen('game-screen');render();startPolling();window.dispatchEvent(new CustomEvent('online-game-started',{detail:{game}}))}else if(game.status==='finished')finishOnline()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
 })();
