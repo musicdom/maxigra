@@ -4,8 +4,8 @@
 const KEY='russian-checkers-account-v2';
 const DEFAULT_BOARD='board_lightwood';
 const catalog={
-  board_90s:{title:'90-е',price:79,image:'assets/boards/IMG_4486.jpeg',tag:'ДОСКА',desc:'Ретро-стиль с атмосферой классических 90-х.'},
-  board_svo:{title:'СВО',price:99,image:'assets/boards/IMG_4487.jpeg',tag:'ДОСКА',desc:'Тактическое оформление игровой доски.'},
+  board_90s:{title:'СВО',price:79,image:'assets/boards/IMG_4486.jpeg',tag:'ДОСКА',desc:'Ретро-стиль с атмосферой классических 90-х.'},
+  board_svo:{title:'90-е',price:99,image:'assets/boards/IMG_4487.jpeg',tag:'ДОСКА',desc:'Тактическое оформление игровой доски.'},
   board_premium:{title:'Премиум',price:199,image:'assets/boards/IMG_4488.jpeg',tag:'ДОСКА',desc:'Премиальная эксклюзивная тема.'},
   board_light:{title:'Светлый',price:49,image:'assets/boards/IMG_4489.jpeg',tag:'ДОСКА',desc:'Чистая светлая классика.'},
   board_darkwood:{title:'Тёмное дерево',price:59,image:'assets/boards/IMG_4490.jpeg',tag:'ДОСКА',desc:'Глубокая деревянная фактура.'},
