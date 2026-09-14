@@ -18,7 +18,7 @@ let local={};try{local=JSON.parse(localStorage.getItem(KEY)||'null')||{}}catch(e
 const state=local;
 state.owned=Array.isArray(state.owned)?state.owned:[];
 if(!state.owned.includes(DEFAULT_BOARD))state.owned.push(DEFAULT_BOARD);
-state.selectedBoard=DEFAULT_BOARD;
+state.selectedBoard=state.selectedBoard||DEFAULT_BOARD;
 state.selectedPieces=state.selectedPieces||'default';
 state.ai=Math.max(1,Math.min(4,Number(state.ai)||1));state.hints=Math.max(0,Number(state.hints)||0);state.games=Number(state.games)||0;state.wins=Number(state.wins)||0;state.losses=Number(state.losses)||0;state.draws=Number(state.draws)||0;state.coins=Math.max(0,Number(state.coins)||0);
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
@@ -33,24 +33,33 @@ function getInitData(){
 }
 async function waitForInitData(timeout=5000){const started=Date.now();while(Date.now()-started<timeout){const data=getInitData();if(data)return data;await new Promise(r=>setTimeout(r,100))}return ''}
 let readyPromise=null;
+function mergeServerState(serverState){
+ const previousBoard=state.selectedBoard;
+ const previousPieces=state.selectedPieces;
+ Object.assign(state,serverState||{});
+ state.owned=Array.isArray(state.owned)?state.owned:[];
+ if(!state.owned.includes(DEFAULT_BOARD))state.owned.push(DEFAULT_BOARD);
+ if(previousBoard&&state.owned.includes(previousBoard))state.selectedBoard=previousBoard;
+ else if(!state.owned.includes(state.selectedBoard))state.selectedBoard=DEFAULT_BOARD;
+ state.selectedPieces=state.selectedPieces||previousPieces||'default';
+ save();
+ window.dispatchEvent(new CustomEvent('shop-state-ready',{detail:state}));
+ return state;
+}
 async function sync(){
  if(readyPromise)return readyPromise;
  readyPromise=(async()=>{
   const init=await waitForInitData();if(!init)throw new Error('MAX_INIT_DATA_REQUIRED');
   const r=await fetch(window.maxigraApiUrl('/api/shop'),{headers:{'x-max-init-data':init},cache:'no-store'});
   const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);
-  Object.assign(state,d.state||{});
-  state.owned=Array.isArray(state.owned)?state.owned:[];
-  if(!state.owned.includes(DEFAULT_BOARD))state.owned.push(DEFAULT_BOARD);
-  state.selectedBoard=DEFAULT_BOARD;
-  save();window.dispatchEvent(new CustomEvent('shop-state-ready',{detail:state}));return state;
+  return mergeServerState(d.state||{});
  })().finally(()=>{readyPromise=null});return readyPromise;
 }
 const owned=id=>id==='default'||id===DEFAULT_BOARD||state.owned.includes(id)||id==='premium'&&state.owned.includes('premium');
 async function request(action,id){
  const init=await waitForInitData();if(!init)throw new Error('MAX_INIT_DATA_REQUIRED');
  const r=await fetch(window.maxigraApiUrl('/api/shop'),{method:'POST',headers:{'content-type':'application/json','x-max-init-data':init},body:JSON.stringify({action,id}),cache:'no-store'});
- const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);Object.assign(state,d.state||{});state.owned=Array.isArray(state.owned)?state.owned:[];if(!state.owned.includes(DEFAULT_BOARD))state.owned.push(DEFAULT_BOARD);state.selectedBoard=DEFAULT_BOARD;save();window.dispatchEvent(new CustomEvent('shop-state-ready',{detail:state}));return true;
+ const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);mergeServerState(d.state||{});return true;
 }
 async function createOrder(id){
  const init=await waitForInitData();if(!init)throw new Error('MAX_INIT_DATA_REQUIRED');
