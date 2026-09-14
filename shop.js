@@ -36,12 +36,14 @@ let readyPromise=null;
 function mergeServerState(serverState){
  const previousBoard=state.selectedBoard;
  const previousPieces=state.selectedPieces;
+ const serverBoard=serverState?.selectedBoard;
  Object.assign(state,serverState||{});
  state.owned=Array.isArray(state.owned)?state.owned:[];
  if(!state.owned.includes(DEFAULT_BOARD))state.owned.push(DEFAULT_BOARD);
- if(previousBoard&&state.owned.includes(previousBoard))state.selectedBoard=previousBoard;
- else if(!state.owned.includes(state.selectedBoard))state.selectedBoard=DEFAULT_BOARD;
- state.selectedPieces=state.selectedPieces||previousPieces||'default';
+ if(serverBoard&&serverBoard!==DEFAULT_BOARD&&state.owned.includes(serverBoard)) state.selectedBoard=serverBoard;
+ else if(previousBoard&&state.owned.includes(previousBoard)) state.selectedBoard=previousBoard;
+ else state.selectedBoard=DEFAULT_BOARD;
+ state.selectedPieces=serverState?.selectedPieces||previousPieces||'default';
  save();
  window.dispatchEvent(new CustomEvent('shop-state-ready',{detail:state}));
  return state;
