@@ -7,17 +7,21 @@ const api=(...args)=>apiClient.api(...args);
 function pieces(side){const out=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(game.board[r][c]&&color(game.board[r][c])===side)out.push({r,c});return out}
 function hasCapture(side){return pieces(side).some(p=>captures(game.board,p.r,p.c).length)}
 function legalFor(side,r,c){if(game.chain&&(game.chain.side!==side||game.chain.r!==r||game.chain.c!==c))return[];return game.chain?captures(game.board,r,c):hasCapture(side)?captures(game.board,r,c):simple(game.board,r,c)}
+function flip(){return game?.side===B}
+function toBoard(r,c){return flip()?{r:7-r,c:7-c}:{r,c}}
+function fromBoard(r,c){return flip()?{r:7-r,c:7-c}:{r,c}}
 function applyTheme(){if(!board)return;const s=window.CheckersShop?.state||{};board.dataset.board=s.selectedBoard||'default';board.dataset.pieces=s.selectedPieces||'default'}
 function render(){
  if(!board||!game||!Array.isArray(game.board))return;applyTheme();board.innerHTML='';const possible=selected?legalFor(game.side,selected.r,selected.c):[];
- for(let r=0;r<8;r++)for(let c=0;c<8;c++){const cell=document.createElement('button');cell.type='button';cell.className='cell '+((r+c)%2?'cell-dark':'cell-light');cell.dataset.r=r;cell.dataset.c=c;if(selected?.r===r&&selected?.c===c)cell.classList.add('selected');if(possible.some(m=>m.r===r&&m.c===c))cell.classList.add('possible');if(game.lastMove&&((game.lastMove.from.r===r&&game.lastMove.from.c===c)||(game.lastMove.to.r===r&&game.lastMove.to.c===c)))cell.classList.add('last-move');const p=game.board[r][c];if(p){const piece=document.createElement('span');piece.className='piece '+(color(p)===W?'piece-white':'piece-black')+((p&4)?' piece-king':'');if(window.CheckersShop?.state?.selectedPieces==='gold')piece.classList.add('piece-gold');if(p&4)piece.textContent='♛';cell.appendChild(piece)}board.appendChild(cell)}
+ for(let vr=0;vr<8;vr++)for(let vc=0;vc<8;vc++){const {r,c}=fromBoard(vr,vc);const cell=document.createElement('button');cell.type='button';cell.className='cell '+((r+c)%2?'cell-dark':'cell-light');cell.dataset.r=r;cell.dataset.c=c;if(selected?.r===r&&selected?.c===c)cell.classList.add('selected');if(possible.some(m=>m.r===r&&m.c===c))cell.classList.add('possible');if(game.lastMove&&((game.lastMove.from.r===r&&game.lastMove.from.c===c)||(game.lastMove.to.r===r&&game.lastMove.to.c===c)))cell.classList.add('last-move');const p=game.board[r][c];if(p){const piece=document.createElement('span');piece.className='piece '+(color(p)===W?'piece-white':'piece-black')+((p&4)?' piece-king':'');if(window.CheckersShop?.state?.selectedPieces==='gold')piece.classList.add('piece-gold');if(p&4)piece.textContent='♛';cell.appendChild(piece)}board.appendChild(cell)}
  $('white-score').textContent=pieces(W).length;$('black-score').textContent=pieces(B).length;$('turn-indicator').textContent=game.turn===game.side?'Ваш ход':'Ход соперника';$('move-count').textContent=Math.max(1,Math.floor((game.halfMoves||0)/2)+1);$('capture-info').textContent=game.chain&&game.chain.side===game.side?'⚔ Продолжайте взятие':(game.turn===game.side&&hasCapture(game.side)?'⚔ Взятие обязательно':'');$('thinking').textContent=game.turn===game.side?'':'ждём ход…';
  const labels=document.querySelectorAll('.game-screen .player-label');if(labels.length>=2){labels[0].firstElementChild.textContent=game.side===W?'Соперник':game.opponent.name;labels[1].firstElementChild.textContent=game.side===B?'Вы':game.opponent.name}
 }
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id)?.classList.add('active')}
+function message(text){const el=$('online-search-text');if(el)el.textContent=text}
 function stopPolling(){if(polling){clearInterval(polling);polling=null}}
 function startPolling(){stopPolling();polling=setInterval(syncGame,400);void syncGame()}
-function sameState(a,b){return JSON.stringify([a.board,a.turn,a.chain,a.lastMove,a.status,a.winner,a.halfMoves])===JSON.stringify([b.board,b.turn,b.chain,b.lastMove,b.status,b.winner,b.halfMoves])}
+function sameState(a,b){return JSON.stringify([a.board,a.turn,a.chain,a.lastMove,a.status,a.winner,a.halfMoves,a.updatedAt])===JSON.stringify([b.board,b.turn,b.chain,b.lastMove,b.status,b.winner,b.halfMoves,b.updatedAt])}
 async function syncGame(){
  if(!active||!game||!game.id||syncInFlight)return;syncInFlight=true;
  try{
@@ -30,9 +34,7 @@ async function syncGame(){
   render();
   if(changed)window.dispatchEvent(new CustomEvent('online-game-sync',{detail:{game,version:d.version||0}}));
   if(game.status==='finished')finishOnline();
- }catch(e){
-  // Keep the last authoritative state during transient network failures; next heartbeat retries.
- }
+ }catch(e){}
  finally{syncInFlight=false}
 }
 async function move(from,to){
