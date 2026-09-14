@@ -6,14 +6,28 @@ const CATALOG = {
   board_premium: { price: 199 },
   board_light: { price: 49 },
   board_darkwood: { price: 59 },
-  board_lightwood: { price: 59 },
+  board_lightwood: { price: 0 },
   master: { price: 149 },
   hints: { price: 39 }
 };
 const BOARD_IDS = ['board_90s','board_svo','board_premium','board_light','board_darkwood','board_lightwood'];
+const DEFAULT_BOARD = 'board_lightwood';
 
 function inventoryKey(id) { return `checkers:shop:user:${id}`; }
 function coinsKey(id) { return `checkers:coins:${id}`; }
+
+function normalizeState(state, coinsRaw) {
+  const owned = Array.isArray(state.owned) ? state.owned.filter(itemId => CATALOG[itemId]) : [];
+  if (!owned.includes(DEFAULT_BOARD)) owned.push(DEFAULT_BOARD);
+  return {
+    owned,
+    selectedBoard: BOARD_IDS.includes(state.selectedBoard) && owned.includes(state.selectedBoard) ? state.selectedBoard : DEFAULT_BOARD,
+    selectedPieces: state.selectedPieces || 'default',
+    ai: Math.max(1, Math.min(4, Number(state.ai) || 1)),
+    hints: Math.max(0, Number(state.hints) || 0),
+    coins: Math.max(0, Number(coinsRaw) || 0)
+  };
+}
 
 async function readState(id) {
   const [raw, coinsRaw] = await Promise.all([
@@ -22,14 +36,7 @@ async function readState(id) {
   ]);
   let state = {};
   try { state = raw ? JSON.parse(raw) : {}; } catch {}
-  return {
-    owned: Array.isArray(state.owned) ? state.owned.filter(itemId => CATALOG[itemId]) : [],
-    selectedBoard: BOARD_IDS.includes(state.selectedBoard) ? state.selectedBoard : 'default',
-    selectedPieces: state.selectedPieces || 'default',
-    ai: Math.max(1, Math.min(4, Number(state.ai) || 1)),
-    hints: Math.max(0, Number(state.hints) || 0),
-    coins: Math.max(0, Number(coinsRaw) || 0)
-  };
+  return normalizeState(state, coinsRaw);
 }
 
 async function saveState(id, state) {
@@ -64,7 +71,7 @@ export async function POST(request) {
       if (BOARD_IDS.includes(id)) state.selectedBoard = id;
       else if (id === 'gold') state.selectedPieces = id;
       else if (id === 'master') state.ai = 4;
-      else if (id === 'default') state.selectedBoard = 'default';
+      else if (id === 'default') state.selectedBoard = DEFAULT_BOARD;
       await saveState(user.id, state);
       return reply({ ok: true, state });
     }
@@ -73,8 +80,6 @@ export async function POST(request) {
       const item = CATALOG[id];
       if (!item) return reply({ ok: false, error: 'ITEM_NOT_FOUND' }, 404);
       if (state.owned.includes(id)) return reply({ ok: false, error: 'ITEM_ALREADY_OWNED' }, 409);
-      // Do not trust the browser for payment or balance. Real purchases must be
-      // credited by a verified payment webhook before this endpoint can grant an item.
       return reply({ ok: false, error: 'PAYMENT_REQUIRED', price: item.price }, 402);
     }
 
