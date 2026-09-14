@@ -43,9 +43,16 @@ export function simpleMoves(board,r,c){const p=board[r]?.[c],out=[];if(!p)return
 export function pieces(board,side){const out=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(board[r][c]&&color(board[r][c])===side)out.push({r,c});return out}
 export function hasCapture(board,side){return pieces(board,side).some(p=>captures(board,p.r,p.c).length)}
 export function legalPieceMoves(state,side,r,c){const forced=state.chain&&state.chain.side===side?state.chain:null;if(forced&&(forced.r!==r||forced.c!==c))return[];const must=Boolean(forced)||hasCapture(state.board,side);return must?captures(state.board,r,c):simpleMoves(state.board,r,c)}
-export function allMoves(state,side){const forced=state.chain&&state.chain.side===side;if(forced){const p=state.chain;return legalPieceMoves(state,side,p.r,p.c).map(move=>({from:{r:p.r,c:p.c},move}))}const must=hasCapture(state,side),out=[];for(const p of pieces(state.board,side))for(const move of(must?captures(state.board,p.r,p.c):simpleMoves(state.board,p.r,p.c)))out.push({from:{r:p.r,c:p.c},move});return out}
+export function allMoves(state,side){const forced=state.chain&&state.chain.side===side;if(forced){const p=state.chain;return legalPieceMoves(state,side,p.r,p.c).map(move=>({from:{r:p.r,c:p.c},move}))}const must=hasCapture(state.board,side),out=[];for(const p of pieces(state.board,side))for(const move of(must?captures(state.board,p.r,p.c):simpleMoves(state.board,p.r,p.c)))out.push({from:{r:p.r,c:p.c},move});return out}
 export function applyMove(board,from,move){const next=board.map(row=>row.slice());let p=next[from.r][from.c];next[from.r][from.c]=0;if(move.cap)next[move.cap.r][move.cap.c]=0;if(color(p)===1&&move.r===0)p|=4;if(color(p)===2&&move.r===7)p|=4;next[move.r][move.c]=p;return next}
 export function stateKey(state){return `${state.turn}|${state.board.flat().join(',')}`}
 export function createGame(roomId,p1,p2,p1Side,p2Side){const board=initialBoard(),state={id:roomId,status:'playing',p1,p2,p1Side,p2Side,board,turn:1,chain:null,halfMoves:0,reps:{},winner:null,lastMove:null,createdAt:Date.now(),updatedAt:Date.now()};state.reps[stateKey(state)]=1;return state}
-export function publicGame(state,userId){const side=state.p1.id===userId?state.p1Side:state.p2Side,opponent=state.p1.id===userId?state.p2:state.p1;return{id:state.id,status:state.status,board:state.board,turn:state.turn,side,chain:state.chain,lastMove:state.lastMove,winner:state.winner,halfMoves:state.halfMoves,opponent}}
+export function publicGame(state,userId){
+  const uid=String(userId);
+  const p1Id=String(state.p1?.id??'');
+  const p2Id=String(state.p2?.id??'');
+  const side=p1Id===uid?Number(state.p1Side||1):p2Id===uid?Number(state.p2Side||2):0;
+  const opponent=p1Id===uid?state.p2:p2Id===uid?state.p1:null;
+  return {id:state.id,status:state.status,board:state.board,turn:state.turn,side,chain:state.chain,lastMove:state.lastMove,winner:state.winner,halfMoves:state.halfMoves,opponent:opponent||{name:'Соперник'}};
+}
 export function errorResponse(error){return reply({ok:false,error:error.message||'SERVER_ERROR'},error.status||500)}
