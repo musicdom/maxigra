@@ -32,15 +32,13 @@ function syncProfile(){
 }
 
 function startOnlineFromButton(){
-  const online=window.CheckersOnline;
-  if(online?.start){
-    void online.start();
-    return;
-  }
+  const openRooms=()=>window.CheckersRooms?.open?.();
+  if(window.CheckersRooms?.open){openRooms();return;}
   show('online-search-screen');
   const el=q('online-search-text');
-  if(el)el.textContent='Подключаем онлайн-игру…';
-  window.addEventListener('checkers-online-ready',()=>window.CheckersOnline?.start?.(),{once:true});
+  if(el)el.textContent='Загрузка комнат…';
+  const handler=()=>{window.removeEventListener('checkers-online-ready',handler);openRooms()};
+  window.addEventListener('checkers-online-ready',handler,{once:true});
 }
 
 function bindNavigation(){
@@ -59,12 +57,8 @@ function bindNavigation(){
     };
   }
   const cancel=q('online-cancel-btn');
-  if(cancel&&!window.CheckersOnline){
-    cancel.addEventListener('click',e=>{
-      e.preventDefault();
-      e.stopPropagation();
-      show('menu-screen');
-    });
+  if(cancel){
+    cancel.onclick=e=>{e.preventDefault();e.stopPropagation();show('menu-screen')};
   }
 }
 
