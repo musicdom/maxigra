@@ -3,6 +3,8 @@
 function esc(v){return String(v??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]))}
 function errorText(e){if(e?.message==='PAYMENT_NOT_CONFIGURED')return'Оплата пока не настроена.';if(e?.message==='PAYMENT_REQUIRED')return'Покупка доступна после подтверждения оплаты.';if(e?.message==='MAX_INIT_DATA_REQUIRED')return'Откройте игру внутри MAX.';if(e?.message==='ITEM_NOT_OWNED')return'Сначала приобретите эту доску.';return'Не удалось выполнить действие. Попробуйте ещё раз.'}
 function openPayment(url){if(!url)return false;try{const opened=window.open(url,'_blank','noopener,noreferrer');if(opened)return true}catch{}try{location.href=url;return true}catch{return false}}
+function postPayment(data){const form=document.createElement('form');form.method='POST';form.action='https://yoomoney.ru/quickpay/confirm';form.target='_blank';form.style.display='none';Object.entries(data||{}).forEach(([name,value])=>{const input=document.createElement('input');input.type='hidden';input.name=name;input.value=String(value??'');form.appendChild(input)});document.body.appendChild(form);form.submit();setTimeout(()=>form.remove(),1000);return true}
+function payOrder(order){if(!order?.paymentUrl)return false;try{const u=new URL(order.paymentUrl);const data={};u.searchParams.forEach((v,k)=>data[k]=v);return postPayment(data)}catch{return openPayment(order.paymentUrl)}}
 function render(){
  const box=document.getElementById('shop-content');const shop=window.CheckersShop;if(!box||!shop)return;
  const s=shop.state||{},c=shop.catalog||{};const boards=(shop.boardIds||[]).filter(id=>c[id]);const extras=Object.entries(c).filter(([id])=>!boards.includes(id));
@@ -15,7 +17,7 @@ function render(){
     if(boards.includes(id))await shop.selectBoard(id);else if(id==='gold')await shop.selectPieces(id);else if(id==='master')shop.setAI(4);
    }else{
     const order=await shop.buy(id);
-    if(order?.paymentUrl){openPayment(order.paymentUrl);showNotice(`Заказ ${order.id} создан. После оплаты предмет будет выдан автоматически.`)}
+    if(order?.paymentUrl){payOrder(order);showNotice(`Заказ ${order.id} создан. После оплаты предмет будет выдан автоматически.`)}
    }
    render();
   }catch(e){btn.disabled=false;showNotice(errorText(e))}
