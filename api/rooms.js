@@ -35,6 +35,16 @@ export async function POST(request){
   try{
     const user=auth(request); const data=await body(request); const action=String(data.action||'');
 
+    if(action==='sync'){
+      const id=String(data.roomId||'');
+      if(!/^R[A-Z0-9]{6}$/.test(id))throw Object.assign(new Error('ROOM_NOT_FOUND'),{status:404});
+      const raw=await redis('GET',[roomKey(id)]);
+      if(!raw)throw Object.assign(new Error('ROOM_NOT_FOUND'),{status:404});
+      const room=JSON.parse(raw);
+      if(room.p1?.id!==user.id&&room.p2?.id!==user.id)throw Object.assign(new Error('NOT_A_PLAYER'),{status:403});
+      return reply({ok:true,status:room.status,version:Number(room.updatedAt||0),game:publicGame(room,user.id)});
+    }
+
     if(action==='create'){
       const existing=await redis('GET',[userRoomKey(user.id)]);
       if(existing){
