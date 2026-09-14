@@ -43,7 +43,7 @@ async function grant(order) {
   }
 
   state.owned = owned;
-  state.selectedBoard = state.selectedBoard || 'default';
+  state.selectedBoard = state.selectedBoard || 'board_lightwood';
   state.selectedPieces = state.selectedPieces || 'default';
   state.ai = Math.max(1, Math.min(4, Number(state.ai) || 1));
   state.hints = Math.max(0, Number(state.hints) || 0);
@@ -56,11 +56,8 @@ export async function POST(request) {
   if (!SECRET) return reply({ ok: false, error: 'PAYMENT_WEBHOOK_NOT_CONFIGURED' }, 503);
 
   let form;
-  try {
-    form = await request.formData();
-  } catch {
-    return reply({ ok: false, error: 'BAD_NOTIFICATION' }, 400);
-  }
+  try { form = await request.formData(); }
+  catch { return reply({ ok: false, error: 'BAD_NOTIFICATION' }, 400); }
 
   if (!validSign(form)) return reply({ ok: false, error: 'INVALID_NOTIFICATION_SIGNATURE' }, 401);
 
@@ -68,21 +65,22 @@ export async function POST(request) {
   const operationId = formValue(form, 'operation_id');
   const orderId = formValue(form, 'label');
   const currency = formValue(form, 'currency');
-  const unaccepted = formValue(form, 'unaccepted');
-  const codepro = formValue(form, 'codepro');
+  const unaccepted = formValue(form, 'unaccepted').toLowerCase();
+  const codepro = formValue(form, 'codepro').toLowerCase();
   const amount = Number(formValue(form, 'amount'));
   const withdrawAmount = Number(formValue(form, 'withdraw_amount'));
 
   if (!['p2p-incoming', 'card-incoming'].includes(notificationType)) return reply({ ok: false, error: 'UNSUPPORTED_NOTIFICATION' }, 400);
   if (!operationId || !/^mx_[a-f0-9]{32}$/.test(orderId)) return reply({ ok: false, error: 'INVALID_PAYMENT_REFERENCE' }, 400);
   if (currency !== '643' || unaccepted === 'true' || codepro === 'true' || !Number.isFinite(amount) || amount <= 0) return reply({ ok: false, error: 'INVALID_PAYMENT' }, 400);
-  if (withdrawAmount !== 0 && !Number.isFinite(withdrawAmount)) return reply({ ok: false, error: 'INVALID_PAYMENT' }, 400);
+  if (!Number.isFinite(withdrawAmount) || withdrawAmount < 0) return reply({ ok: false, error: 'INVALID_PAYMENT' }, 400);
 
   const orderRaw = await redis('GET', [orderKey(orderId)]);
   if (!orderRaw) return reply({ ok: false, error: 'ORDER_NOT_FOUND' }, 404);
   let order;
   try { order = JSON.parse(orderRaw); } catch { return reply({ ok: false, error: 'ORDER_INVALID' }, 500); }
 
+  if (String(order.currency) !== 'RUB' || Number(order.price) <= 0) return reply({ ok: false, error: 'ORDER_INVALID' }, 400);
   if (order.status === 'paid') return reply({ ok: true, status: 'paid' });
   if (Number(amount) + 0.000001 < Number(order.price)) return reply({ ok: false, error: 'PAYMENT_AMOUNT_TOO_LOW' }, 400);
 
@@ -100,6 +98,7 @@ export async function POST(request) {
     const latestRaw = await redis('GET', [orderKey(orderId)]);
     const latest = latestRaw ? JSON.parse(latestRaw) : order;
     if (latest.status === 'paid') return reply({ ok: true, status: 'paid' });
+    if (Number(latest.price) !== Number(order.price) || String(latest.userId) !== String(order.userId) || String(latest.itemId) !== String(order.itemId)) return reply({ ok: false, error: 'ORDER_CHANGED' }, 409);
 
     const grantMarker = await redis('SET', [grantKey(orderId), 'processing', 'NX', 'EX', '300']);
     if (grantMarker !== 'OK') return reply({ ok: true, status: 'processing' });
@@ -111,7 +110,7 @@ export async function POST(request) {
         status: 'paid',
         operationId,
         paidAmount: amount,
-        withdrawAmount: Number.isFinite(withdrawAmount) ? withdrawAmount : null,
+        withdrawAmount,
         paidAt: Date.now()
       };
       await redis('SET', [orderKey(orderId), JSON.stringify(paidOrder), 'EX', '2592000']);
