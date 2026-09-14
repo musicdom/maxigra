@@ -30,7 +30,8 @@ export async function GET(request){
 }
 
 export async function POST(request){
-  let heldLock='';
+  let lockId='';
+  let lockHeld=false;
   try{
     const user=auth(request); const data=await body(request); const action=String(data.action||'');
 
@@ -55,8 +56,8 @@ export async function POST(request){
 
     if(action==='leave'){
       const id=String(data.roomId||''); if(!/^R[A-Z0-9]{6}$/.test(id))return reply({ok:true});
-      heldLock=await redis('SET',[lockKey(id),user.id,'NX','EX',10]);
-      if(heldLock!=='OK')throw new Error('ROOM_BUSY');
+      lockId=id; lockHeld=(await redis('SET',[lockKey(id),user.id,'NX','EX',10]))==='OK';
+      if(!lockHeld)throw new Error('ROOM_BUSY');
       const key=roomKey(id); const raw=await redis('GET',[key]);
       if(!raw){await redis('DEL',[userRoomKey(user.id)]);return reply({ok:true});}
       const room=JSON.parse(raw);
@@ -66,12 +67,12 @@ export async function POST(request){
 
     if(action==='join'){
       const id=String(data.roomId||''); if(!/^R[A-Z0-9]{6}$/.test(id))throw Object.assign(new Error('ROOM_NOT_FOUND'),{status:404});
-      heldLock=await redis('SET',[lockKey(id),user.id,'NX','EX',10]);
-      if(heldLock!=='OK')throw new Error('ROOM_BUSY');
+      lockId=id; lockHeld=(await redis('SET',[lockKey(id),user.id,'NX','EX',10]))==='OK';
+      if(!lockHeld)throw new Error('ROOM_BUSY');
       const key=roomKey(id); const raw=await redis('GET',[key]); if(!raw)throw Object.assign(new Error('ROOM_NOT_FOUND'),{status:404});
       const room=JSON.parse(raw); if(room.p1?.id===user.id)throw new Error('OWN_ROOM'); if(room.status!=='waiting'||room.p2)throw new Error('ROOM_BUSY');
       const oldRoomId=await redis('GET',[userRoomKey(user.id)]);
-      if(oldRoomId&&oldRoomId!==id){await redis('DEL',[userRoomKey(user.id)]);}
+      if(oldRoomId&&oldRoomId!==id)await redis('DEL',[userRoomKey(user.id)]);
       room.p2=user; room.status='playing'; room.updatedAt=Date.now(); room.board=room.board?.length?room.board:initialBoard();
       const saved=await redis('SET',[key,JSON.stringify(room),'XX','EX',7200]); if(saved!=='OK')throw new Error('ROOM_BUSY');
       await redis('SET',[userRoomKey(user.id),id,'EX',7200]); await redis('SET',[`checkers:user:${user.id}`,JSON.stringify(user),'EX',2592000]);
@@ -80,10 +81,7 @@ export async function POST(request){
     }
     throw new Error('INVALID_ACTION');
   }catch(e){return errorResponse(e)}
-  finally{if(heldLock){const id=String(dataRoomIdSafe(request));await redis('DEL',[lockKey(id)]).catch(()=>{});}}
+  finally{if(lockHeld&&lockId)await redis('DEL',[lockKey(lockId)]).catch(()=>{});}
 }
 
-function dataRoomIdSafe(request){
-  return '';
-}
 export default {GET,POST};
