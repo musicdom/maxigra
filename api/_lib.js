@@ -53,6 +53,6 @@ export function publicGame(state,userId){
   const p2Id=String(state.p2?.id??'');
   const side=p1Id===uid?Number(state.p1Side||1):p2Id===uid?Number(state.p2Side||2):0;
   const opponent=p1Id===uid?state.p2:p2Id===uid?state.p1:null;
-  return {id:state.id,status:state.status,board:state.board,turn:state.turn,side,chain:state.chain,lastMove:state.lastMove,winner:state.winner,halfMoves:state.halfMoves,opponent:opponent||{name:'Соперник'}};
+  return {id:state.id,status:state.status,board:state.board,turn:Number(state.turn||1),side,chain:state.chain,winner:state.winner,halfMoves:Number(state.halfMoves||0),lastMove:state.lastMove,updatedAt:Number(state.updatedAt||0),version:Number(state.updatedAt||0),opponent:opponent||{name:'Соперник'}};
 }
 export function errorResponse(error){return reply({ok:false,error:error.message||'SERVER_ERROR'},error.status||500)}
