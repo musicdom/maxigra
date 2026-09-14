@@ -15,26 +15,24 @@ function render(){
  const labels=document.querySelectorAll('.game-screen .player-label');if(labels.length>=2){labels[0].firstElementChild.textContent=game.side===W?'Соперник':game.opponent.name;labels[1].firstElementChild.textContent=game.side===B?'Вы':game.opponent.name}
 }
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id)?.classList.add('active')}
-function message(text){const el=$('online-search-text');if(el)el.textContent=text}
 function stopPolling(){if(polling){clearInterval(polling);polling=null}}
-function startPolling(){stopPolling();polling=setInterval(syncGame,500);void syncGame()}
+function startPolling(){stopPolling();polling=setInterval(syncGame,400);void syncGame()}
 function sameState(a,b){return JSON.stringify([a.board,a.turn,a.chain,a.lastMove,a.status,a.winner,a.halfMoves])===JSON.stringify([b.board,b.turn,b.chain,b.lastMove,b.status,b.winner,b.halfMoves])}
 async function syncGame(){
  if(!active||!game||!game.id||syncInFlight)return;syncInFlight=true;
  try{
-  const d=await api('/api/rooms?roomId='+encodeURIComponent(game.id)+'&_='+Date.now());
+  const d=await api('/api/rooms','POST',{action:'sync',roomId:game.id});
   if(!d?.game)return;
   const incoming=d.game;
   const changed=!sameState(game,incoming);
-  // Never invent a local state. The room stored in Redis is the single source of truth.
   game=incoming;
   if(selected){const p=game.board[selected.r]?.[selected.c];if(!p||color(p)!==game.side||game.turn!==game.side||game.chain)selected=null}
-  // Render every successful snapshot. This deliberately does not depend on local move state,
-  // so the second device redraws immediately after the first device commits a move.
   render();
-  if(changed)window.dispatchEvent(new CustomEvent('online-game-sync',{detail:{game}}));
+  if(changed)window.dispatchEvent(new CustomEvent('online-game-sync',{detail:{game,version:d.version||0}}));
   if(game.status==='finished')finishOnline();
- }catch(e){/* transient network errors are retried by the next heartbeat */}
+ }catch(e){
+  // Keep the last authoritative state during transient network failures; next heartbeat retries.
+ }
  finally{syncInFlight=false}
 }
 async function move(from,to){
@@ -43,14 +41,12 @@ async function move(from,to){
   const d=await api('/api/matchmaking/move','POST',{roomId:game.id,from,to});
   if(!d?.game)throw new Error('BAD_MOVE_RESPONSE');
   game=d.game;render();
-  // Do an immediate authoritative read after the write. This also catches a stale client snapshot.
   await syncGame();
   if(game.status==='finished')finishOnline();
  }catch(e){
-  if(e.message==='NOT_YOUR_TURN'){await syncGame();showToast('Сейчас ход соперника');}
-  else if(e.message==='BUSY'){await syncGame();}
-  else if(e.message==='ILLEGAL_MOVE'){await syncGame();showToast('Недопустимый ход');}
-  else {await syncGame();showToast(e.message==='ROOM_NOT_FOUND'?'Комната больше не существует':'Ошибка хода. Синхронизация…')}
+  await syncGame();
+  if(e.message==='NOT_YOUR_TURN')showToast('Сейчас ход соперника');
+  else if(e.message!=='BUSY'&&e.message!=='ILLEGAL_MOVE')showToast(e.message==='ROOM_NOT_FOUND'?'Комната больше не существует':'Ошибка хода. Синхронизация…');
  }finally{busy=false;selected=null;render()}
 }
 function choose(r,c){
