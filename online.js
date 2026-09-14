@@ -2,47 +2,56 @@
 'use strict';
 const board=document.getElementById('board'),$=id=>document.getElementById(id),core=window.CheckersOnlineCore,apiClient=window.CheckersOnlineApi;
 const W=core.W,B=core.B,color=core.color,captures=core.captures,simple=core.simple;
-let active=false,polling=null,game=null,selected=null,busy=false,finishedShown=false,setupDone=false,syncInFlight=false;
+let active=false,polling=null,game=null,selected=null,busy=false,finishedShown=false,setupDone=false,syncInFlight=false,serverVersion=0;
 const api=(...args)=>apiClient.api(...args);
 function pieces(side){const out=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(game.board[r][c]&&color(game.board[r][c])===side)out.push({r,c});return out}
 function hasCapture(side){return pieces(side).some(p=>captures(game.board,p.r,p.c).length)}
 function legalFor(side,r,c){if(game.chain&&(game.chain.side!==side||game.chain.r!==r||game.chain.c!==c))return[];return game.chain?captures(game.board,r,c):hasCapture(side)?captures(game.board,r,c):simple(game.board,r,c)}
 function flip(){return game?.side===B}
-function toBoard(r,c){return flip()?{r:7-r,c:7-c}:{r,c}}
 function fromBoard(r,c){return flip()?{r:7-r,c:7-c}:{r,c}}
-function applyTheme(){if(!board)return;const s=window.CheckersShop?.state||{};board.dataset.board=s.selectedBoard||'default';board.dataset.pieces=s.selectedPieces||'default'}
+function applyTheme(){if(!board)return;const s=window.CheckersShop?.state||{};board.dataset.board=s.selectedBoard||'default';board.dataset.pieces=s.selectedPieces||'default';board.dataset.side=flip()?'black':'white'}
 function render(){
  if(!board||!game||!Array.isArray(game.board))return;applyTheme();board.innerHTML='';const possible=selected?legalFor(game.side,selected.r,selected.c):[];
- for(let vr=0;vr<8;vr++)for(let vc=0;vc<8;vc++){const {r,c}=fromBoard(vr,vc);const cell=document.createElement('button');cell.type='button';cell.className='cell '+((r+c)%2?'cell-dark':'cell-light');cell.dataset.r=r;cell.dataset.c=c;if(selected?.r===r&&selected?.c===c)cell.classList.add('selected');if(possible.some(m=>m.r===r&&m.c===c))cell.classList.add('possible');if(game.lastMove&&((game.lastMove.from.r===r&&game.lastMove.from.c===c)||(game.lastMove.to.r===r&&game.lastMove.to.c===c)))cell.classList.add('last-move');const p=game.board[r][c];if(p){const piece=document.createElement('span');piece.className='piece '+(color(p)===W?'piece-white':'piece-black')+((p&4)?' piece-king':'');if(window.CheckersShop?.state?.selectedPieces==='gold')piece.classList.add('piece-gold');if(p&4)piece.textContent='♛';cell.appendChild(piece)}board.appendChild(cell)}
+ for(let vr=0;vr<8;vr++)for(let vc=0;vc<8;vc++){
+  const {r,c}=fromBoard(vr,vc);const cell=document.createElement('button');cell.type='button';cell.className='cell '+((r+c)%2?'cell-dark':'cell-light');cell.dataset.r=r;cell.dataset.c=c;
+  if(selected?.r===r&&selected?.c===c)cell.classList.add('selected');
+  if(possible.some(m=>m.r===r&&m.c===c))cell.classList.add('possible');
+  if(game.lastMove&&((game.lastMove.from.r===r&&game.lastMove.from.c===c)||(game.lastMove.to.r===r&&game.lastMove.to.c===c)))cell.classList.add('last-move');
+  const p=game.board[r][c];if(p){const piece=document.createElement('span');piece.className='piece '+(color(p)===W?'piece-white':'piece-black')+((p&4)?' piece-king':'');if(window.CheckersShop?.state?.selectedPieces==='gold')piece.classList.add('piece-gold');if(p&4)piece.textContent='♛';cell.appendChild(piece)}
+  board.appendChild(cell);
+ }
  $('white-score').textContent=pieces(W).length;$('black-score').textContent=pieces(B).length;$('turn-indicator').textContent=game.turn===game.side?'Ваш ход':'Ход соперника';$('move-count').textContent=Math.max(1,Math.floor((game.halfMoves||0)/2)+1);$('capture-info').textContent=game.chain&&game.chain.side===game.side?'⚔ Продолжайте взятие':(game.turn===game.side&&hasCapture(game.side)?'⚔ Взятие обязательно':'');$('thinking').textContent=game.turn===game.side?'':'ждём ход…';
  const labels=document.querySelectorAll('.game-screen .player-label');if(labels.length>=2){labels[0].firstElementChild.textContent=game.side===W?'Соперник':game.opponent.name;labels[1].firstElementChild.textContent=game.side===B?'Вы':game.opponent.name}
 }
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id)?.classList.add('active')}
-function message(text){const el=$('online-search-text');if(el)el.textContent=text}
 function stopPolling(){if(polling){clearInterval(polling);polling=null}}
-function startPolling(){stopPolling();polling=setInterval(syncGame,400);void syncGame()}
-function sameState(a,b){return JSON.stringify([a.board,a.turn,a.chain,a.lastMove,a.status,a.winner,a.halfMoves,a.updatedAt])===JSON.stringify([b.board,b.turn,b.chain,b.lastMove,b.status,b.winner,b.halfMoves,b.updatedAt])}
+function startPolling(){stopPolling();polling=setInterval(()=>{void syncGame()},400);void syncGame()}
+function stateVersion(d){return Number(d?.version||d?.game?.version||d?.game?.updatedAt||0)}
+function sameState(a,b){return JSON.stringify([a.board,a.turn,a.chain,a.lastMove,a.status,a.winner,a.halfMoves,a.updatedAt,a.version])===JSON.stringify([b.board,b.turn,b.chain,b.lastMove,b.status,b.winner,b.halfMoves,b.updatedAt,b.version])}
 async function syncGame(){
  if(!active||!game||!game.id||syncInFlight)return;syncInFlight=true;
  try{
-  const d=await api('/api/rooms','POST',{action:'sync',roomId:game.id});
+  const d=await api('/api/rooms','POST',{action:'sync',roomId:game.id,clientVersion:serverVersion,nonce:Date.now()});
   if(!d?.game)return;
-  const incoming=d.game;
+  const incoming=d.game,version=stateVersion(d);
+  if(version&&serverVersion&&version<serverVersion)return;
   const changed=!sameState(game,incoming);
+  serverVersion=Math.max(serverVersion,version);
   game=incoming;
   if(selected){const p=game.board[selected.r]?.[selected.c];if(!p||color(p)!==game.side||game.turn!==game.side||game.chain)selected=null}
   render();
-  if(changed)window.dispatchEvent(new CustomEvent('online-game-sync',{detail:{game,version:d.version||0}}));
+  if(changed)window.dispatchEvent(new CustomEvent('online-game-sync',{detail:{game,version:serverVersion}}));
   if(game.status==='finished')finishOnline();
- }catch(e){}
- finally{syncInFlight=false}
+ }catch(e){
+  // A failed heartbeat never replaces the last good authoritative board.
+ }finally{syncInFlight=false}
 }
 async function move(from,to){
  if(busy||!game||game.status!=='playing'||game.turn!==game.side)return;busy=true;selected=null;
  try{
   const d=await api('/api/matchmaking/move','POST',{roomId:game.id,from,to});
   if(!d?.game)throw new Error('BAD_MOVE_RESPONSE');
-  game=d.game;render();
+  const version=stateVersion(d);if(version>=serverVersion)serverVersion=version;game=d.game;render();
   await syncGame();
   if(game.status==='finished')finishOnline();
  }catch(e){
@@ -54,15 +63,15 @@ async function move(from,to){
 function choose(r,c){
  if(!active||!game||game.status!=='playing'||game.turn!==game.side||busy)return;
  const p=game.board[r][c];
- if(selected){const m=legalFor(game.side,selected.r,selected.c).find(x=>x.r===r&&x.c===c);if(m){move({...selected},{r,c});return}if(!game.chain&&p&&color(p)===game.side){selected={r,c};render();return}selected=null;render();return}
+ if(selected){const m=legalFor(game.side,selected.r,selected.c).find(x=>x.r===r&&x.c===c);if(m){void move({...selected},{r,c});return}if(!game.chain&&p&&color(p)===game.side){selected={r,c};render();return}selected=null;render();return}
  if(p&&color(p)===game.side&&(!hasCapture(game.side)||captures(game.board,r,c).length)){selected={r,c};render()}
 }
 function resultText(){if(game.winner==='draw')return'🤝 Ничья';return game.winner===game.side?'🏆 Вы победили!':'⚔️ Победил соперник'}
 function finishOnline(){if(finishedShown||!game||game.status!=='finished')return;finishedShown=true;stopPolling();let box=$('game-result');if(!box){box=document.createElement('div');box.id='game-result';box.className='game-result';document.body.appendChild(box)}box.innerHTML='<div class="result-card"><div class="result-title">'+resultText()+'</div><div class="result-sub">Онлайн-партия завершена</div><div class="result-actions"><button class="btn btn--primary" id="online-again">Вернуться к комнатам</button><button class="btn btn--secondary" id="online-menu">В меню</button></div></div>';box.classList.add('show');$('online-again').onclick=()=>{box.classList.remove('show');active=false;showScreen('rooms-screen');window.CheckersRooms?.refresh?.()};$('online-menu').onclick=()=>{box.classList.remove('show');cancelOnline()}}
-async function resign(){if(!game||game.status!=='playing')return;if(!confirm('Сдаться и завершить онлайн-партию?'))return;try{const d=await api('/api/matchmaking/resign','POST',{roomId:game.id});game=d.game;render();finishOnline()}catch{showToast('Не удалось завершить партию')}}
+async function resign(){if(!game||game.status!=='playing')return;if(!confirm('Сдаться и завершить онлайн-партию?'))return;try{const d=await api('/api/matchmaking/resign','POST',{roomId:game.id});game=d.game;serverVersion=stateVersion(d);render();finishOnline()}catch{showToast('Не удалось завершить партию')}}
 function showToast(text){let t=$('checkers-toast');if(!t){t=document.createElement('div');t.id='checkers-toast';t.className='checkers-toast';document.body.appendChild(t)}t.textContent=text;t.style.display='block';clearTimeout(t._timer);t._timer=setTimeout(()=>t.style.display='none',1800)}
-function cancelOnline(){stopPolling();active=false;game=null;selected=null;showScreen('menu-screen')}
+function cancelOnline(){stopPolling();active=false;game=null;selected=null;serverVersion=0;showScreen('menu-screen')}
 function setup(){if(setupDone)return;setupDone=true;if(board)board.addEventListener('click',e=>{const cell=e.target.closest('.cell');if(cell)choose(Number(cell.dataset.r),Number(cell.dataset.c))});const back=$('game-back');if(back)back.onclick=()=>{if(active&&game?.status==='playing')resign();else cancelOnline()};window.CheckersOnline={get active(){return active},start:()=>window.CheckersRooms?.open?.(),cancel:cancelOnline};window.__startOnlineRoomGame=d=>{active=true;startGame(d)};window.dispatchEvent(new CustomEvent('checkers-online-ready'))}
-function startGame(d){if(!active||!d?.game)return;game=d.game;selected=null;finishedShown=false;if(game.status==='matched'||game.status==='playing'){showScreen('game-screen');render();startPolling();window.dispatchEvent(new CustomEvent('online-game-started',{detail:{game}}))}else if(game.status==='finished')finishOnline()}
+function startGame(d){if(!active||!d?.game)return;game=d.game;serverVersion=stateVersion(d);selected=null;finishedShown=false;if(game.status==='matched'||game.status==='playing'){showScreen('game-screen');render();startPolling();window.dispatchEvent(new CustomEvent('online-game-started',{detail:{game}}))}else if(game.status==='finished')finishOnline()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
 })();
