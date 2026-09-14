@@ -29,12 +29,18 @@ function startPolling(){stopPolling();polling=setInterval(()=>{void syncGame()},
 function stateVersion(d){return Number(d?.version||d?.game?.version||d?.game?.updatedAt||0)}
 function sameState(a,b){return JSON.stringify([a.board,a.turn,a.chain,a.lastMove,a.status,a.winner,a.halfMoves,a.updatedAt,a.version])===JSON.stringify([b.board,b.turn,b.chain,b.lastMove,b.status,b.winner,b.halfMoves,b.updatedAt,b.version])}
 async function syncGame(){
- if(!active||!game||!game.id||syncInFlight)return;syncInFlight=true;
+ if(!active||!game||!game.id||syncInFlight)return false;syncInFlight=true;
  try{
-  const d=await api('/api/rooms','POST',{action:'sync',roomId:game.id,clientVersion:serverVersion,nonce:Date.now()});
-  if(!d?.game)return;
+  let d=null;
+  try{
+   d=await api('/api/rooms','POST',{action:'sync',roomId:game.id,clientVersion:serverVersion,nonce:Date.now()});
+  }catch(postError){
+   // Fallback to GET so an older deployment/proxy cannot block the opponent from receiving moves.
+   d=await api('/api/rooms?roomId='+encodeURIComponent(game.id)+'&_='+Date.now(),'GET');
+  }
+  if(!d?.game)return false;
   const incoming=d.game,version=stateVersion(d);
-  if(version&&serverVersion&&version<serverVersion)return;
+  if(version&&serverVersion&&version<serverVersion)return true;
   const changed=!sameState(game,incoming);
   serverVersion=Math.max(serverVersion,version);
   game=incoming;
@@ -42,8 +48,10 @@ async function syncGame(){
   render();
   if(changed)window.dispatchEvent(new CustomEvent('online-game-sync',{detail:{game,version:serverVersion}}));
   if(game.status==='finished')finishOnline();
+  return true;
  }catch(e){
-  // A failed heartbeat never replaces the last good authoritative board.
+  // Keep the last authoritative state; the next heartbeat retries automatically.
+  return false;
  }finally{syncInFlight=false}
 }
 async function move(from,to){
