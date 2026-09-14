@@ -1,5 +1,7 @@
 import { auth, body, errorResponse, legalPieceMoves, publicGame, redis, reply, applyMove, allMoves, stateKey } from '../_lib.js';
 
+export function OPTIONS(){ return reply({ok:true}); }
+
 export async function POST(request) {
   let lock = '', roomForLock = '';
   try {
@@ -43,8 +45,6 @@ export async function POST(request) {
     else if(!allMoves(game,game.turn).length){game.status='finished';game.winner=side}
 
     await redis('SET',[`checkers:room:${roomId}`,JSON.stringify(game),'EX','7200']);
-
-    // Presence is auxiliary; a failure here must never turn a successfully saved move into "Ошибка хода".
     await Promise.allSettled([
       redis('SET',[`checkers:presence:${user.id}`,'1','EX','7200']),
       redis('SADD',['checkers:online',user.id])
@@ -55,4 +55,4 @@ export async function POST(request) {
     if(lock&&roomForLock)try{await redis('EVAL',[`if redis.call('GET',KEYS[1])==ARGV[1] then return redis.call('DEL',KEYS[1]) else return 0 end`,1,`checkers:room:lock:${roomForLock}`,lock])}catch{}
   }
 }
-export default { POST };
+export default { POST, OPTIONS };
