@@ -4,13 +4,14 @@ const CATALOG = {
   board_90s: { price: 79 },
   board_svo: { price: 99 },
   board_premium: { price: 199 },
+  board_premiumwood: { price: 0 },
   board_light: { price: 49 },
   board_darkwood: { price: 59 },
   board_lightwood: { price: 0 },
   master: { price: 149 },
   hints: { price: 39 }
 };
-const BOARD_IDS = ['board_90s','board_svo','board_premium','board_light','board_darkwood','board_lightwood'];
+const BOARD_IDS = ['board_90s','board_svo','board_premium','board_premiumwood','board_light','board_darkwood','board_lightwood'];
 const DEFAULT_BOARD = 'board_lightwood';
 
 function inventoryKey(id) { return `checkers:shop:user:${id}`; }
@@ -80,6 +81,11 @@ export async function POST(request) {
       const item = CATALOG[id];
       if (!item) return reply({ ok: false, error: 'ITEM_NOT_FOUND' }, 404);
       if (state.owned.includes(id)) return reply({ ok: false, error: 'ITEM_ALREADY_OWNED' }, 409);
+      if (item.price === 0) {
+        state.owned.push(id);
+        await saveState(user.id, state);
+        return reply({ ok: true, state });
+      }
       return reply({ ok: false, error: 'PAYMENT_REQUIRED', price: item.price }, 402);
     }
 
