@@ -11,14 +11,19 @@ function flip(){return game?.side===B}
 function fromBoard(r,c){return flip()?{r:7-r,c:7-c}:{r,c}}
 function applyTheme(){if(!board)return;const s=window.CheckersShop?.state||{};board.dataset.board=s.selectedBoard||'default';board.dataset.pieces=s.selectedPieces||'default';board.dataset.side=flip()?'black':'white'}
 function render(){
- if(!board||!game||!Array.isArray(game.board))return;applyTheme();board.innerHTML='';const possible=selected?legalFor(game.side,selected.r,selected.c):[];
+ if(!board||!game||!Array.isArray(game.board))return;applyTheme();
+ const possible=selected?legalFor(game.side,selected.r,selected.c):[];
+ const cells=board.children.length===64?board.children:null;
+ if(!cells){board.innerHTML='';for(let vr=0;vr<8;vr++)for(let vc=0;vc<8;vc++){const cell=document.createElement('button');cell.type='button';cell.className='cell';cell.dataset.vr=vr;cell.dataset.vc=vc;board.appendChild(cell)}}
  for(let vr=0;vr<8;vr++)for(let vc=0;vc<8;vc++){
-  const {r,c}=fromBoard(vr,vc);const cell=document.createElement('button');cell.type='button';cell.className='cell '+((r+c)%2?'cell-dark':'cell-light');cell.dataset.r=r;cell.dataset.c=c;
+  const cell=board.children[vr*8+vc];const {r,c}=fromBoard(vr,vc);const p=game.board[r][c];
+  cell.dataset.r=r;cell.dataset.c=c;cell.className='cell '+((r+c)%2?'cell-dark':'cell-light');
   if(selected?.r===r&&selected?.c===c)cell.classList.add('selected');
   if(possible.some(m=>m.r===r&&m.c===c))cell.classList.add('possible');
   if(game.lastMove&&((game.lastMove.from.r===r&&game.lastMove.from.c===c)||(game.lastMove.to.r===r&&game.lastMove.to.c===c)))cell.classList.add('last-move');
-  const p=game.board[r][c];if(p){const piece=document.createElement('span');piece.className='piece '+(color(p)===W?'piece-white':'piece-black')+((p&4)?' piece-king':'');if(window.CheckersShop?.state?.selectedPieces==='gold')piece.classList.add('piece-gold');if(p&4)piece.textContent='♛';cell.appendChild(piece)}
-  board.appendChild(cell);
+  const old=cell.querySelector('.piece');
+  if(!p){if(old)old.remove();cell._pieceValue=0}
+  else if(cell._pieceValue!==p){if(old)old.remove();const piece=document.createElement('span');piece.className='piece '+(color(p)===W?'piece-white':'piece-black')+((p&4)?' piece-king':'');if(window.CheckersShop?.state?.selectedPieces==='gold')piece.classList.add('piece-gold');if(p&4)piece.textContent='♛';cell.appendChild(piece);cell._pieceValue=p}
  }
  $('white-score').textContent=pieces(W).length;$('black-score').textContent=pieces(B).length;$('turn-indicator').textContent=game.turn===game.side?'Ваш ход':'Ход соперника';$('move-count').textContent=Math.max(1,Math.floor((game.halfMoves||0)/2)+1);$('capture-info').textContent=game.chain&&game.chain.side===game.side?'⚔ Продолжайте взятие':(game.turn===game.side&&hasCapture(game.side)?'⚔ Взятие обязательно':'');$('thinking').textContent=game.turn===game.side?'':'ждём ход…';
  const opponentLabel=document.querySelector('.game-screen .player-label.opponent span');
@@ -63,7 +68,7 @@ async function move(from,to){
   await syncGame();
   if(e.message==='NOT_YOUR_TURN')showToast('Сейчас ход соперника');
   else if(e.message!=='BUSY'&&e.message!=='ILLEGAL_MOVE')showToast(e.message==='ROOM_NOT_FOUND'?'Комната больше не существует':'Ошибка хода. Синхронизация…');
- }finally{busy=false;selected=null;render()}
+ }finally{busy=false;selected=null}
 }
 function choose(r,c){
  if(!active||!game||game.status!=='playing'||game.turn!==game.side||busy)return;
