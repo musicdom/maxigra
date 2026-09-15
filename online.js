@@ -21,7 +21,6 @@ function render(){
   board.appendChild(cell);
  }
  $('white-score').textContent=pieces(W).length;$('black-score').textContent=pieces(B).length;$('turn-indicator').textContent=game.turn===game.side?'Ваш ход':'Ход соперника';$('move-count').textContent=Math.max(1,Math.floor((game.halfMoves||0)/2)+1);$('capture-info').textContent=game.chain&&game.chain.side===game.side?'⚔ Продолжайте взятие':(game.turn===game.side&&hasCapture(game.side)?'⚔ Взятие обязательно':'');$('thinking').textContent=game.turn===game.side?'':'ждём ход…';
- // Do not use every .player-label here: capture-info and thinking are also player-label elements.
  const opponentLabel=document.querySelector('.game-screen .player-label.opponent span');
  const playerLabel=document.querySelector('.game-screen .game-container > .player-label:not(#capture-info):not(#thinking) span');
  if(opponentLabel)opponentLabel.textContent=game.side===W?'Соперник':game.opponent.name;
@@ -43,10 +42,11 @@ async function syncGame(){
   if(version&&serverVersion&&version<serverVersion)return true;
   const changed=!sameState(game,incoming);
   serverVersion=Math.max(serverVersion,version);
+  if(!changed)return true;
   game=incoming;
   if(selected){const p=game.board[selected.r]?.[selected.c];if(!p||color(p)!==game.side||game.turn!==game.side||game.chain)selected=null}
   render();
-  if(changed)window.dispatchEvent(new CustomEvent('online-game-sync',{detail:{game,version:serverVersion}}));
+  window.dispatchEvent(new CustomEvent('online-game-sync',{detail:{game,version:serverVersion}}));
   if(game.status==='finished')finishOnline();
   return true;
  }catch(e){return false}finally{syncInFlight=false}
