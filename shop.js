@@ -7,13 +7,14 @@ const catalog={
   board_90s:{title:'СВО',price:79,image:'assets/boards/IMG_4486.jpeg',tag:'ДОСКА',desc:'Ретро-стиль с атмосферой классических 90-х.'},
   board_svo:{title:'90-е',price:99,image:'assets/boards/IMG_4487.jpeg',tag:'ДОСКА',desc:'Тактическое оформление игровой доски.'},
   board_premium:{title:'Премиум',price:199,image:'assets/boards/IMG_4488.jpeg',tag:'ДОСКА',desc:'Премиальная эксклюзивная тема.'},
+  board_premiumwood:{title:'Премиальная дерево',price:0,image:'assets/boards/IMG_4565.jpeg',tag:'ДОСКА',desc:'Премиальная деревянная игровая доска.'},
   board_light:{title:'Светлый',price:49,image:'assets/boards/IMG_4489.jpeg',tag:'ДОСКА',desc:'Чистая светлая классика.'},
   board_darkwood:{title:'Тёмное дерево',price:59,image:'assets/boards/IMG_4490.jpeg',tag:'ДОСКА',desc:'Глубокая деревянная фактура.'},
   board_lightwood:{title:'Светлое дерево',price:0,image:'assets/boards/IMG_4491.jpeg',tag:'ОСНОВНАЯ ДОСКА',desc:'Светлое натуральное дерево — основная доска игры для всех игроков.'},
   master:{title:'Гроссмейстер',price:149,icon:'🏆',tag:'ИИ',desc:'Открывает максимальный уровень компьютера.'},
   hints:{title:'50 подсказок',price:39,icon:'💡',tag:'ПАКЕТ',desc:'50 подсказок для сложных позиций.'}
 };
-const boardIds=['board_90s','board_svo','board_premium','board_light','board_darkwood','board_lightwood'];
+const boardIds=['board_90s','board_svo','board_premium','board_premiumwood','board_light','board_darkwood','board_lightwood'];
 let local={};try{local=JSON.parse(localStorage.getItem(KEY)||'null')||{}}catch(e){}
 const state=local;
 state.owned=Array.isArray(state.owned)?state.owned:[];
@@ -68,7 +69,7 @@ async function createOrder(id){
  const r=await fetch(window.maxigraApiUrl('/api/shop/order'),{method:'POST',headers:{'content-type':'application/json','x-max-init-data':init},body:JSON.stringify({id}),cache:'no-store'});
  const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);return d.order;
 }
-async function buy(id){if(!catalog[id]||owned(id)||id===DEFAULT_BOARD)return false;return createOrder(id)}
+async function buy(id){if(!catalog[id]||owned(id)||id===DEFAULT_BOARD)return false;if(catalog[id].price===0)return request('purchase',id);return createOrder(id)}
 async function selectBoard(id){if(id===DEFAULT_BOARD){state.selectedBoard=DEFAULT_BOARD;save();return true}if(!owned(id))return false;return request('select',id)}
 async function selectPieces(id){if(!owned(id))return false;return request('select',id)}
 function setAI(n){return owned('master')&&((state.ai=Math.max(1,Math.min(4,Number(n)||1))),save(),true)}
