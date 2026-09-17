@@ -16,7 +16,10 @@ function syncProfile(){
   const name=q('max-profile-name'),username=q('max-profile-username'),status=q('max-profile-status');
   if(name)name.textContent=user.name||user.username||'Игрок';
   if(username)username.textContent=user.username?('@'+user.username):'Профиль MAX';
-  if(status)status.textContent=window.CheckersAuth?.registered?'✓ Профиль MAX подтверждён':'Профиль MAX';
+  if(status){
+    status.textContent=window.CheckersAuth?.registered?'✓ Профиль MAX подтверждён':'Гостевой профиль';
+    status.classList.toggle('is-guest',!window.CheckersAuth?.registered);
+  }
   if(avatar&&user.photo){
     avatar.src=user.photo;avatar.style.display='block';
     if(fallback)fallback.style.display='none';
@@ -24,11 +27,26 @@ function syncProfile(){
     avatar.removeAttribute('src');avatar.style.display='none';
     if(fallback)fallback.style.display='grid';
   }
+
   let stats={};
   try{stats=JSON.parse(localStorage.getItem(ACCOUNT_KEY)||'null')||{}}catch(e){}
-  const items=[['games','Игр'],['wins','Побед'],['losses','Поражений'],['draws','Ничьих']];
+  const games=Math.max(0,Number(stats.games)||0);
+  const wins=Math.max(0,Number(stats.wins)||0);
+  const losses=Math.max(0,Number(stats.losses)||0);
+  const draws=Math.max(0,Number(stats.draws)||0);
+  const winRate=games?Math.round((wins/games)*100):0;
   const box=q('profile-stats');
-  if(box)box.innerHTML=items.map(([key,label])=>`<div class="profile-stat"><b>${Number(stats[key]||0)}</b><span>${label}</span></div>`).join('');
+  if(box)box.innerHTML=`
+    <div class="profile-stat profile-stat--games"><span class="profile-stat-icon">🎮</span><b>${games}</b><span>Игр</span></div>
+    <div class="profile-stat profile-stat--wins"><span class="profile-stat-icon">🏆</span><b>${wins}</b><span>Побед</span></div>
+    <div class="profile-stat profile-stat--losses"><span class="profile-stat-icon">⚔️</span><b>${losses}</b><span>Поражений</span></div>
+    <div class="profile-stat profile-stat--draws"><span class="profile-stat-icon">🤝</span><b>${draws}</b><span>Ничьих</span></div>`;
+
+  const extra=q('profile-extra');
+  if(extra)extra.innerHTML=`
+    <div class="profile-extra-row"><span>Процент побед</span><strong>${winRate}%</strong></div>
+    <div class="profile-progress"><span style="width:${Math.min(100,winRate)}%"></span></div>
+    <div class="profile-extra-row"><span>Статус</span><strong>${window.CheckersAuth?.registered?'Игрок MAX':'Гость'}</strong></div>`;
 }
 
 function startOnlineFromButton(){
