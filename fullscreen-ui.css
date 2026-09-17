@@ -23,12 +23,10 @@ html,body{width:100%;height:100%;overflow:hidden}
 .game-result .result-actions{width:100%!important;align-items:stretch!important}
 .game-result .result-actions .btn{width:100%!important}
 
-.menu-logo{width:68px!important;height:68px!important;border-radius:21px!important;font-size:37px!important;margin-top:6px!important;margin-bottom:21px!important}
-
-/* HOME — polished main screen */
+/* HOME — full-screen app surface */
 #menu-screen{position:relative;align-items:center;justify-content:center;padding-top:clamp(18px,5vh,52px);padding-bottom:clamp(20px,5vh,48px)!important;background:radial-gradient(520px 300px at 50% 8%,rgba(77,163,255,.10),transparent 72%)}
 #menu-screen:before{content:"";position:absolute;left:50%;top:5%;width:min(620px,92vw);height:260px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle,rgba(77,163,255,.08),transparent 68%);filter:blur(8px);pointer-events:none}
-.menu-card{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:8px;align-items:stretch;justify-content:center;width:min(620px,100%)!important;max-width:620px!important;margin:0 auto!important;padding:12px 0 18px!important;position:relative;z-index:1}
+.menu-card{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:8px;align-items:stretch;justify-content:center;width:100%!important;max-width:none!important;min-height:100%!important;margin:0!important;padding:clamp(8px,3vh,24px) 0 clamp(20px,4vh,36px)!important;position:relative;z-index:1;background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border-radius:0!important}
 .menu-card:before{right:4%;top:8%;width:118px;height:118px;opacity:.38;transform:rotate(9deg);box-shadow:0 22px 50px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.06)}
 .menu-card:after{right:9%;top:11%;opacity:.55}
 .menu-logo{grid-column:1/-1;width:78px!important;height:78px!important;border-radius:24px!important;font-size:42px!important;margin:0 auto 18px!important;box-shadow:0 18px 44px rgba(238,165,43,.22),0 0 0 7px rgba(255,200,87,.045)!important}
@@ -46,34 +44,11 @@ html,body{width:100%;height:100%;overflow:hidden}
 .menu-card #rules-btn:before{content:"?";font-size:21px;font-weight:900;color:var(--mx-green)}
 
 /* BACK — large, explicit and anchored near the bottom */
-#shop-screen .shop-top .ctrl-btn,#profile-screen .profile-panel>.ctrl-btn,#rules-screen .rules-card>.ctrl-btn{
-  position:fixed!important;
-  left:50%!important;
-  bottom:calc(env(safe-area-inset-bottom) + 18px)!important;
-  transform:translate3d(-50%,0,0)!important;
-  z-index:30!important;
-  width:min(320px,calc(100vw - 36px))!important;
-  height:54px!important;
-  min-height:54px!important;
-  margin:0!important;
-  padding:0 22px!important;
-  border-radius:17px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  gap:9px!important;
-  background:rgba(25,42,60,.98)!important;
-  border:1px solid rgba(105,180,246,.55)!important;
-  color:#fff!important;
-  font-size:16px!important;
-  font-weight:700!important;
-  letter-spacing:.1px!important;
-  box-shadow:0 12px 30px rgba(0,0,0,.34),0 0 20px rgba(77,163,255,.12),inset 0 1px rgba(255,255,255,.12)!important;
-}
+#shop-screen .shop-top .ctrl-btn,#profile-screen .profile-panel>.ctrl-btn,#rules-screen .rules-card>.ctrl-btn{position:fixed!important;left:50%!important;bottom:calc(env(safe-area-inset-bottom) + 18px)!important;transform:translate3d(-50%,0,0)!important;z-index:30!important;width:min(320px,calc(100vw - 36px))!important;height:54px!important;min-height:54px!important;margin:0!important;padding:0 22px!important;border-radius:17px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:9px!important;background:rgba(25,42,60,.98)!important;border:1px solid rgba(105,180,246,.55)!important;color:#fff!important;font-size:16px!important;font-weight:700!important;letter-spacing:.1px!important;box-shadow:0 12px 30px rgba(0,0,0,.34),0 0 20px rgba(77,163,255,.12),inset 0 1px rgba(255,255,255,.12)!important}
 #shop-screen .shop-top .ctrl-btn:before,#profile-screen .profile-panel>.ctrl-btn:before,#rules-screen .rules-card>.ctrl-btn:before{content:"‹";font-size:27px!important;line-height:1;font-weight:400}
 #shop-screen .shop-top .ctrl-btn:hover,#profile-screen .profile-panel>.ctrl-btn:hover,#rules-screen .rules-card>.ctrl-btn:hover{background:rgba(35,57,78,1)!important}
 
-/* STABILITY — prevent visual jumps on different mobile viewports */
+/* STABILITY — keep the shell and home screen on fixed geometry */
 html{height:100%;overflow:hidden;overscroll-behavior:none}
 body{height:100%;min-height:100%;overflow:hidden;overscroll-behavior:none}
 #app{height:100svh!important;min-height:100svh!important;max-height:100svh!important;overflow:hidden;box-sizing:border-box}
@@ -81,9 +56,8 @@ body{height:100%;min-height:100%;overflow:hidden;overscroll-behavior:none}
 .screen.active{transform:none!important}
 .btn,.ctrl-btn{transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease!important}
 .btn:hover,.btn:active,.ctrl-btn:hover,.ctrl-btn:active{transform:none!important}
-.menu-card:before,.menu-card h1:after{transform:none}
 .game-result{height:100svh!important;min-height:100svh!important;transform:none!important}
 .game-result .result-card{transform:none!important}
 @supports (height:100lvh){#app{height:100svh!important;min-height:100svh!important;max-height:100svh!important}}
 
-@media (max-width:420px){#menu-screen{padding-left:14px;padding-right:14px}.menu-card{padding-top:4px!important}.menu-logo{width:72px!important;height:72px!important;font-size:39px!important;margin-bottom:15px!important}.menu-card h1{font-size:39px!important}.menu-note{font-size:13px!important;margin-bottom:15px!important}.menu-card #play-btn,.menu-card #online-play-btn{min-height:61px!important}.menu-card #shop-btn,.menu-card #profile-btn,.menu-card #rules-btn{min-height:74px!important}}
+@media (max-width:420px){#menu-screen{padding-left:14px;padding-right:14px}.menu-card{padding-top:4px!important;padding-bottom:22px!important}.menu-logo{width:72px!important;height:72px!important;font-size:39px!important;margin-bottom:15px!important}.menu-card h1{font-size:39px!important}.menu-note{font-size:13px!important;margin-bottom:15px!important}.menu-card #play-btn,.menu-card #online-play-btn{min-height:61px!important}.menu-card #shop-btn,.menu-card #profile-btn,.menu-card #rules-btn{min-height:74px!important}}
