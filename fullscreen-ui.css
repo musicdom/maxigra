@@ -1,0 +1,55 @@
+/* MAXИГРА — FULL-SCREEN APP SHELL
+   Visual/layout only. No JS, API, navigation, storage or handlers changed.
+*/
+
+/* The previous shell was visually constrained by a centered max-width + outer padding.
+   Make the app behave like a real MAX mini-app: the viewport is the app surface. */
+html,body{width:100%;height:100%;overflow:hidden}
+#app{width:100%;max-width:none;height:100dvh;min-height:100dvh;margin:0;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);position:relative;overflow:hidden}
+
+.screen{width:100%;height:100%;min-height:0;max-width:none;margin:0}
+
+/* Full-screen pages: no floating square/card around the whole application. */
+#menu-screen,#shop-screen,#profile-screen,#rules-screen,#online-search-screen{width:100%;max-width:none;padding-left:18px;padding-right:18px}
+
+/* HOME */
+#menu-screen{align-items:stretch;justify-content:flex-start;padding-top:24px;padding-bottom:28px;overflow:auto}
+.menu-card{width:100%;max-width:none;margin:0 auto;padding:8px 0 24px!important}
+.menu-card h1{max-width:none}
+.menu-note{max-width:560px!important}
+.menu-card #play-btn,.menu-card #online-play-btn{width:100%!important}
+.menu-card #shop-btn,.menu-card #profile-btn,.menu-card #rules-btn{width:calc(33.333% - 8px)!important}
+
+/* Keep the home content comfortably readable on tablets/desktop while the page itself remains full-screen. */
+@media (min-width:700px){
+  #menu-screen{padding-left:clamp(24px,5vw,72px);padding-right:clamp(24px,5vw,72px)}
+  .menu-card{max-width:760px}
+}
+
+/* SECONDARY PAGES — independent full-screen sections, not centered boxes. */
+#shop-screen,#profile-screen,#rules-screen{align-items:stretch;overflow:auto;padding-top:18px;padding-bottom:32px}
+.shop-card,.profile-panel,.rules-card{width:100%;max-width:none;margin:0;padding:0 0 28px!important}
+.shop-top{padding-top:0!important}
+
+@media (min-width:700px){
+  #shop-screen,#profile-screen,#rules-screen{padding-left:clamp(24px,5vw,72px);padding-right:clamp(24px,5vw,72px)}
+  .shop-card,.profile-panel,.rules-card{max-width:900px;margin:0 auto}
+}
+
+/* ONLINE SEARCH — still a focused state, but not a tiny app trapped in a box. */
+#online-search-screen{align-items:center;justify-content:center;padding-top:24px;padding-bottom:24px}
+.online-search-card{width:min(620px,100%);max-width:620px}
+
+/* GAME — use the whole viewport; only the board itself stays deliberately bounded. */
+#game-screen{padding-left:12px;padding-right:12px;padding-top:8px}
+.game-container{width:100%;max-width:none}
+.game-header,.bottom-controls{width:100%}
+
+/* Result overlay must remain viewport-wide. */
+.game-result{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important}
+
+/* Mobile: avoid the old 3-column mini-buttons becoming visually cramped. */
+@media (max-width:420px){
+  #menu-screen{padding-left:14px;padding-right:14px}
+  .menu-card #shop-btn,.menu-card #profile-btn,.menu-card #rules-btn{width:calc(33.333% - 7px)!important}
+}
