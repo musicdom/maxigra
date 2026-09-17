@@ -2,9 +2,15 @@ import crypto from 'node:crypto';
 import { auth, body, errorResponse, redis, reply } from '../_lib.js';
 
 const CATALOG = {
-  board_90s: 5, board_svo: 6, board_premium: 7,
-  board_light: 8, board_darkwood: 9, board_lightwood: 0,
-  master: 10, hints: 10
+  board_90s: { price: 79 },
+  board_svo: { price: 99 },
+  board_premium: { price: 199 },
+  board_premiumwood: { price: 0 },
+  board_light: { price: 49 },
+  board_darkwood: { price: 59 },
+  board_lightwood: { price: 0 },
+  master: { price: 149 },
+  hints: { price: 39 }
 };
 const ORDER_TTL = 86400;
 const RECEIVER = String(process.env.YOOMONEY_RECEIVER || '').trim();
@@ -35,7 +41,7 @@ export async function POST(request) {
     const user = auth(request);
     const payload = await body(request);
     const itemId = String(payload?.id || '');
-    const price = CATALOG[itemId];
+    const price = CATALOG[itemId]?.price;
     if (price == null) return reply({ ok: false, error: 'ITEM_NOT_FOUND' }, 404);
     if (price <= 0) return reply({ ok: false, error: 'ITEM_ALREADY_OWNED' }, 409);
     if (!RECEIVER) return reply({ ok: false, error: 'PAYMENT_NOT_CONFIGURED' }, 503);
@@ -62,4 +68,4 @@ export async function GET(request) {
     return reply({ ok: true, order: { id: order.id, itemId: order.itemId, price: order.price, currency: order.currency, status: order.status, createdAt: order.createdAt, paymentUrl: order.status === 'pending' ? paymentUrl(order.id, order.price) : '', paymentOptions: order.status === 'pending' ? paymentOptions(order.id, order.price) : { wallet: '', card: '' } } });
   } catch (error) { return errorResponse(error); }
 }
-export default { GET, POST };
+export default { POST, GET };
