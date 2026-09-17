@@ -25,27 +25,24 @@ html,body{width:100%;height:100%;overflow:hidden}
 
 .menu-logo{width:68px!important;height:68px!important;border-radius:21px!important;font-size:37px!important;margin-top:6px!important;margin-bottom:21px!important}
 
-/* HOME — polished main screen only */
+/* HOME — polished main screen */
 #menu-screen{position:relative;align-items:center;justify-content:center;padding-top:clamp(18px,5vh,52px);padding-bottom:clamp(20px,5vh,48px)!important;background:radial-gradient(520px 300px at 50% 8%,rgba(77,163,255,.10),transparent 72%)}
 #menu-screen:before{content:"";position:absolute;left:50%;top:5%;width:min(620px,92vw);height:260px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle,rgba(77,163,255,.08),transparent 68%);filter:blur(8px);pointer-events:none}
-.menu-card{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;width:min(620px,100%)!important;max-width:620px!important;margin:0 auto!important;padding:12px 0 18px!important;position:relative;z-index:1}
+.menu-card{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:8px;align-items:stretch;justify-content:center;width:min(620px,100%)!important;max-width:620px!important;margin:0 auto!important;padding:12px 0 18px!important;position:relative;z-index:1}
 .menu-card:before{right:4%;top:8%;width:118px;height:118px;opacity:.38;transform:rotate(9deg);box-shadow:0 22px 50px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.06)}
 .menu-card:after{right:9%;top:11%;opacity:.55}
-.menu-logo{width:78px!important;height:78px!important;border-radius:24px!important;font-size:42px!important;margin:0 auto 18px!important;box-shadow:0 18px 44px rgba(238,165,43,.22),0 0 0 7px rgba(255,200,87,.045)!important}
-.menu-card h1{position:relative;text-align:center!important;font-size:44px!important;line-height:.98!important;letter-spacing:-2.2px!important;font-weight:900!important;max-width:none!important;margin:0!important}
+.menu-logo{grid-column:1/-1;width:78px!important;height:78px!important;border-radius:24px!important;font-size:42px!important;margin:0 auto 18px!important;box-shadow:0 18px 44px rgba(238,165,43,.22),0 0 0 7px rgba(255,200,87,.045)!important}
+.menu-card h1{grid-column:1/-1;position:relative;text-align:center!important;font-size:44px!important;line-height:.98!important;letter-spacing:-2.2px!important;font-weight:900!important;max-width:none!important;margin:0!important}
 .menu-card h1:after{left:50%!important;top:-17px!important;transform:translateX(-50%)!important;font-size:8px!important;letter-spacing:3px!important}
 .menu-card h1:before{margin:0 0 9px!important;font-size:9px!important;letter-spacing:2.8px!important;color:var(--mx-muted)!important}
-.menu-note{max-width:470px!important;margin:14px auto 20px!important;text-align:center!important;font-size:14px!important;line-height:1.5!important;color:var(--mx-muted)!important}
-.menu-card .btn{margin-top:9px!important}
-.menu-card #play-btn,.menu-card #online-play-btn{width:100%!important;min-height:64px!important;border-radius:20px!important;padding:13px 18px!important}
+.menu-note{grid-column:1/-1;max-width:470px!important;margin:14px auto 20px!important;text-align:center!important;font-size:14px!important;line-height:1.5!important;color:var(--mx-muted)!important}
+.menu-card #play-btn,.menu-card #online-play-btn{grid-column:1/-1;width:100%!important;min-height:64px!important;border-radius:20px!important;padding:13px 18px!important;margin-top:9px!important}
 .menu-card #play-btn{font-size:16px!important;box-shadow:0 16px 36px rgba(239,166,48,.18),inset 0 1px rgba(255,255,255,.55)!important}
 .menu-card #online-play-btn{font-size:14px!important}
-
-/* Restore original compact secondary buttons */
-.menu-card #shop-btn,.menu-card #profile-btn,.menu-card #rules-btn{display:inline-flex!important;vertical-align:top;width:calc(33.333% - 7px)!important;min-height:86px!important;margin:10px 10px 0 0!important;padding:12px 6px!important;flex-direction:column!important;justify-content:center!important;gap:8px!important;border-radius:19px!important;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025))!important;border:1px solid var(--mx-line)!important;color:var(--mx-text)!important;font-size:10px!important;box-shadow:0 8px 25px rgba(0,0,0,.15)!important}
-.menu-card #rules-btn{margin-right:0!important}
+/* Shop / Profile / Rules — original 3-column placement */
+.menu-card #shop-btn,.menu-card #profile-btn,.menu-card #rules-btn{grid-column:auto;display:inline-flex!important;vertical-align:top;width:100%!important;min-width:0;min-height:86px!important;margin:10px 0 0!important;padding:12px 6px!important;flex-direction:column!important;justify-content:center!important;gap:8px!important;border-radius:19px!important;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025))!important;border:1px solid var(--mx-line)!important;color:var(--mx-text)!important;font-size:10px!important;box-shadow:0 8px 25px rgba(0,0,0,.15)!important}
 .menu-card #shop-btn:before{content:"▦";font-size:23px;color:var(--mx-gold)}
 .menu-card #profile-btn:before{content:"◉";font-size:20px;color:var(--mx-blue)}
 .menu-card #rules-btn:before{content:"?";font-size:21px;font-weight:900;color:var(--mx-green)}
 
-@media (max-width:420px){#menu-screen{padding-left:14px;padding-right:14px}.menu-card{padding-top:4px!important}.menu-logo{width:72px!important;height:72px!important;font-size:39px!important;margin-bottom:15px!important}.menu-card h1{font-size:39px!important}.menu-note{font-size:13px!important;margin-bottom:15px!important}.menu-card #play-btn,.menu-card #online-play-btn{min-height:61px!important}.menu-card #shop-btn,.menu-card #profile-btn,.menu-card #rules-btn{min-height:86px!important;margin-right:6px!important}.menu-card #rules-btn{margin-right:0!important}}
+@media (max-width:420px){#menu-screen{padding-left:14px;padding-right:14px}.menu-card{padding-top:4px!important}.menu-logo{width:72px!important;height:72px!important;font-size:39px!important;margin-bottom:15px!important}.menu-card h1{font-size:39px!important}.menu-note{font-size:13px!important;margin-bottom:15px!important}.menu-card #play-btn,.menu-card #online-play-btn{min-height:61px!important}.menu-card #shop-btn,.menu-card #profile-btn,.menu-card #rules-btn{min-height:74px!important}}
