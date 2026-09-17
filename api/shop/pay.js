@@ -1,0 +1,74 @@
+import { redis, reply } from '../_lib.js';
+
+const RECEIVER = String(process.env.YOOMONEY_RECEIVER || '').trim();
+const orderKey = id => `checkers:shop:order:${id}`;
+
+function esc(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function page({ order, error = '' }) {
+  if (error) {
+    return `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Максигра — оплата</title><style>body{margin:0;background:#f5faff;color:#172536;font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:grid;place-items:center;min-height:100vh}.box{width:min(420px,calc(100% - 32px));box-sizing:border-box;background:#fff;border:1px solid #e5f3ff;border-radius:24px;padding:28px;box-shadow:0 16px 50px rgba(23,37,54,.08)}h1{font-size:22px;margin:0 0 10px}p{line-height:1.5;opacity:.72;margin:0}</style></head><body><main class="box"><h1>Оплата недоступна</h1><p>${esc(error)}</p></main></body></html>`;
+  }
+
+  const amount = Number(order.price).toFixed(2);
+  const action = 'https://yoomoney.ru/quickpay/confirm';
+  const label = esc(order.id);
+  const receiver = esc(RECEIVER);
+
+  return `<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Оплата — Максигра</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#f5faff;color:#172536;font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:24px 16px;display:flex;align-items:center;justify-content:center}.box{width:min(430px,100%);background:#fff;border:1px solid #e5f3ff;border-radius:24px;padding:26px;box-shadow:0 18px 60px rgba(23,37,54,.09)}.brand{font-size:13px;font-weight:700;letter-spacing:.08em;color:#318bea;text-transform:uppercase;margin-bottom:8px}.title{font-size:26px;font-weight:750;margin:0 0 5px}.order{font-size:13px;opacity:.52;margin-bottom:24px;word-break:break-all}.amount{display:flex;align-items:baseline;justify-content:space-between;padding:16px 0;border-top:1px solid #edf5fb;border-bottom:1px solid #edf5fb;margin-bottom:20px}.amount span{opacity:.65}.amount b{font-size:25px}.methods{display:grid;gap:10px;margin-bottom:20px}.method{display:flex;align-items:center;gap:12px;border:1px solid #dcecf8;border-radius:16px;padding:14px;cursor:pointer}.method:has(input:checked){border-color:#318bea;background:#f5faff}.method input{width:18px;height:18px;accent-color:#318bea}.method strong{display:block;font-size:16px}.method small{display:block;opacity:.6;margin-top:2px}.pay{width:100%;border:0;border-radius:15px;background:#318bea;color:#fff;font-size:16px;font-weight:700;padding:15px;cursor:pointer}.pay:active{opacity:.9}.note{text-align:center;font-size:12px;line-height:1.45;opacity:.52;margin:14px 4px 0}
+</style>
+</head>
+<body>
+<main class="box">
+<div class="brand">МАКСИГРА</div>
+<h1 class="title">Оплата покупки</h1>
+<div class="order">Заказ ${label}</div>
+<div class="amount"><span>К оплате</span><b>${amount} ₽</b></div>
+<form method="POST" action="${action}">
+<input type="hidden" name="receiver" value="${receiver}">
+<input type="hidden" name="quickpay-form" value="button">
+<input type="hidden" name="sum" value="${amount}">
+<input type="hidden" name="label" value="${label}">
+<div class="methods">
+<label class="method"><input type="radio" name="paymentType" value="PC" checked><span><strong>Кошелёк ЮMoney</strong><small>Оплата со счёта ЮMoney</small></span></label>
+<label class="method"><input type="radio" name="paymentType" value="AC"><span><strong>Банковская карта</strong><small>Оплата с банковской карты</small></span></label>
+</div>
+<button class="pay" type="submit">Перейти к оплате</button>
+</form>
+<p class="note">После успешной оплаты ЮMoney отправит уведомление в Максигру. Предмет будет выдан автоматически только после подтверждения платежа.</p>
+</main>
+</body>
+</html>`;
+}
+
+export async function GET(request) {
+  try {
+    if (!RECEIVER) return new Response(page({ error: 'Платёжная система пока не настроена.' }), { status: 503, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+    const url = new URL(request.url);
+    const orderId = String(url.searchParams.get('id') || '');
+    if (!/^mx_[a-f0-9]{32}$/.test(orderId)) return new Response(page({ error: 'Некорректный номер заказа.' }), { status: 400, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+    const raw = await redis('GET', [orderKey(orderId)]);
+    if (!raw) return new Response(page({ error: 'Заказ не найден или срок его оплаты истёк.' }), { status: 404, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+    const order = JSON.parse(raw);
+    if (order.status !== 'pending' || Number(order.price) <= 0) return new Response(page({ error: 'Этот заказ уже обработан.' }), { status: 409, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+    return new Response(page({ order }), { status: 200, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+  } catch (error) {
+    return reply({ ok: false, error: 'PAYMENT_PAGE_ERROR' }, 500);
+  }
+}
+
+export default { GET };
