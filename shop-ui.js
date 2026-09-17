@@ -5,7 +5,6 @@ function errorText(e){if(e?.message==='PAYMENT_NOT_CONFIGURED')return'Оплат
 function openPayment(url){if(!url)return false;try{const opened=window.open(url,'_blank','noopener,noreferrer');if(opened)return true}catch{}try{location.href=url;return true}catch{return false}}
 function postPayment(data){const form=document.createElement('form');form.method='POST';form.action='https://yoomoney.ru/quickpay/confirm';form.target='_blank';form.style.display='none';Object.entries(data||{}).forEach(([name,value])=>{const input=document.createElement('input');input.type='hidden';input.name=name;input.value=String(value??'');form.appendChild(input)});document.body.appendChild(form);form.submit();setTimeout(()=>form.remove(),1000);return true}
 function payOrderUrl(url){if(!url)return false;try{const u=new URL(url);const data={};u.searchParams.forEach((v,k)=>data[k]=v);return postPayment(data)}catch{return openPayment(url)}}
-function choosePayment(order){const options=order?.paymentOptions||{};const wallet=options.wallet||order?.paymentUrl;const card=options.card;if(!wallet&&!card)return false;const overlay=document.createElement('div');overlay.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px;';const box=document.createElement('div');box.style.cssText='width:min(360px,100%);background:#fff;border-radius:18px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.25);font-family:Inter,Arial,sans-serif;';box.innerHTML=`<div style="font-size:19px;font-weight:700;margin-bottom:8px">Способ оплаты</div><div style="font-size:14px;line-height:1.45;opacity:.72;margin-bottom:16px">Заказ ${esc(order.id)} на ${esc(order.price)} ₽</div><div style="display:grid;gap:10px"><button data-pay="wallet" style="border:0;border-radius:12px;padding:13px 14px;font-size:15px;font-weight:600;cursor:pointer">🟣 Кошелёк ЮMoney</button><button data-pay="card" style="border:0;border-radius:12px;padding:13px 14px;font-size:15px;font-weight:600;cursor:pointer">💳 Банковская карта</button><button data-pay="cancel" style="border:0;background:transparent;padding:10px;font-size:14px;cursor:pointer;opacity:.65">Отмена</button></div>`;overlay.appendChild(box);document.body.appendChild(overlay);const close=()=>overlay.remove();box.querySelector('[data-pay="wallet"]').onclick=()=>{close();payOrderUrl(wallet)};box.querySelector('[data-pay="card"]').onclick=()=>{close();payOrderUrl(card)};box.querySelector('[data-pay="cancel"]').onclick=close;overlay.addEventListener('click',e=>{if(e.target===overlay)close()});return true}
 function render(){
  const box=document.getElementById('shop-content');const shop=window.CheckersShop;if(!box||!shop)return;
  const s=shop.state||{},c=shop.catalog||{};const boards=(shop.boardIds||[]).filter(id=>c[id]);const extras=Object.entries(c).filter(([id])=>!boards.includes(id));
@@ -18,7 +17,11 @@ function render(){
     if(boards.includes(id))await shop.selectBoard(id);else if(id==='gold')await shop.selectPieces(id);else if(id==='master')shop.setAI(4);
    }else{
     const order=await shop.buy(id);
-    if(order?.paymentOptions||order?.paymentUrl){choosePayment(order);showNotice(`Заказ ${order.id} создан. После оплаты предмет будет выдан автоматически.`)}
+    if(order?.paymentUrl||order?.paymentOptions?.wallet){
+      const paymentUrl=order.paymentUrl||order.paymentOptions.wallet;
+      showNotice(`Заказ ${order.id} создан. Открываем оплату…`);
+      payOrderUrl(paymentUrl);
+    }
    }
    render();
   }catch(e){btn.disabled=false;showNotice(errorText(e))}
