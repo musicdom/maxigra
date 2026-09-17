@@ -82,7 +82,10 @@ export async function POST(request) {
 
   if (String(order.currency) !== 'RUB' || Number(order.price) <= 0) return reply({ ok: false, error: 'ORDER_INVALID' }, 400);
   if (order.status === 'paid') return reply({ ok: true, status: 'paid' });
-  if (Number(amount) + 0.000001 < Number(order.price)) return reply({ ok: false, error: 'PAYMENT_AMOUNT_TOO_LOW' }, 400);
+  // YooMoney can deduct a commission from the credited amount. `amount` is what
+  // reaches the wallet, while `withdraw_amount` is what the payer actually pays.
+  // The order must therefore be checked against withdraw_amount, not amount.
+  if (Number(withdrawAmount) + 0.000001 < Number(order.price)) return reply({ ok: false, error: 'PAYMENT_AMOUNT_TOO_LOW' }, 400);
 
   const lock = await redis('SET', [lockKey(operationId), '1', 'NX', 'EX', '120']);
   if (lock !== 'OK') return reply({ ok: true, status: 'processing' });
