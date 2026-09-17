@@ -2,8 +2,9 @@ import crypto from 'node:crypto';
 import { auth, body, errorResponse, redis, reply } from '../_lib.js';
 
 const CATALOG = {
-  board_90s: 79, board_svo: 99, board_premium: 199, board_light: 49,
-  board_darkwood: 59, board_lightwood: 0, master: 149, hints: 39
+  board_90s: 5, board_svo: 6, board_premium: 7,
+  board_light: 8, board_darkwood: 9, board_lightwood: 0,
+  master: 10, hints: 10
 };
 const ORDER_TTL = 86400;
 const RECEIVER = String(process.env.YOOMONEY_RECEIVER || '').trim();
