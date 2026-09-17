@@ -50,6 +50,9 @@ export async function GET(request) {
     const raw = await redis('GET', [orderKey(id)]);
     if (!raw) return reply({ ok:false, error:'ORDER_NOT_FOUND' }, 404);
     const order = JSON.parse(raw);
+    if (order.status === 'paid') {
+      await reconcile(String(order.userId));
+    }
     return reply({ ok:true, status:String(order.status||'pending'), itemId:String(order.itemId||''), paidAt:order.paidAt||null });
   } catch { return reply({ ok:false, error:'PAYMENT_STATUS_ERROR' }, 500); }
 }
