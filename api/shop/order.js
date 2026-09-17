@@ -2,15 +2,15 @@ import crypto from 'node:crypto';
 import { auth, body, errorResponse, redis, reply } from '../_lib.js';
 
 const CATALOG = {
-  board_90s: { price: 79 },
-  board_svo: { price: 99 },
-  board_premium: { price: 199 },
+  board_90s: { price: 5 },
+  board_svo: { price: 6 },
+  board_premium: { price: 10 },
   board_premiumwood: { price: 0 },
-  board_light: { price: 49 },
-  board_darkwood: { price: 59 },
+  board_light: { price: 7 },
+  board_darkwood: { price: 8 },
   board_lightwood: { price: 0 },
-  master: { price: 149 },
-  hints: { price: 39 }
+  master: { price: 9 },
+  hints: { price: 5 }
 };
 const ORDER_TTL = 86400;
 const RECEIVER = String(process.env.YOOMONEY_RECEIVER || '').trim();
