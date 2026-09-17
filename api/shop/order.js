@@ -7,22 +7,14 @@ const CATALOG = {
 };
 const ORDER_TTL = 86400;
 const RECEIVER = String(process.env.YOOMONEY_RECEIVER || '').trim();
+const PAYMENT_PAGE = String(process.env.YOOMONEY_PAYMENT_PAGE_URL || 'https://maxigra.vercel.app/api/shop/pay').trim();
 const orderKey = id => `checkers:shop:order:${id}`;
 const userOrdersKey = id => `checkers:shop:orders:user:${id}`;
 const inventoryKey = id => `checkers:shop:user:${id}`;
 
-// Let YooMoney choose the available payment method. Forcing PC/AC can
-// produce an unavailable-transfer page when that method is restricted.
 function paymentUrl(orderId, price) {
   if (!RECEIVER || price <= 0) return '';
-  const params = new URLSearchParams({
-    receiver: RECEIVER,
-    'quickpay-form': 'button',
-    targets: `MaxИгра заказ ${orderId}`,
-    sum: price.toFixed(2),
-    label: orderId
-  });
-  return `https://yoomoney.ru/quickpay/confirm?${params.toString()}`;
+  return `${PAYMENT_PAGE}?id=${encodeURIComponent(orderId)}`;
 }
 function paymentOptions(orderId, price) {
   const url = paymentUrl(orderId, price);
