@@ -3,13 +3,11 @@
 function esc(v){return String(v??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]))}
 function errorText(e){if(e?.message==='PAYMENT_NOT_CONFIGURED')return'Оплата пока не настроена.';if(e?.message==='PAYMENT_REQUIRED')return'Покупка доступна после подтверждения оплаты.';if(e?.message==='MAX_INIT_DATA_REQUIRED')return'Откройте игру внутри MAX.';if(e?.message==='ITEM_NOT_OWNED')return'Сначала приобретите эту доску.';return'Не удалось выполнить действие. Попробуйте ещё раз.'}
 function openPayment(url){if(!url)return false;try{const opened=window.open(url,'_blank','noopener,noreferrer');if(opened)return true}catch{}try{location.href=url;return true}catch{return false}}
-function postPayment(data){const form=document.createElement('form');form.method='POST';form.action='https://yoomoney.ru/quickpay/confirm';form.target='_blank';form.style.display='none';Object.entries(data||{}).forEach(([name,value])=>{const input=document.createElement('input');input.type='hidden';input.name=name;input.value=String(value??'');form.appendChild(input)});document.body.appendChild(form);form.submit();setTimeout(()=>form.remove(),1000);return true}
-function payOrderUrl(url){if(!url)return false;try{const u=new URL(url);const data={};u.searchParams.forEach((v,k)=>data[k]=v);return postPayment(data)}catch{return openPayment(url)}}
 function render(){
  const box=document.getElementById('shop-content');const shop=window.CheckersShop;if(!box||!shop)return;
  const s=shop.state||{},c=shop.catalog||{};const boards=(shop.boardIds||[]).filter(id=>c[id]);const extras=Object.entries(c).filter(([id])=>!boards.includes(id));
  const card=(id,x)=>{const isFree=x.price===0,isOwned=shop.owned(id),selected=s.selectedBoard===id;return `<article class="shop-item board-shop-item ${isOwned?'is-owned':''} ${selected?'is-selected':''}"><div class="shop-board-preview"><img src="${esc(x.image)}" alt="${esc(x.title)}" loading="lazy"></div><div class="shop-item-main"><span class="shop-tag">${esc(x.tag)}</span><h3>${esc(x.title)}</h3><p>${esc(x.desc)}</p><button class="shop-buy btn ${isOwned?'btn--secondary':'btn--primary'}" data-shop-id="${esc(id)}">${isFree?(isOwned?(selected?'✓ Выбрано':'Выбрать'):'Бесплатно'):isOwned?(selected?'✓ Выбрано':'Выбрать'):x.price+' ₽'}</button></div></article>`};
- box.innerHTML=`<div class="shop-balance"><span>Ваши предметы</span><b>${s.owned?.length||0}</b></div><h3 class="shop-section-title">Доски</h3><div class="shop-grid shop-board-grid">${boards.map(id=>card(id,c[id])).join('')}</div>${extras.length?`<h3 class="shop-section-title">Дополнительно</h3><div class="shop-grid">${extras.map(([id,x])=>{const isOwned=shop.owned(id),selected=s.selectedPieces===id;return `<article class="shop-item ${isOwned?'is-owned':''} ${selected?'is-selected':''}"><div class="shop-item-icon">${x.icon||'🎁'}</div><div class="shop-item-main"><span class="shop-tag">${esc(x.tag)}</span><h3>${esc(x.title)}</h3><p>${esc(x.desc)}</p></div><button class="shop-buy btn ${isOwned?'btn--secondary':'btn--primary'}" data-shop-id="${esc(id)}">${id==='hints'?((s.hints||0)+' подсказок'):isOwned?(selected?'✓ Выбрано':'Использовать'):x.price+' ₽'}</button></article>`}).join('')}</div>`:''}`;
+ box.innerHTML=`<div class="shop-balance"><span>Ваши предметы</span><b>${s.owned?.length||0}</b></div><h3 class="shop-section-title">Доски</h3><div class="shop-grid shop-board-grid">${boards.map(id=>card(id,c[id])).join('')}</div>${extras.length?`<h3 class="shop-section-title">Дополнительно</h3><div class="shop-grid">${extras.map(([id,x])=>{const isOwned=shop.owned(id),selected=s.selectedPieces===id;return `<article class="shop-item ${isOwned?'is-owned':''} ${selected?'is-selected':''}"><div class="shop-item-icon">${x.icon||'🎁'}</div><div class="shop-item-main"><span class="shop-tag">${esc(x.tag)}</span><h3>${esc(x.title)}</h3><p>${esc(x.desc)}</p></div><button class="shop-buy btn ${isOwned?'btn--secondary':'btn--primary'}" data-shop-id="${esc(id)}">${id==='hints'?((s.hints||0)+' подсказок'):isOwned?(selected?'✓ Выбрано':'Использовать'):x.price+' ₽'}</button></div>`}).join('')}</div>`:''}`;
  box.querySelectorAll('[data-shop-id]').forEach(btn=>btn.addEventListener('click',async()=>{
   const id=btn.dataset.shopId;btn.disabled=true;
   try{
@@ -20,7 +18,7 @@ function render(){
     if(order?.paymentUrl||order?.paymentOptions?.wallet){
       const paymentUrl=order.paymentUrl||order.paymentOptions.wallet;
       showNotice(`Заказ ${order.id} создан. Открываем оплату…`);
-      payOrderUrl(paymentUrl);
+      openPayment(paymentUrl);
     }
    }
    render();
