@@ -53,7 +53,7 @@ async function sync(){
  if(readyPromise)return readyPromise;
  readyPromise=(async()=>{
   const init=await waitForInitData();if(!init)throw new Error('MAX_INIT_DATA_REQUIRED');
-  try{await fetch(window.maxigraApiUrl('/api/shop/recover'),{method:'POST',headers:{'x-max-init-data':init},cache:'no-store'})}catch{}
+  try{await fetch(window.maxigraApiUrl('/api/shop/status'),{method:'POST',headers:{'x-max-init-data':init},cache:'no-store'})}catch{}
   const r=await fetch(window.maxigraApiUrl('/api/shop'),{headers:{'x-max-init-data':init},cache:'no-store'});
   const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);
   return mergeServerState(d.state||{});
