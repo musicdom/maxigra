@@ -7,14 +7,12 @@ const catalog={
   board_90s:{title:'90-е',price:5,image:'assets/boards/IMG_4486.jpeg',tag:'ДОСКА',desc:'Ретро-стиль с атмосферой классических 90-х.'},
   board_svo:{title:'СВО',price:6,image:'assets/boards/IMG_4487.jpeg',tag:'ДОСКА',desc:'Тактическое оформление игровой доски.'},
   board_premium:{title:'Премиум',price:10,image:'assets/boards/IMG_4488.jpeg',tag:'ДОСКА',desc:'Премиальная эксклюзивная тема.'},
-  board_premiumwood:{title:'Премиальная дерево',price:0,image:'assets/boards/IMG_4565.jpeg',tag:'ДОСКА',desc:'Премиальная деревянная игровая доска.'},
-  board_light:{title:'Светлый',price:7,image:'assets/boards/IMG_4489.jpeg',tag:'ДОСКА',desc:'Чистая светлая классика.'},
   board_darkwood:{title:'Тёмное дерево',price:8,image:'assets/boards/IMG_4490.jpeg',tag:'ДОСКА',desc:'Глубокая деревянная фактура.'},
   board_lightwood:{title:'Светлое дерево',price:0,image:'assets/boards/IMG_4491.jpeg',tag:'ОСНОВНАЯ ДОСКА',desc:'Светлое натуральное дерево — основная доска игры для всех игроков.'},
   master:{title:'Гроссмейстер',price:9,icon:'🏆',tag:'ИИ',desc:'Открывает максимальный уровень компьютера.'},
   hints:{title:'50 подсказок',price:5,icon:'💡',tag:'ПАКЕТ',desc:'50 подсказок для сложных позиций.'}
 };
-const boardIds=['board_90s','board_svo','board_premium','board_premiumwood','board_light','board_darkwood','board_lightwood'];
+const boardIds=['board_90s','board_svo','board_premium','board_darkwood','board_lightwood'];
 let local={};try{local=JSON.parse(localStorage.getItem(KEY)||'null')||{}}catch(e){}
 const state=local;
 state.owned=Array.isArray(state.owned)?state.owned:[];
