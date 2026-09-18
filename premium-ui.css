@@ -105,7 +105,7 @@ body:before{
 .turn-box{min-width:128px;padding:7px 13px!important;border:1px solid var(--mx-line)!important;border-radius:999px!important;background:rgba(16,24,35,.78)!important;box-shadow:0 5px 18px rgba(0,0,0,.16)!important}
 .turn-box strong{color:var(--mx-text)!important}.turn-box span{color:var(--mx-muted)!important}.score{color:var(--mx-text)!important}.score span:last-child{color:var(--mx-dim)!important}
 .game-container{gap:7px!important}.player-label{color:var(--mx-muted)!important}.player-label span:first-child{color:var(--mx-text)!important}
-.board-wrapper{width:min(88vw,440px)!important;height:min(88vw,440px)!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:22px!important;background:#070b10!important;box-shadow:0 28px 75px rgba(0,0,0,.62),0 0 45px rgba(60,139,220,.08)!important;padding:0!important}.board{padding:11%!important}.player-label{width:min(88vw,440px)!important}.piece{width:86%!important;height:86%!important;max-width:86%!important;max-height:86%!important;margin:auto!important;left:0!important;top:0!important;transform:scale(.86)!important;flex:0 0 auto!important}.cell-light,.cell-dark{background:transparent!important}
+.board-wrapper{width:min(88vw,440px)!important;height:min(88vw,440px)!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:22px!important;background:#070b10!important;box-shadow:0 28px 75px rgba(0,0,0,.62),0 0 45px rgba(60,139,220,.08)!important;padding:0!important}.board{padding:10%!important}.player-label{width:min(88vw,440px)!important}.piece{width:86%!important;height:86%!important;max-width:86%!important;max-height:86%!important;margin:auto!important;left:0!important;top:0!important;transform:scale(.86)!important;flex:0 0 auto!important}.cell-light,.cell-dark{background:transparent!important}
 .board{border-radius:17px;overflow:hidden}
 .cell-light,.cell-dark{background:transparent!important}
 .cell.possible:after{width:22%!important;height:22%!important;background:rgba(255,200,87,.88)!important;box-shadow:0 0 0 4px rgba(255,200,87,.12),0 0 17px rgba(255,200,87,.3)!important}
@@ -114,7 +114,7 @@ body:before{
 .cell.last-move{box-shadow:inset 0 0 0 2px rgba(255,255,255,.62)!important}
 .piece{box-shadow:inset 0 3px 5px rgba(255,255,255,.30),0 8px 17px rgba(0,0,0,.48)!important}
 .piece-white{background:radial-gradient(circle at 30% 22%,#fff,#e9f1f6 46%,#9fb4c3)!important;border-color:#fff!important;color:#244258!important}
-.piece-black{background:radial-gradient(circle at 30% 22%,#657e92,#172633 58%,#08121b)!important;border-color:#4b6478!important;color:#ffd45d!important}
+.piece-black{background:radial-gradient(circle at 28% 20%,#8ea8bb,#263d4e 48%,#071019 78%,#02070b)!important;border:2px solid #8aa7ba!important;color:#ffe07a!important;box-shadow:inset 0 3px 5px rgba(255,255,255,.34),0 0 0 1px rgba(120,170,205,.28),0 8px 19px rgba(0,0,0,.62)!important}
 .piece-king{box-shadow:inset 0 3px 5px rgba(255,255,255,.3),0 0 0 3px rgba(255,200,87,.32),0 8px 18px rgba(0,0,0,.55)!important}
 .bottom-controls{gap:11px!important;padding:9px 0 2px!important}.bottom-controls .ctrl-btn{background:rgba(15,23,34,.88)!important}
 
