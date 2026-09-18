@@ -48,7 +48,7 @@ async function grant(order) {
   state.ai = Math.max(1, Math.min(4, Number(state.ai) || 1));
   state.hints = Math.max(0, Number(state.hints) || 0);
 
-  await redis('SET', [inventoryKey(order.userId), JSON.stringify(state), 'EX', '2592000']);
+  await redis('SET', [inventoryKey(order.userId), JSON.stringify(state)]);
   return state;
 }
 
@@ -91,7 +91,7 @@ export async function POST(request) {
   if (lock !== 'OK') return reply({ ok: true, status: 'processing' });
 
   try {
-    const duplicate = await redis('SET', [operationKey(operationId), orderId, 'NX', 'EX', '2592000']);
+    const duplicate = await redis('SET', [operationKey(operationId), orderId, 'NX']);
     if (duplicate !== 'OK') {
       const currentRaw = await redis('GET', [orderKey(orderId)]);
       const current = currentRaw ? JSON.parse(currentRaw) : null;
@@ -116,8 +116,8 @@ export async function POST(request) {
         withdrawAmount,
         paidAt: Date.now()
       };
-      await redis('SET', [orderKey(orderId), JSON.stringify(paidOrder), 'EX', '2592000']);
-      await redis('SET', [grantKey(orderId), 'done', 'EX', '2592000']);
+      await redis('SET', [orderKey(orderId), JSON.stringify(paidOrder)]);
+      await redis('SET', [grantKey(orderId), 'done']);
       return reply({ ok: true, status: 'paid' });
     } catch (error) {
       await redis('DEL', [grantKey(orderId)]).catch(() => {});
