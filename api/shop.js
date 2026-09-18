@@ -4,22 +4,19 @@ const CATALOG = {
   board_90s: { price: 5 },
   board_svo: { price: 6 },
   board_premium: { price: 10 },
-  board_premiumwood: { price: 0 },
-  board_light: { price: 7 },
   board_darkwood: { price: 8 },
-  board_lightwood: { price: 0 },
   master: { price: 9 },
   hints: { price: 5 }
 };
-const BOARD_IDS = ['board_90s','board_svo','board_premium','board_premiumwood','board_light','board_darkwood','board_lightwood'];
-const DEFAULT_BOARD = 'board_lightwood';
+const BOARD_IDS = ['board_90s','board_svo','board_premium','board_darkwood'];
+const DEFAULT_BOARD = 'board_90s';
 
 function inventoryKey(id) { return `checkers:shop:user:${id}`; }
 function coinsKey(id) { return `checkers:coins:${id}`; }
 
 function normalizeState(state, coinsRaw) {
   const owned = Array.isArray(state.owned) ? state.owned.filter(itemId => CATALOG[itemId]) : [];
-  if (!owned.includes(DEFAULT_BOARD)) owned.push(DEFAULT_BOARD);
+  for (const boardId of BOARD_IDS) if (!owned.includes(boardId)) owned.push(boardId);
   return {
     owned,
     selectedBoard: BOARD_IDS.includes(state.selectedBoard) && owned.includes(state.selectedBoard) ? state.selectedBoard : DEFAULT_BOARD,
