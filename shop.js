@@ -2,21 +2,20 @@
 (()=>{
 'use strict';
 const KEY='russian-checkers-account-v2';
-const DEFAULT_BOARD='board_lightwood';
+const DEFAULT_BOARD='board_90s';
 const catalog={
-  board_90s:{title:'90-е',price:5,image:'assets/boards/IMG_4486.jpeg',tag:'ДОСКА',desc:'Ретро-стиль с атмосферой классических 90-х.'},
-  board_svo:{title:'СВО',price:6,image:'assets/boards/IMG_4487.jpeg',tag:'ДОСКА',desc:'Тактическое оформление игровой доски.'},
+  board_90s:{title:'СВО',price:5,image:'assets/boards/IMG_4486.jpeg',tag:'ДОСКА',desc:'Ретро-стиль с атмосферой классических 90-х.'},
+  board_svo:{title:'90-е',price:6,image:'assets/boards/IMG_4487.jpeg',tag:'ДОСКА',desc:'Тактическое оформление игровой доски.'},
   board_premium:{title:'Премиум',price:10,image:'assets/boards/IMG_4488.jpeg',tag:'ДОСКА',desc:'Премиальная эксклюзивная тема.'},
   board_darkwood:{title:'Тёмное дерево',price:8,image:'assets/boards/IMG_4490.jpeg',tag:'ДОСКА',desc:'Глубокая деревянная фактура.'},
-  board_lightwood:{title:'Светлое дерево',price:0,image:'assets/boards/IMG_4491.jpeg',tag:'ОСНОВНАЯ ДОСКА',desc:'Светлое натуральное дерево — основная доска игры для всех игроков.'},
   master:{title:'Гроссмейстер',price:9,icon:'🏆',tag:'ИИ',desc:'Открывает максимальный уровень компьютера.'},
   hints:{title:'50 подсказок',price:5,icon:'💡',tag:'ПАКЕТ',desc:'50 подсказок для сложных позиций.'}
 };
-const boardIds=['board_90s','board_svo','board_premium','board_darkwood','board_lightwood'];
+const boardIds=['board_90s','board_svo','board_premium','board_darkwood'];
 let local={};try{local=JSON.parse(localStorage.getItem(KEY)||'null')||{}}catch(e){}
 const state=local;
 state.owned=Array.isArray(state.owned)?state.owned:[];
-if(!state.owned.includes(DEFAULT_BOARD))state.owned.push(DEFAULT_BOARD);
+for(const boardId of boardIds)if(!state.owned.includes(boardId))state.owned.push(boardId);
 state.selectedBoard=state.selectedBoard||DEFAULT_BOARD;
 state.selectedPieces=state.selectedPieces||'default';
 state.ai=Math.max(1,Math.min(4,Number(state.ai)||1));state.hints=Math.max(0,Number(state.hints)||0);state.games=Number(state.games)||0;state.wins=Number(state.wins)||0;state.losses=Number(state.losses)||0;state.draws=Number(state.draws)||0;state.coins=Math.max(0,Number(state.coins)||0);
@@ -38,7 +37,7 @@ function mergeServerState(serverState){
  const serverBoard=serverState?.selectedBoard;
  Object.assign(state,serverState||{});
  state.owned=Array.isArray(state.owned)?state.owned:[];
- if(!state.owned.includes(DEFAULT_BOARD))state.owned.push(DEFAULT_BOARD);
+ for(const boardId of boardIds)if(!state.owned.includes(boardId))state.owned.push(boardId);
  if(serverBoard&&serverBoard!==DEFAULT_BOARD&&state.owned.includes(serverBoard)) state.selectedBoard=serverBoard;
  else if(previousBoard&&state.owned.includes(previousBoard)) state.selectedBoard=previousBoard;
  else state.selectedBoard=DEFAULT_BOARD;
