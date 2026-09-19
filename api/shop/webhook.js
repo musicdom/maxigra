@@ -43,7 +43,7 @@ async function grant(order) {
   }
 
   state.owned = owned;
-  state.selectedBoard = state.selectedBoard || 'board_lightwood';
+  state.selectedBoard = state.selectedBoard || 'board_90s';
   state.selectedPieces = state.selectedPieces || 'default';
   state.ai = Math.max(1, Math.min(4, Number(state.ai) || 1));
   state.hints = Math.max(0, Number(state.hints) || 0);
