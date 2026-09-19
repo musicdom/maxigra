@@ -6,12 +6,10 @@ const DEFAULT_BOARD='board_90s';
 const catalog={
   board_90s:{title:'СВО',price:5,image:'assets/boards/IMG_4486.jpeg',tag:'ДОСКА',desc:'Ретро-стиль с атмосферой классических 90-х.'},
   board_svo:{title:'90-е',price:6,image:'assets/boards/IMG_4487.jpeg',tag:'ДОСКА',desc:'Тактическое оформление игровой доски.'},
-  board_premium:{title:'Премиум',price:10,image:'assets/boards/IMG_4488.jpeg',tag:'ДОСКА',desc:'Премиальная эксклюзивная тема.'},
-  board_darkwood:{title:'Тёмное дерево',price:8,image:'assets/boards/IMG_4490.jpeg',tag:'ДОСКА',desc:'Глубокая деревянная фактура.'},
   master:{title:'Гроссмейстер',price:9,icon:'🏆',tag:'ИИ',desc:'Открывает максимальный уровень компьютера.'},
   hints:{title:'50 подсказок',price:5,icon:'💡',tag:'ПАКЕТ',desc:'50 подсказок для сложных позиций.'}
 };
-const boardIds=['board_90s','board_svo','board_premium','board_darkwood'];
+const boardIds=['board_90s','board_svo'];
 let local={};try{local=JSON.parse(localStorage.getItem(KEY)||'null')||{}}catch(e){}
 const state=local;
 state.owned=Array.isArray(state.owned)?state.owned:[];
