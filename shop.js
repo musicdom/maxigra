@@ -6,10 +6,13 @@ const DEFAULT_BOARD='board_90s';
 const catalog={
   board_90s:{title:'СВО',price:5,image:'assets/boards/IMG_4486.jpeg',tag:'ДОСКА',desc:'Ретро-стиль с атмосферой классических 90-х.'},
   board_svo:{title:'90-е',price:6,image:'assets/boards/IMG_4487.jpeg',tag:'ДОСКА',desc:'Тактическое оформление игровой доски.'},
+  board_max:{title:'MAX',price:7,image:'assets/boards/IMG_4586.jpeg',tag:'ДОСКА',desc:'Фирменное оформление в стиле MAX.'},
+  board_orbita:{title:'ОРБИТА',price:7,image:'assets/boards/IMG_4587.jpeg',tag:'ДОСКА',desc:'Космическое оформление в стиле ОРБИТА.'},
+  board_original:{title:'Оригинал',price:7,image:'assets/boards/IMG_4589.jpeg',tag:'ДОСКА',desc:'Оригинальное оформление игры.'},
   master:{title:'Гроссмейстер',price:9,icon:'🏆',tag:'ИИ',desc:'Открывает максимальный уровень компьютера.'},
   hints:{title:'50 подсказок',price:5,icon:'💡',tag:'ПАКЕТ',desc:'50 подсказок для сложных позиций.'}
 };
-const boardIds=['board_90s','board_svo'];
+const boardIds=['board_90s','board_svo','board_max','board_orbita','board_original'];
 let local={};try{local=JSON.parse(localStorage.getItem(KEY)||'null')||{}}catch(e){}
 const state=local;
 state.owned=Array.isArray(state.owned)?state.owned:[];
