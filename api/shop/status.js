@@ -10,7 +10,7 @@ async function reconcile(userId) {
   let state = {};
   try { state = raw ? JSON.parse(raw) : {}; } catch {}
   state.owned = Array.isArray(state.owned) ? state.owned.filter(Boolean) : [];
-  state.selectedBoard = state.selectedBoard || 'board_90s';
+  state.selectedBoard = state.selectedBoard || 'board_original';
   state.selectedPieces = state.selectedPieces || 'default';
   state.ai = Math.max(1, Math.min(4, Number(state.ai) || 1));
   state.hints = Math.max(0, Number(state.hints) || 0);
@@ -35,7 +35,7 @@ async function reconcile(userId) {
     } catch {}
   }
 
-  if (!BOARD_IDS.has(state.selectedBoard) || !state.owned.includes(state.selectedBoard)) state.selectedBoard = 'board_90s';
+  if (!BOARD_IDS.has(state.selectedBoard) || !state.owned.includes(state.selectedBoard)) state.selectedBoard = 'board_original';
   if (changed || !raw) {
     await redis('SET', [inventoryKey(userId), JSON.stringify({owned:state.owned,selectedBoard:state.selectedBoard,selectedPieces:state.selectedPieces,ai:state.ai,hints:state.hints}),'EX','2592000']);
   }
