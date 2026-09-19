@@ -53,7 +53,7 @@ export async function POST(request){
     const state=await readInventory(id);const action=String(p?.action||'');
     if(action==='reset'){state.owned=['board_original'];state.selectedBoard='board_original';state.resetAt=Date.now();}
     else if(action==='grant'){const board=String(p?.boardId||'');if(!BOARD_IDS.includes(board))return reply({ok:false,error:'BOARD_NOT_FOUND'},404);if(!state.owned.includes(board))state.owned.push(board);}
-    else if(action==='revoke'){const board=String(p?.boardId||'');if(board==='board_original')return reply({ok:false,error:'ORIGINAL_CANNOT_BE_REMOVED'},400);state.owned=state.owned.filter(x=>x!==board);if(state.selectedBoard===board)state.selectedBoard='board_original';}
+    else if(action==='revoke'){const board=String(p?.boardId||'');if(board==='board_original')return reply({ok:false,error:'ORIGINAL_CANNOT_BE_REMOVED'},400);if(!BOARD_IDS.includes(board))return reply({ok:false,error:'BOARD_NOT_FOUND'},404);state.owned=state.owned.filter(x=>x!==board);if(state.selectedBoard===board)state.selectedBoard='board_original';state.resetAt=Date.now();}
     else return reply({ok:false,error:'BAD_ACTION'},400);
     await saveInventory(id,state);return reply({ok:true,userId:id,shop:state});
   }catch(error){return errorResponse(error);}
