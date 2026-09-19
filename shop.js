@@ -8,7 +8,7 @@ const catalog={
   board_svo:{title:'90-е',price:6,image:'assets/boards/IMG_4487.jpeg',tag:'ДОСКА',desc:'Тактическое оформление игровой доски.'},
   board_max:{title:'MAX',price:7,image:'assets/boards/IMG_4586.jpeg',tag:'ДОСКА',desc:'Фирменное оформление в стиле MAX.'},
   board_orbita:{title:'ОРБИТА',price:7,image:'assets/boards/IMG_4587.jpeg',tag:'ДОСКА',desc:'Космическое оформление в стиле ОРБИТА.'},
-  board_original:{title:'Оригинал',price:7,image:'assets/boards/IMG_4589.jpeg',tag:'ДОСКА',desc:'Оригинальное оформление игры.'},
+  board_original:{title:'Оригинал',price:0,image:'assets/boards/IMG_4589.jpeg',tag:'ДОСКА',desc:'Оригинальное оформление игры.'},
   master:{title:'Гроссмейстер',price:9,icon:'🏆',tag:'ИИ',desc:'Открывает максимальный уровень компьютера.'},
   hints:{title:'50 подсказок',price:5,icon:'💡',tag:'ПАКЕТ',desc:'50 подсказок для сложных позиций.'}
 };
@@ -57,7 +57,7 @@ async function sync(){
   return mergeServerState(d.state||{});
  })().finally(()=>{readyPromise=null});return readyPromise;
 }
-const owned=id=>id==='default'||id===DEFAULT_BOARD||state.owned.includes(id)||id==='premium'&&state.owned.includes('premium');
+const owned=id=>id==='default'||id===DEFAULT_BOARD||id==='board_original'||state.owned.includes(id)||id==='premium'&&state.owned.includes('premium');
 async function request(action,id){
  const init=await waitForInitData();if(!init)throw new Error('MAX_INIT_DATA_REQUIRED');
  const r=await fetch(window.maxigraApiUrl('/api/shop'),{method:'POST',headers:{'content-type':'application/json','x-max-init-data':init},body:JSON.stringify({action,id}),cache:'no-store'});
@@ -69,7 +69,7 @@ async function createOrder(id){
  const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);return d.order;
 }
 async function buy(id){if(!catalog[id]||owned(id)||id===DEFAULT_BOARD)return false;if(catalog[id].price===0)return request('purchase',id);return createOrder(id)}
-async function selectBoard(id){if(id===DEFAULT_BOARD){state.selectedBoard=DEFAULT_BOARD;save();return true}if(!owned(id))return false;return request('select',id)}
+async function selectBoard(id){if(id===DEFAULT_BOARD||id==='board_original'){state.selectedBoard=id;save();if(id==='board_original')try{await request('purchase',id)}catch{}return true}if(!owned(id))return false;return request('select',id)}
 async function selectPieces(id){if(!owned(id))return false;return request('select',id)}
 function setAI(n){return owned('master')&&((state.ai=Math.max(1,Math.min(4,Number(n)||1))),save(),true)}
 function getProfile(){return {...state,owned:[...state.owned]}}
