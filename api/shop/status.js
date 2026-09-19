@@ -3,15 +3,14 @@ import { auth, errorResponse, redis, reply } from '../_lib.js';
 const orderKey = id => `checkers:shop:order:${id}`;
 const userOrdersKey = id => `checkers:shop:orders:user:${id}`;
 const inventoryKey = id => `checkers:shop:user:${id}`;
-const BOARD_IDS = new Set(['board_90s','board_svo','board_premium','board_premiumwood','board_light','board_darkwood','board_lightwood']);
+const BOARD_IDS = new Set(['board_90s','board_svo','board_max','board_orbita','board_original']);
 
 async function reconcile(userId) {
   const raw = await redis('GET', [inventoryKey(userId)]);
   let state = {};
   try { state = raw ? JSON.parse(raw) : {}; } catch {}
   state.owned = Array.isArray(state.owned) ? state.owned.filter(Boolean) : [];
-  if (!state.owned.includes('board_lightwood')) state.owned.push('board_lightwood');
-  state.selectedBoard = state.selectedBoard || 'board_lightwood';
+  state.selectedBoard = state.selectedBoard || 'board_90s';
   state.selectedPieces = state.selectedPieces || 'default';
   state.ai = Math.max(1, Math.min(4, Number(state.ai) || 1));
   state.hints = Math.max(0, Number(state.hints) || 0);
@@ -36,7 +35,7 @@ async function reconcile(userId) {
     } catch {}
   }
 
-  if (!BOARD_IDS.has(state.selectedBoard) || !state.owned.includes(state.selectedBoard)) state.selectedBoard = 'board_lightwood';
+  if (!BOARD_IDS.has(state.selectedBoard) || !state.owned.includes(state.selectedBoard)) state.selectedBoard = 'board_90s';
   if (changed || !raw) {
     await redis('SET', [inventoryKey(userId), JSON.stringify({owned:state.owned,selectedBoard:state.selectedBoard,selectedPieces:state.selectedPieces,ai:state.ai,hints:state.hints}),'EX','2592000']);
   }
