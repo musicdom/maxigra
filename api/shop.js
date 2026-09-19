@@ -3,12 +3,10 @@ import { auth, body, errorResponse, redis, reply } from './_lib.js';
 const CATALOG = {
   board_90s: { price: 5 },
   board_svo: { price: 6 },
-  board_premium: { price: 10 },
-  board_darkwood: { price: 8 },
   master: { price: 9 },
   hints: { price: 5 }
 };
-const BOARD_IDS = ['board_90s','board_svo','board_premium','board_darkwood'];
+const BOARD_IDS = ['board_90s','board_svo'];
 const DEFAULT_BOARD = 'board_90s';
 
 function inventoryKey(id) { return `checkers:shop:user:${id}`; }
