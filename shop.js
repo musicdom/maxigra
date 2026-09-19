@@ -2,12 +2,12 @@
 (()=>{
 'use strict';
 const KEY='russian-checkers-account-v2';
-const DEFAULT_BOARD='board_90s';
+const DEFAULT_BOARD='board_original';
 const catalog={
-  board_90s:{title:'СВО',price:5,image:'assets/boards/IMG_4486.jpeg',tag:'ДОСКА',desc:'Ретро-стиль с атмосферой классических 90-х.'},
-  board_svo:{title:'90-е',price:6,image:'assets/boards/IMG_4487.jpeg',tag:'ДОСКА',desc:'Тактическое оформление игровой доски.'},
-  board_max:{title:'MAX',price:7,image:'assets/boards/IMG_4586.jpeg',tag:'ДОСКА',desc:'Фирменное оформление в стиле MAX.'},
-  board_orbita:{title:'ОРБИТА',price:7,image:'assets/boards/IMG_4587.jpeg',tag:'ДОСКА',desc:'Космическое оформление в стиле ОРБИТА.'},
+  board_90s:{title:'СВО',price:299,image:'assets/boards/IMG_4486.jpeg',tag:'ДОСКА',desc:'Ретро-стиль с атмосферой классических 90-х.'},
+  board_svo:{title:'90-е',price:299,image:'assets/boards/IMG_4487.jpeg',tag:'ДОСКА',desc:'Тактическое оформление игровой доски.'},
+  board_max:{title:'MAX',price:299,image:'assets/boards/IMG_4586.jpeg',tag:'ДОСКА',desc:'Фирменное оформление в стиле MAX.'},
+  board_orbita:{title:'ОРБИТА',price:299,image:'assets/boards/IMG_4587.jpeg',tag:'ДОСКА',desc:'Космическое оформление в стиле ОРБИТА.'},
   board_original:{title:'Оригинал',price:0,image:'assets/boards/IMG_4589.jpeg',tag:'ДОСКА',desc:'Оригинальное оформление игры.'},
   master:{title:'Гроссмейстер',price:9,icon:'🏆',tag:'ИИ',desc:'Открывает максимальный уровень компьютера.'},
   hints:{title:'50 подсказок',price:5,icon:'💡',tag:'ПАКЕТ',desc:'50 подсказок для сложных позиций.'}
@@ -70,9 +70,10 @@ async function createOrder(id){
 }
 async function buy(id){if(!catalog[id]||owned(id)||id===DEFAULT_BOARD)return false;if(catalog[id].price===0)return request('purchase',id);return createOrder(id)}
 async function selectBoard(id){if(id===DEFAULT_BOARD||id==='board_original'){state.selectedBoard=id;save();if(id==='board_original')try{await request('purchase',id)}catch{}return true}if(!owned(id))return false;return request('select',id)}
+async function resetForTest(){return request('reset-test','');}
 async function selectPieces(id){if(!owned(id))return false;return request('select',id)}
 function setAI(n){return owned('master')&&((state.ai=Math.max(1,Math.min(4,Number(n)||1))),save(),true)}
 function getProfile(){return {...state,owned:[...state.owned]}}
-window.CheckersShop={catalog,state,boardIds,save,owned,buy,selectBoard,selectPieces,setAI,getProfile,sync,getInitData,DEFAULT_BOARD};
+window.CheckersShop={catalog,state,boardIds,save,owned,buy,selectBoard,selectPieces,setAI,getProfile,sync,getInitData,resetForTest,DEFAULT_BOARD};
 save();sync().catch(()=>{});
 })();
