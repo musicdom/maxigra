@@ -25,7 +25,8 @@ function normalizeState(state, coinsRaw) {
     selectedPieces: state.selectedPieces || 'default',
     ai: Math.max(1, Math.min(4, Number(state.ai) || 1)),
     hints: Math.max(0, Number(state.hints) || 0),
-    coins: Math.max(0, Number(coinsRaw) || 0)
+    coins: Math.max(0, Number(coinsRaw) || 0),
+    resetAt: Number(state.resetAt) || 0
   };
 }
 
@@ -45,7 +46,8 @@ async function saveState(id, state) {
     selectedBoard: state.selectedBoard,
     selectedPieces: state.selectedPieces,
     ai: state.ai,
-    hints: state.hints
+    hints: state.hints,
+    resetAt: Number(state.resetAt) || 0
   })]);
 }
 
@@ -67,7 +69,8 @@ export async function POST(request) {
     if (action === 'reset-test') {
       if (String(user.id) !== '163701646') return reply({ ok: false, error: 'FORBIDDEN' }, 403);
       state.owned = ['board_original'];
-      state.selectedBoard = 'board_original';
+      state.selectedBoard = DEFAULT_BOARD;
+      state.resetAt = Date.now();
       await saveState(user.id, state);
       return reply({ ok: true, state, reset: true });
     }
