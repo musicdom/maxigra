@@ -6,7 +6,7 @@ const CATALOG = {
   board_svo: { price: 299 },
   board_max: { price: 299 },
   board_orbita: { price: 299 },
-  board_original: { price: 299 },
+  board_original: { price: 0 },
   master: { price: 9 },
   hints: { price: 5 }
 };
