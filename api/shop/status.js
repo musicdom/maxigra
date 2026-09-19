@@ -14,6 +14,7 @@ async function reconcile(userId) {
   state.selectedPieces = state.selectedPieces || 'default';
   state.ai = Math.max(1, Math.min(4, Number(state.ai) || 1));
   state.hints = Math.max(0, Number(state.hints) || 0);
+  state.resetAt = Number(state.resetAt) || 0;
 
   let orderIds = [];
   try {
@@ -28,6 +29,8 @@ async function reconcile(userId) {
       if (!orderRaw) continue;
       const order = JSON.parse(orderRaw);
       if (String(order.userId) !== String(userId) || order.status !== 'paid') continue;
+      // Do not resurrect purchases that existed before an admin/test reset.
+      if (state.resetAt && Number(order.paidAt || 0) <= state.resetAt) continue;
       const itemId = String(order.itemId || '');
       if (!BOARD_IDS.has(itemId) || state.owned.includes(itemId)) continue;
       state.owned.push(itemId);
@@ -37,7 +40,14 @@ async function reconcile(userId) {
 
   if (!BOARD_IDS.has(state.selectedBoard) || !state.owned.includes(state.selectedBoard)) state.selectedBoard = 'board_original';
   if (changed || !raw) {
-    await redis('SET', [inventoryKey(userId), JSON.stringify({owned:state.owned,selectedBoard:state.selectedBoard,selectedPieces:state.selectedPieces,ai:state.ai,hints:state.hints}),'EX','2592000']);
+    await redis('SET', [inventoryKey(userId), JSON.stringify({
+      owned:state.owned,
+      selectedBoard:state.selectedBoard,
+      selectedPieces:state.selectedPieces,
+      ai:state.ai,
+      hints:state.hints,
+      resetAt:state.resetAt
+    }),'EX','2592000']);
   }
   return state;
 }
