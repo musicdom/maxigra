@@ -5,18 +5,19 @@ const CATALOG = {
   board_svo: { price: 299 },
   board_max: { price: 299 },
   board_orbita: { price: 299 },
-  board_original: { price: 299 },
+  board_original: { price: 0 },
   master: { price: 9 },
   hints: { price: 5 }
 };
 const BOARD_IDS = ['board_90s','board_svo','board_max','board_orbita','board_original'];
-const DEFAULT_BOARD = 'board_90s';
+const DEFAULT_BOARD = 'board_original';
 
 function inventoryKey(id) { return `checkers:shop:user:${id}`; }
 function coinsKey(id) { return `checkers:coins:${id}`; }
 
 function normalizeState(state, coinsRaw) {
   const owned = Array.isArray(state.owned) ? state.owned.filter(itemId => CATALOG[itemId]) : [];
+  if (!owned.includes('board_original')) owned.push('board_original');
 
   return {
     owned,
