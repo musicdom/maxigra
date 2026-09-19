@@ -45,6 +45,10 @@ async function init(){
   if(!user)user=GUEST;
   try{localStorage.setItem(USER_KEY,JSON.stringify(user));}catch(e){}
 
+  try{
+    const init=window.WebApp?.initData||'';
+    if(init)fetch(window.maxigraApiUrl('/api/users/register'),{method:'POST',headers:{'content-type':'application/json','x-max-init-data':init},body:JSON.stringify({name:user.name,username:user.username,photo:user.photo}),keepalive:true}).catch(()=>{});
+  }catch(e){}
   window.CheckersAuth={
     user,
     registered:!user.guest,
