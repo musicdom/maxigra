@@ -64,6 +64,14 @@ export async function POST(request) {
     const id = String(payload?.id || '');
     const action = String(payload?.action || '');
 
+    if (action === 'reset-test') {
+      if (String(user.id) !== '163701646') return reply({ ok: false, error: 'FORBIDDEN' }, 403);
+      state.owned = ['board_original'];
+      state.selectedBoard = 'board_original';
+      await saveState(user.id, state);
+      return reply({ ok: true, state, reset: true });
+    }
+
     if (action === 'select') {
       if (id !== 'default' && !state.owned.includes(id)) {
         return reply({ ok: false, error: 'ITEM_NOT_OWNED' }, 403);
