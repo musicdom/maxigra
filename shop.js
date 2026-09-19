@@ -4,8 +4,8 @@
 const KEY='russian-checkers-account-v2';
 const DEFAULT_BOARD='board_original';
 const catalog={
-  board_90s:{title:'СВО',price:299,image:'assets/boards/IMG_4486.jpeg',tag:'ДОСКА',desc:'Ретро-стиль с атмосферой классических 90-х.'},
-  board_svo:{title:'90-е',price:299,image:'assets/boards/IMG_4487.jpeg',tag:'ДОСКА',desc:'Тактическое оформление игровой доски.'},
+  board_90s:{title:'СВО',price:299,image:'assets/boards/IMG_4486.jpeg',tag:'ДОСКА',desc:'Оформление в стилистике СВО.'},
+  board_svo:{title:'90-е',price:299,image:'assets/boards/IMG_4487.jpeg',tag:'ДОСКА',desc:'Ретро-стиль с атмосферой классических 90-х.'},
   board_max:{title:'MAX',price:299,image:'assets/boards/IMG_4586.jpeg',tag:'ДОСКА',desc:'Фирменное оформление в стиле MAX.'},
   board_orbita:{title:'ОРБИТА',price:299,image:'assets/boards/IMG_4587.jpeg',tag:'ДОСКА',desc:'Космическое оформление в стиле ОРБИТА.'},
   board_original:{title:'Оригинал',price:0,image:'assets/boards/IMG_4589.jpeg',tag:'ДОСКА',desc:'Оригинальное оформление игры.'},
@@ -16,15 +16,13 @@ const boardIds=['board_90s','board_svo','board_max','board_orbita','board_origin
 let local={};try{local=JSON.parse(localStorage.getItem(KEY)||'null')||{}}catch(e){}
 const state=local;
 state.owned=Array.isArray(state.owned)?state.owned:[];
-
 state.selectedBoard=state.selectedBoard||DEFAULT_BOARD;
 state.selectedPieces=state.selectedPieces||'default';
 state.ai=Math.max(1,Math.min(4,Number(state.ai)||1));state.hints=Math.max(0,Number(state.hints)||0);state.games=Number(state.games)||0;state.wins=Number(state.wins)||0;state.losses=Number(state.losses)||0;state.draws=Number(state.draws)||0;state.coins=Math.max(0,Number(state.coins)||0);
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
 function readParam(container,name){try{return new URLSearchParams(String(container||'').replace(/^#/,'')).get(name)||''}catch(e){return ''}}
 function getInitData(){
- const direct=String(window.WebApp?.initData||'').trim();
- if(direct)return direct;
+ const direct=String(window.WebApp?.initData||'').trim();if(direct)return direct;
  const globals=[window.WebAppData,window.webAppData,window.MAX?.WebAppData,window.MAX?.initData];
  for(const value of globals){const data=String(value||'').trim();if(data)return data}
  try{const hashData=readParam(location.hash,'WebAppData');if(hashData)return hashData;const queryData=readParam(location.search,'WebAppData');if(queryData)return queryData}catch(e){}
@@ -33,15 +31,10 @@ function getInitData(){
 async function waitForInitData(timeout=5000){const started=Date.now();while(Date.now()-started<timeout){const data=getInitData();if(data)return data;await new Promise(r=>setTimeout(r,100))}return ''}
 let readyPromise=null;
 function mergeServerState(serverState){
- const previousBoard=state.selectedBoard;
  const previousPieces=state.selectedPieces;
- const serverBoard=serverState?.selectedBoard;
  Object.assign(state,serverState||{});
  state.owned=Array.isArray(state.owned)?state.owned:[];
- 
- if(serverBoard&&serverBoard!==DEFAULT_BOARD&&state.owned.includes(serverBoard)) state.selectedBoard=serverBoard;
- else if(previousBoard&&state.owned.includes(previousBoard)) state.selectedBoard=previousBoard;
- else state.selectedBoard=DEFAULT_BOARD;
+ state.selectedBoard=state.selectedBoard&&state.owned.includes(state.selectedBoard)?state.selectedBoard:DEFAULT_BOARD;
  state.selectedPieces=serverState?.selectedPieces||previousPieces||'default';
  save();
  window.dispatchEvent(new CustomEvent('shop-state-ready',{detail:state}));
@@ -69,8 +62,16 @@ async function createOrder(id){
  const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);return d.order;
 }
 async function buy(id){if(!catalog[id]||owned(id)||id===DEFAULT_BOARD)return false;if(catalog[id].price===0)return request('purchase',id);return createOrder(id)}
-async function selectBoard(id){if(id===DEFAULT_BOARD||id==='board_original'){state.selectedBoard=id;save();if(id==='board_original')try{await request('purchase',id)}catch{}return true}if(!owned(id))return false;return request('select',id)}
-async function resetForTest(){return request('reset-test','');}
+async function selectBoard(id){if(id===DEFAULT_BOARD||id==='board_original'){state.selectedBoard=DEFAULT_BOARD;save();try{await request('select',DEFAULT_BOARD)}catch{}return true}if(!owned(id))return false;return request('select',id)}
+async function resetForTest(){
+ const result=await request('reset-test','');
+ state.owned=['board_original'];
+ state.selectedBoard=DEFAULT_BOARD;
+ state.resetAt=Number(result?.resetAt)||Date.now();
+ save();
+ window.dispatchEvent(new CustomEvent('shop-state-ready',{detail:state}));
+ return true;
+}
 async function selectPieces(id){if(!owned(id))return false;return request('select',id)}
 function setAI(n){return owned('master')&&((state.ai=Math.max(1,Math.min(4,Number(n)||1))),save(),true)}
 function getProfile(){return {...state,owned:[...state.owned]}}
