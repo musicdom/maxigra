@@ -13,49 +13,37 @@ function readMaxUser(){
   const first=String(u.first_name||'').trim();
   const last=String(u.last_name||'').trim();
   const name=[first,last].filter(Boolean).join(' ')||'Игрок';
-  return {
-    id:String(u.id),
-    name,
-    username:String(u.username||''),
-    photo:String(u.photo_url||''),
-    guest:false,
-    max:true
-  };
+  return {id:String(u.id),name,username:String(u.username||''),photo:String(u.photo_url||''),guest:false,max:true};
 }
 async function init(){
   if(window.__maxAuthStarted)return;
   window.__maxAuthStarted=true;
-
   let user=null;
   for(let i=0;i<20&&!user;i++){
     user=readMaxUser();
     if(!user)await new Promise(resolve=>setTimeout(resolve,150));
   }
-
   if(!user){
     try{
       const cached=localStorage.getItem(USER_KEY);
-      if(cached){
-        const parsed=JSON.parse(cached);
-        if(parsed?.id&&!parsed.guest)user={...GUEST,...parsed,max:true};
-      }
+      if(cached){const parsed=JSON.parse(cached);if(parsed?.id&&!parsed.guest)user={...GUEST,...parsed,max:true};}
     }catch(e){}
   }
-
   if(!user)user=GUEST;
   try{localStorage.setItem(USER_KEY,JSON.stringify(user));}catch(e){}
 
+  // Регистрируем пользователя через уже существующий /api/profile,
+  // чтобы не создавать отдельную Serverless Function на Vercel.
   try{
     const init=window.WebApp?.initData||'';
-    if(init)fetch(window.maxigraApiUrl('/api/users/register'),{method:'POST',headers:{'content-type':'application/json','x-max-init-data':init},body:JSON.stringify({name:user.name,username:user.username,photo:user.photo}),keepalive:true}).catch(()=>{});
+    if(init)fetch(window.maxigraApiUrl('/api/profile'),{
+      method:'POST',
+      headers:{'content-type':'application/json','x-max-init-data':init},
+      body:JSON.stringify({name:user.name,username:user.username,photo:user.photo}),
+      keepalive:true
+    }).catch(()=>{});
   }catch(e){}
-  window.CheckersAuth={
-    user,
-    registered:!user.guest,
-    ready:true,
-    guest:!!user.guest,
-    max:!!user.max
-  };
+  window.CheckersAuth={user,registered:!user.guest,ready:true,guest:!!user.guest,max:!!user.max};
   document.body.classList.remove('max-auth-blocked');
   window.dispatchEvent(new CustomEvent('max-profile-ready',{detail:user}));
   goMenu();
