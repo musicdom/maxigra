@@ -1,11 +1,11 @@
 import { auth, body, errorResponse, redis, reply } from './_lib.js';
 
 const CATALOG = {
-  board_90s: { price: 5 },
-  board_svo: { price: 6 },
-  board_max: { price: 7 },
-  board_orbita: { price: 7 },
-  board_original: { price: 7 },
+  board_90s: { price: 299 },
+  board_svo: { price: 299 },
+  board_max: { price: 299 },
+  board_orbita: { price: 299 },
+  board_original: { price: 299 },
   master: { price: 9 },
   hints: { price: 5 }
 };
@@ -17,7 +17,7 @@ function coinsKey(id) { return `checkers:coins:${id}`; }
 
 function normalizeState(state, coinsRaw) {
   const owned = Array.isArray(state.owned) ? state.owned.filter(itemId => CATALOG[itemId]) : [];
-  for (const boardId of BOARD_IDS) if (!owned.includes(boardId)) owned.push(boardId);
+
   return {
     owned,
     selectedBoard: BOARD_IDS.includes(state.selectedBoard) && owned.includes(state.selectedBoard) ? state.selectedBoard : DEFAULT_BOARD,
