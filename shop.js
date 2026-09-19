@@ -16,7 +16,7 @@ const boardIds=['board_90s','board_svo','board_max','board_orbita','board_origin
 let local={};try{local=JSON.parse(localStorage.getItem(KEY)||'null')||{}}catch(e){}
 const state=local;
 state.owned=Array.isArray(state.owned)?state.owned:[];
-for(const boardId of boardIds)if(!state.owned.includes(boardId))state.owned.push(boardId);
+
 state.selectedBoard=state.selectedBoard||DEFAULT_BOARD;
 state.selectedPieces=state.selectedPieces||'default';
 state.ai=Math.max(1,Math.min(4,Number(state.ai)||1));state.hints=Math.max(0,Number(state.hints)||0);state.games=Number(state.games)||0;state.wins=Number(state.wins)||0;state.losses=Number(state.losses)||0;state.draws=Number(state.draws)||0;state.coins=Math.max(0,Number(state.coins)||0);
@@ -38,7 +38,7 @@ function mergeServerState(serverState){
  const serverBoard=serverState?.selectedBoard;
  Object.assign(state,serverState||{});
  state.owned=Array.isArray(state.owned)?state.owned:[];
- for(const boardId of boardIds)if(!state.owned.includes(boardId))state.owned.push(boardId);
+ 
  if(serverBoard&&serverBoard!==DEFAULT_BOARD&&state.owned.includes(serverBoard)) state.selectedBoard=serverBoard;
  else if(previousBoard&&state.owned.includes(previousBoard)) state.selectedBoard=previousBoard;
  else state.selectedBoard=DEFAULT_BOARD;
