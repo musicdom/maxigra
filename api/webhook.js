@@ -1,4 +1,4 @@
-import {handlePostings,handlePostingsCallback} from "./postings.js";
+import {handlePostings,handlePostingsCallback} from "../lib/postings.js";
 function uid(u){return u?.user?.user_id??u?.user?.id??u?.message?.sender?.user_id??u?.message?.sender?.id??u?.callback?.user?.user_id??u?.callback?.user?.id??null}
 function txt(u){return String(u?.message?.body?.text??u?.message?.text??u?.body?.text??u?.text??"").trim()}
 export default async function handler(req,res){
