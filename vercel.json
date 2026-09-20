@@ -3,6 +3,10 @@
     {
       "source": "/api/yoomoney/notify",
       "destination": "/api/shop/webhook"
+    },
+    {
+      "source": "/api/matchmaking/resign",
+      "destination": "/api/matchmaking/move"
     }
   ]
 }
