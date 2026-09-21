@@ -75,3 +75,9 @@ html{height:100%;overflow:hidden;overscroll-behavior:none}body{height:100%;min-h
 #menu-screen .menu-card .menu-small-row .menu-small{width:100%!important;aspect-ratio:1!important;height:auto!important;min-height:0!important;max-width:none!important;padding:3px!important;font-size:7px!important;border-radius:13px!important;}
 #menu-screen .menu-card .menu-small-row .menu-small:before{font-size:16px!important;}
 @media(max-width:360px){#menu-screen .menu-card .menu-small-row{gap:10px!important}#menu-screen .menu-card .menu-small-row .menu-small{font-size:7px!important;padding:3px!important;}}
+
+/* FINAL: smaller buttons, readable labels */
+#menu-screen .menu-card .menu-small-row{width:100%!important;display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:14px!important;}
+#menu-screen .menu-card .menu-small-row .menu-small{width:100%!important;aspect-ratio:1!important;height:auto!important;min-height:0!important;max-width:none!important;padding:3px!important;border-radius:13px!important;font-size:11px!important;}
+#menu-screen .menu-card .menu-small-row .menu-small:before{font-size:16px!important;}
+@media(max-width:360px){#menu-screen .menu-card .menu-small-row{gap:10px!important}#menu-screen .menu-card .menu-small-row .menu-small{font-size:11px!important;padding:3px!important;}}
