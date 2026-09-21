@@ -1,5 +1,24 @@
 import { auth, body, errorResponse, legalPieceMoves, publicGame, redis, reply, applyMove, allMoves, stateKey } from '../_lib.js';
 
+async function recordOnlineStats(game){
+  if(game.status!=='finished'||game.statsRecorded||!game.p1?.id||!game.p2?.id)return;
+  const players=[[game.p1,Number(game.p1Side||1)],[game.p2,Number(game.p2Side||2)]];
+  for(const [player,side] of players){
+    const result=game.winner==='draw'?'draw':Number(game.winner)===side?'win':'loss';
+    const key='checkers:stats:'+player.id;
+    let stats={id:String(player.id),name:player.name||'Игрок',username:player.username||'',photo:player.photo||'',games:0,wins:0,losses:0,draws:0};
+    const raw=await redis('GET',[key]);
+    if(raw)try{stats={...stats,...JSON.parse(raw)}}catch{}
+    stats.games=Number(stats.games||0)+1;
+    if(result==='win')stats.wins=Number(stats.wins||0)+1;
+    if(result==='loss')stats.losses=Number(stats.losses||0)+1;
+    if(result==='draw')stats.draws=Number(stats.draws||0)+1;
+    stats.name=player.name||stats.name;stats.username=player.username||stats.username;stats.photo=player.photo||stats.photo;stats.updatedAt=Date.now();
+    await redis('SET',[key,JSON.stringify(stats)]);
+  }
+  game.statsRecorded=true;
+}
+
 export function OPTIONS(){ return reply({ok:true}); }
 
 export async function POST(request) {
@@ -12,7 +31,7 @@ export async function POST(request) {
       const game = JSON.parse(raw);
       const side = String(game.p1?.id)===String(user.id)?Number(game.p1Side):String(game.p2?.id)===String(user.id)?Number(game.p2Side):0;
       if (!side) return reply({ok:false,error:'NOT_A_PLAYER'},403);
-      if (game.status==='playing') { game.status='finished'; game.winner=side===1?2:1; game.updatedAt=Date.now(); await redis('SET',['checkers:room:' + roomId,JSON.stringify(game),'EX','7200']); }
+      if (game.status==='playing') { game.status='finished'; game.winner=side===1?2:1; game.updatedAt=Date.now(); await recordOnlineStats(game); await redis('SET',['checkers:room:' + roomId,JSON.stringify(game),'EX','7200']); }
       await redis('SREM',['checkers:online',user.id]); await redis('DEL',['checkers:presence:' + user.id]);
       return reply({ok:true,game:publicGame(game,user.id)});
     } catch(error) { return errorResponse(error); }
@@ -58,6 +77,7 @@ export async function POST(request) {
     if(game.halfMoves>=100||game.reps[key]>=3){game.status='finished';game.winner='draw'}
     else if(!allMoves(game,game.turn).length){game.status='finished';game.winner=side}
 
+    if(game.status==='finished') await recordOnlineStats(game);
     await redis('SET',[`checkers:room:${roomId}`,JSON.stringify(game),'EX','7200']);
     await Promise.allSettled([
       redis('SET',[`checkers:presence:${user.id}`,'1','EX','7200']),
