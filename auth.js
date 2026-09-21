@@ -46,6 +46,9 @@ async function init(){
   window.CheckersAuth={user,registered:!user.guest,ready:true,guest:!!user.guest,max:!!user.max};
   document.body.classList.remove('max-auth-blocked');
   window.dispatchEvent(new CustomEvent('max-profile-ready',{detail:user}));
+  // На iOS/Android MAX ждём завершения нативного кэша изображений,
+  // чтобы главное меню не показывалось раньше своих фоновых изображений.
+  try{if(window.MaxAssetCache?.ready)await Promise.race([window.MaxAssetCache.ready,new Promise(resolve=>setTimeout(resolve,8000))])}catch(e){}
   goMenu();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
