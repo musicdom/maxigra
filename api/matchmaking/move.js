@@ -5,7 +5,7 @@ async function recordOnlineStats(game){
   const players=[[game.p1,Number(game.p1Side||1)],[game.p2,Number(game.p2Side||2)]];
   for(const [player,side] of players){
     const result=game.winner==='draw'?'draw':Number(game.winner)===side?'win':'loss';
-    const key='checkers:stats:'+player.id;
+    const key='checkers:stats:online:'+player.id;
     let stats={id:String(player.id),name:player.name||'Игрок',username:player.username||'',photo:player.photo||'',games:0,wins:0,losses:0,draws:0};
     const raw=await redis('GET',[key]);
     if(raw)try{stats={...stats,...JSON.parse(raw)}}catch{}
