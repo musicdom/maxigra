@@ -7,3 +7,26 @@
 .leader-rank{font-size:14px;font-weight:900;text-align:center;color:var(--muted)}.leader-rank.top{font-size:20px;color:#fff}.leader-player{min-width:0;display:flex;align-items:center;gap:10px}.leader-avatar{width:40px;height:40px;flex:0 0 40px;border-radius:13px;object-fit:cover;background:#1b3045;display:grid;place-items:center;font-size:17px;border:1px solid rgba(255,255,255,.08)}.leader-name{font-size:13px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.leader-record{margin-top:4px;color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.leader-wins{text-align:right;min-width:48px}.leader-wins b{display:block;font-size:18px;line-height:1.05}.leader-wins span{display:block;margin-top:3px;font-size:8px;letter-spacing:.5px;color:var(--muted)}
 .leader-empty{text-align:center;padding:38px 16px;color:var(--muted);font-size:12px}.leader-me{margin-top:12px;padding:13px 14px;border-radius:16px;background:linear-gradient(90deg,rgba(77,163,255,.11),rgba(77,163,255,.045));border:1px solid rgba(77,163,255,.13);font-size:12px;color:var(--muted)}.leader-me strong{color:var(--white);font-weight:900}
 @media(max-width:380px){#leaderboard-screen{padding-left:8px;padding-right:8px}.leaderboard-panel{padding:13px}.leader-row{grid-template-columns:30px minmax(0,1fr) auto;gap:7px;padding:9px}.leader-avatar{width:36px;height:36px;flex-basis:36px}.leader-record{font-size:9px}.leader-name{font-size:12px}}
+
+/* Leaderboard motion polish */
+@keyframes leaderboardFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes leaderboardRowIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes leaderboardTopPulse{0%,100%{box-shadow:0 0 0 1px rgba(77,163,255,.14) inset,0 8px 24px rgba(77,163,255,.04)}50%{box-shadow:0 0 0 1px rgba(77,163,255,.28) inset,0 10px 30px rgba(77,163,255,.09)}}
+@keyframes leaderboardMeGlow{0%,100%{box-shadow:0 0 0 0 rgba(77,163,255,0)}50%{box-shadow:0 0 22px rgba(77,163,255,.13)}}
+.leaderboard-panel{animation:leaderboardFadeIn .28s ease-out both}
+.leaderboard-list .leader-row{animation:leaderboardRowIn .34s cubic-bezier(.2,.75,.25,1) both}
+.leaderboard-list .leader-row:nth-child(1){animation-delay:.04s}.leaderboard-list .leader-row:nth-child(2){animation-delay:.08s}.leaderboard-list .leader-row:nth-child(3){animation-delay:.12s}.leaderboard-list .leader-row:nth-child(4){animation-delay:.16s}.leaderboard-list .leader-row:nth-child(5){animation-delay:.20s}.leaderboard-list .leader-row:nth-child(n+6){animation-delay:.23s}
+.leader-row{position:relative;overflow:hidden}
+.leader-row::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.045) 48%,transparent 52%);transform:translateX(-120%);transition:transform .55s ease}
+.leader-row:hover::after{transform:translateX(120%)}
+.leader-row:active{transform:scale(.985)}
+.leader-rank.top{animation:leaderboardTopPulse 2.4s ease-in-out infinite}
+.leader-row:nth-child(1) .leader-rank.top{filter:drop-shadow(0 0 7px rgba(255,215,80,.18))}
+.leader-row:nth-child(2) .leader-rank.top{filter:drop-shadow(0 0 7px rgba(210,220,235,.16))}
+.leader-row:nth-child(3) .leader-rank.top{filter:drop-shadow(0 0 7px rgba(205,145,90,.15))}
+.leader-row.me{animation:leaderboardRowIn .34s cubic-bezier(.2,.75,.25,1) both,leaderboardMeGlow 2.8s ease-in-out .5s infinite}
+.leader-avatar{transition:transform .2s ease,box-shadow .2s ease}.leader-row:hover .leader-avatar{transform:scale(1.05);box-shadow:0 5px 16px rgba(0,0,0,.2)}
+.leader-wins b{transition:transform .2s ease}.leader-row:hover .leader-wins b{transform:translateY(-1px)}
+.leader-tab{transition:background .2s ease,color .2s ease,box-shadow .2s ease,transform .15s ease}.leader-tab:active{transform:scale(.97)}
+.leader-me{animation:leaderboardFadeIn .35s .16s ease-out both}
+@media(prefers-reduced-motion:reduce){.leaderboard-panel,.leaderboard-list .leader-row,.leader-me,.leader-row.me{animation:none!important}.leader-row::after{display:none}.leader-row,.leader-avatar,.leader-wins b,.leader-tab{transition:none!important}}
