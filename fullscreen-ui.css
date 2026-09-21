@@ -20,8 +20,8 @@ html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
 .menu-card #shop-btn.menu-shop-wide{width:100%!important;height:60px!important;min-height:60px!important;margin-top:10px!important;padding:12px 18px!important;border-radius:20px!important;font-size:19px!important;font-weight:800!important}
 .menu-card #shop-btn.menu-shop-wide{background-image:var(--mx-btn-image,linear-gradient(135deg,#253b52,#4d6f91))!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
 .menu-card #profile-btn.menu-small{background-image:var(--mx-btn-image,linear-gradient(135deg,#253b52,#466782))!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
-.menu-card #leaderboard-btn.menu-small{background-image:linear-gradient(135deg,#253b52,#466782)!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
-.menu-card #rules-btn.menu-small{background-image:linear-gradient(135deg,#253b52,#466782)!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
+ .menu-card #leaderboard-btn.menu-small{background-image:var(--mx-btn-image,linear-gradient(135deg,#253b52,#466782))!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
+ .menu-card #rules-btn.menu-small{background-image:var(--mx-btn-image,linear-gradient(135deg,#253b52,#466782))!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
 /* Premium CSS icons — icon is decorative and never affects title centering */
 .menu-card #play-btn,.menu-card #online-play-btn{
   text-align:center!important;
