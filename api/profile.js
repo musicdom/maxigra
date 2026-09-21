@@ -30,7 +30,8 @@ export async function GET(request){
   try{
     const user=auth(request);
     const url=new URL(request.url);
-    if(url.searchParams.get('leaderboard')==='1'){\n      const mode=url.searchParams.get('mode')==='online'?'online':'offline';
+    if(url.searchParams.get('leaderboard')==='1'){
+      const mode=url.searchParams.get('mode')==='online'?'online':'offline';
       const keys=await redis('KEYS',[`checkers:stats:${mode}:*`]);
       const rows=[];
       for(const key of (keys||[])){
