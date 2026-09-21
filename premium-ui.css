@@ -75,15 +75,15 @@ body:before{
 .menu-note{max-width:315px!important;margin:12px 0 22px!important;padding:0!important;text-align:left!important;color:var(--mx-muted)!important;font-size:13px!important;line-height:1.48!important}
 .menu-card .btn{position:relative;margin-top:9px!important}
 .menu-card #play-btn,.menu-card #online-play-btn{min-height:66px!important;width:100%!important;justify-content:flex-start!important;text-align:left!important;padding:14px 17px!important;border-radius:20px!important}
-.menu-card #play-btn{font-size:16px!important;background-image:var(--mx-btn-image,linear-gradient(135deg,#ffc95d,#e9a02a))!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
+.menu-card #play-btn{font-size:16px!important;background-image:url("assets/кнопки/IMG_4614.jpeg")!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
 .menu-card #play-btn:after,.menu-card #online-play-btn:after{margin-left:auto;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;font-size:20px}
 .menu-card #play-btn:after{content:"→";background:rgba(255,255,255,.18);color:#151a21}
-.menu-card #online-play-btn{background-image:var(--mx-btn-image,linear-gradient(135deg,rgba(77,163,255,.13),rgba(255,255,255,.035)))!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;border-color:rgba(77,163,255,.25)!important}
+.menu-card #online-play-btn{background-image:url("assets/кнопки/IMG_4616.jpeg")!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;border-color:rgba(77,163,255,.25)!important}
 .menu-card #online-play-btn:after{content:"↗";color:var(--mx-blue);background:rgba(77,163,255,.10)}
 .menu-card #shop-btn,.menu-card #profile-btn,.menu-card #rules-btn{
   display:inline-flex!important;vertical-align:top;width:calc(33.333% - 7px)!important;min-height:86px!important;margin:10px 10px 0 0!important;
   padding:12px 6px!important;flex-direction:column!important;justify-content:center!important;gap:8px!important;border-radius:19px!important;
-  background-image:var(--mx-btn-image,linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025)))!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;border:1px solid var(--mx-line)!important;color:var(--mx-text)!important;font-size:10px!important;box-shadow:0 8px 25px rgba(0,0,0,.15)!important
+  background-image:url("assets/кнопки/IMG_4605.jpeg")!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;border:1px solid var(--mx-line)!important;color:var(--mx-text)!important;font-size:10px!important;box-shadow:0 8px 25px rgba(0,0,0,.15)!important
 }
 .menu-card #rules-btn{margin-right:0!important}
 
