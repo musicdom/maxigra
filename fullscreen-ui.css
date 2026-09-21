@@ -45,3 +45,11 @@ html{height:100%;overflow:hidden;overscroll-behavior:none}body{height:100%;min-h
 @media(max-width:420px){#menu-screen{padding-left:14px;padding-right:14px}.menu-card{padding-top:4px!important;padding-bottom:22px!important}.menu-logo{width:72px!important;height:72px!important;font-size:39px!important;margin-bottom:15px!important}.menu-card h1{font-size:39px!important}.menu-note{font-size:13px!important;margin-bottom:15px!important}.menu-card #play-btn,.menu-card #online-play-btn{min-height:61px!important}.menu-card #shop-btn,.menu-card #profile-btn,.menu-card #rules-btn{min-height:74px!important}
 #rules-screen{padding-left:14px!important;padding-right:14px!important;padding-top:10px!important}.rules-card h2{font-size:27px!important}.rules-card>p{font-size:13px!important;padding:14px!important}.rules-card li{font-size:13px!important;padding:12px 12px 12px 40px!important}.rules-card li:before{left:15px;top:17px}.rules-card .btn--primary{min-height:56px!important}}
 @media(min-width:700px){#rules-screen{padding-left:clamp(24px,5vw,72px)!important;padding-right:clamp(24px,5vw,72px)!important}}
+
+/* MENU BUTTON STRUCTURE — keep main actions untouched */
+#menu-screen .menu-card{grid-template-columns:1fr!important;}
+#menu-screen .menu-card #play-btn,#menu-screen .menu-card #online-play-btn{grid-column:1!important;width:100%!important;}
+#menu-screen .menu-card .menu-small-row{grid-column:1!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;width:100%!important;gap:8px!important;margin-top:10px!important;}
+#menu-screen .menu-card .menu-small-row .menu-small{width:100%!important;aspect-ratio:1 / 1!important;height:auto!important;min-height:0!important;max-width:none!important;margin:0!important;padding:8px!important;box-sizing:border-box!important;}
+#menu-screen .menu-card #shop-btn.menu-shop-wide{grid-column:1!important;width:100%!important;height:60px!important;min-height:60px!important;margin-top:10px!important;}
+@media(max-width:360px){#menu-screen .menu-card .menu-small-row{gap:6px!important}#menu-screen .menu-card #shop-btn.menu-shop-wide{height:56px!important;min-height:56px!important;}}
