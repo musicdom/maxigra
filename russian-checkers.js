@@ -39,7 +39,7 @@ async function recordServerResult(result){
     if(!init)return;
     const type=result==='Белые'?'win':result==='Чёрные'?'loss':'draw';
     const resultId='local-'+Date.now()+'-'+Math.random().toString(36).slice(2,10);
-    await fetch(window.maxigraApiUrl('/api/profile'),{method:'POST',headers:{'content-type':'application/json','x-max-init-data':init},body:JSON.stringify({action:'record_result',result:type,resultId})});
+    await fetch(window.maxigraApiUrl('/api/profile'),{method:'POST',headers:{'content-type':'application/json','x-max-init-data':init},body:JSON.stringify({action:'record_result',result:type,resultId,mode:'offline'})});
   }catch{}
 }
 function finish(result){if(gameOver)return;gameOver=true;thinking=false;clearTimeout(aiTimer);if(window.CheckersShop){const s=window.CheckersShop.state;if(result==='Белые')s.wins=(s.wins||0)+1;else if(result==='Чёрные')s.losses=(s.losses||0)+1;else s.draws=(s.draws||0)+1;window.CheckersShop.save()} recordServerResult(result);sound(result==='Ничья'?'draw':'win');update();setTimeout(()=>resultModal(result),120)}
