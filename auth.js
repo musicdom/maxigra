@@ -48,7 +48,7 @@ async function init(){
   window.dispatchEvent(new CustomEvent('max-profile-ready',{detail:user}));
   // На iOS/Android MAX ждём завершения нативного кэша изображений,
   // чтобы главное меню не показывалось раньше своих фоновых изображений.
-  try{if(window.MaxAssetCache?.ready)await Promise.race([window.MaxAssetCache.ready,new Promise(resolve=>setTimeout(resolve,8000))])}catch(e){}
+  try{if(window.MaxAssetCache?.ready)await window.MaxAssetCache.ready}catch(e){}
   goMenu();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
