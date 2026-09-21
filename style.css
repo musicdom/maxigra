@@ -22,6 +22,6 @@
 /* FINAL MAIN MENU LAYOUT — requested */
 .menu-card #shop-btn.menu-shop-wide{display:flex!important;width:100%!important;height:60px!important;min-height:60px!important;margin-top:9px!important;font-size:16px!important;}
 .menu-card .menu-small-row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;width:100%!important;margin:0 0 10px!important;}
-.menu-card .menu-small{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-width:0!important;box-sizing:border-box!important;height:50px!important;min-height:50px!important;padding:10px 6px!important;font-size:13px!important;line-height:1.1!important;margin:0!important;}
+.menu-card .menu-small{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-width:0!important;aspect-ratio:1 / 1!important;height:auto!important;min-height:0!important;box-sizing:border-box!important;padding:8px!important;font-size:13px!important;line-height:1.1!important;margin:0!important;}
 
 @media(max-width:360px){.menu-card .menu-small-row{gap:6px!important}.menu-card .menu-small{font-size:13px!important;padding-left:5px!important;padding-right:5px!important;}.menu-card #shop-btn.menu-shop-wide{height:56px!important;min-height:56px!important;}}
