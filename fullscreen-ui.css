@@ -22,11 +22,61 @@ html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
 .menu-card #profile-btn.menu-small{background-image:url("assets/кнопки/IMG_4613.jpeg")!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
 .menu-card #leaderboard-btn.menu-small{background-image:url("assets/кнопки/IMG_4609.jpeg")!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
 .menu-card #rules-btn.menu-small{background-image:url("assets/кнопки/IMG_4612.jpeg")!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
-/* Premium CSS icons for the two primary actions */
-.menu-card #play-btn:before,.menu-card #online-play-btn:before{content:"";display:inline-block;flex:0 0 auto;width:26px!important;height:26px!important;border-radius:50%;background:rgba(255,255,255,.18);box-shadow:inset 0 1px rgba(255,255,255,.35),0 4px 12px rgba(0,0,0,.18);position:relative!important}
-.menu-card #play-btn:after{content:"";position:absolute!important;width:0!important;height:0!important;border-top:7px solid transparent!important;border-bottom:7px solid transparent!important;border-left:10px solid #fff!important;left:50%!important;top:50%!important;transform:translate(-28%,-50%)!important;margin:0!important;background:none!important;border-radius:0!important;box-shadow:none!important}
-.menu-card #online-play-btn:after{content:"";position:absolute!important;width:9px!important;height:9px!important;border:2px solid #fff!important;border-radius:50%!important;left:calc(50% - 5px)!important;top:calc(50% - 5px)!important;background:transparent!important;box-shadow:-9px 7px 0 -2px transparent,9px 7px 0 -2px transparent!important}
-.menu-card #online-play-btn:before{background:rgba(255,255,255,.14)!important}
+/* Premium CSS icons — icon is decorative and never affects title centering */
+.menu-card #play-btn,.menu-card #online-play-btn{
+  text-align:center!important;
+  justify-content:center!important;
+  align-items:center!important;
+  position:relative!important;
+  overflow:hidden!important
+}
+.menu-card #play-btn:before,.menu-card #online-play-btn:before{
+  content:"";
+  position:absolute!important;
+  left:18px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  width:30px!important;
+  height:30px!important;
+  border-radius:50%!important;
+  background:rgba(255,255,255,.16)!important;
+  border:1px solid rgba(255,255,255,.32)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.34),0 5px 14px rgba(0,0,0,.20)!important;
+  pointer-events:none!important
+}
+.menu-card #play-btn:after{
+  content:"";
+  position:absolute!important;
+  left:28px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  width:0!important;
+  height:0!important;
+  border-top:7px solid transparent!important;
+  border-bottom:7px solid transparent!important;
+  border-left:10px solid #fff!important;
+  pointer-events:none!important
+}
+.menu-card #online-play-btn:before{
+  background:rgba(255,255,255,.13)!important
+}
+.menu-card #online-play-btn:after{
+  content:"";
+  position:absolute!important;
+  left:25px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  width:15px!important;
+  height:15px!important;
+  border:1.8px solid #fff!important;
+  border-radius:50%!important;
+  box-shadow:inset 0 0 0 3px transparent!important;
+  pointer-events:none!important
+}
+.menu-card #play-btn,.menu-card #online-play-btn{
+  padding-left:18px!important;
+  padding-right:18px!important
+}
 
 #online-search-screen{align-items:center;justify-content:center;padding:24px 18px}
 .online-search-card{width:min(620px,100%);max-width:620px}
