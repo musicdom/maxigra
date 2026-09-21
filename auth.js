@@ -49,6 +49,7 @@ async function init(){
   // На iOS/Android MAX ждём завершения нативного кэша изображений,
   // чтобы главное меню не показывалось раньше своих фоновых изображений.
   try{if(window.MaxAssetCache?.ready)await window.MaxAssetCache.ready}catch(e){}
+  try{window.MaxAssetCache?.apply?.()}catch(e){}
   goMenu();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
