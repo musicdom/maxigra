@@ -86,9 +86,7 @@ body:before{
   background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025))!important;border:1px solid var(--mx-line)!important;color:var(--mx-text)!important;font-size:10px!important;box-shadow:0 8px 25px rgba(0,0,0,.15)!important
 }
 .menu-card #rules-btn{margin-right:0!important}
-.menu-card #shop-btn:before{content:"▦";font-size:23px;color:var(--mx-gold)}
-.menu-card #profile-btn:before{content:"◉";font-size:20px;color:var(--mx-blue)}
-.menu-card #rules-btn:before{content:"?";font-size:21px;font-weight:900;color:var(--mx-green)}
+
 
 /* ONLINE SEARCH / ROOMS */
 #online-search-screen{align-items:center;justify-content:center;padding:18px}
