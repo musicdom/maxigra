@@ -53,3 +53,9 @@ html{height:100%;overflow:hidden;overscroll-behavior:none}body{height:100%;min-h
 #menu-screen .menu-card .menu-small-row .menu-small{width:100%!important;aspect-ratio:1 / 1!important;height:auto!important;min-height:0!important;max-width:none!important;margin:0!important;padding:6px!important;box-sizing:border-box!important;font-size:9px!important;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;}
 #menu-screen .menu-card #shop-btn.menu-shop-wide{grid-column:1!important;width:100%!important;height:60px!important;min-height:60px!important;margin-top:4px!important;}
 @media(max-width:360px){#menu-screen .menu-card .menu-small-row{grid-template-columns:repeat(3,minmax(0,1fr))!important;width:82%!important;gap:5px!important}#menu-screen .menu-card .menu-small-row .menu-small{width:100%!important;height:auto!important;max-width:none!important;font-size:8px!important}#menu-screen .menu-card #shop-btn.menu-shop-wide{height:56px!important;min-height:56px!important;margin-top:4px!important;}}
+
+/* FINAL COMPACT MENU ALIGNMENT */
+#menu-screen .menu-card .menu-small-row{grid-column:1!important;display:flex!important;flex-direction:row!important;align-items:stretch!important;justify-content:center!important;width:78%!important;margin:8px auto 0!important;gap:6px!important;}
+#menu-screen .menu-card .menu-small-row .menu-small{flex:1 1 0!important;width:auto!important;max-width:none!important;aspect-ratio:1!important;height:auto!important;min-height:0!important;margin:0!important;display:flex!important;align-items:center!important;justify-content:center!important;align-self:stretch!important;box-sizing:border-box!important;padding:6px!important;text-align:center!important;}
+#menu-screen .menu-card #shop-btn.menu-shop-wide{margin-top:4px!important;}
+@media(max-width:360px){#menu-screen .menu-card .menu-small-row{width:82%!important;gap:5px!important;}}
