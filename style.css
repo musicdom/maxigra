@@ -18,3 +18,8 @@
 .menu-small-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%;margin-top:8px;}
 .menu-small-row .btn{width:100%;min-height:53px;padding:14px 18px;font-size:14px;}
 @media(max-width:360px){.menu-small-row{gap:6px}.menu-small-row .btn{font-size:14px;padding-left:10px;padding-right:10px;}}
+
+/* FINAL MAIN MENU LAYOUT */
+.menu-card .menu-large{display:block!important;width:100%!important;box-sizing:border-box!important;margin:0 0 10px!important;}
+.menu-card .menu-small-row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;width:100%!important;margin:0!important;}
+.menu-card .menu-small{display:block!important;width:100%!important;min-width:0!important;box-sizing:border-box!important;height:49px!important;min-height:49px!important;padding:10px 6px!important;font-size:13px!important;line-height:1.1!important;margin:0!important;}
