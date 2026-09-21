@@ -16,5 +16,5 @@
 /* Main menu layout */
 .menu-card > .btn#shop-btn{width:100%;}
 .menu-small-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%;margin-top:8px;}
-.menu-small-row .btn{width:100%;padding-left:8px;padding-right:8px;font-size:13px;}
-@media(max-width:360px){.menu-small-row{gap:6px}.menu-small-row .btn{font-size:12px;padding-left:5px;padding-right:5px;}}
+.menu-small-row .btn{width:100%;min-height:53px;padding:14px 18px;font-size:14px;}
+@media(max-width:360px){.menu-small-row{gap:6px}.menu-small-row .btn{font-size:14px;padding-left:10px;padding-right:10px;}}
