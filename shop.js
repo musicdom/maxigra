@@ -13,6 +13,12 @@ const catalog={
   hints:{title:'50 подсказок',price:5,icon:'💡',tag:'ПАКЕТ',desc:'50 подсказок для сложных позиций.'}
 };
 const boardIds=['board_90s','board_svo','board_max','board_orbita','board_original'];
+// В MAX используем DeviceStorage для сохранения уже загруженных изображений между запусками.
+if(window.MaxAssetCache?.ready){window.MaxAssetCache.ready.then(()=>{
+ const cache=window.MaxAssetCache;
+ Object.entries(catalog).forEach(([id,item])=>{const cached=cache.get(id);if(cached)item.image=cached});
+ window.dispatchEvent(new CustomEvent('max-assets-applied'));
+}).catch(()=>{})}
 // Загружаем изображения досок заранее, чтобы при открытии магазина/игры они не появлялись с задержкой.
 const PRELOAD_IMAGES=Object.values(catalog).map(item=>item.image).filter(Boolean);
 function preloadImages(){
