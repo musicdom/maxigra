@@ -20,9 +20,11 @@ function syncProfile(){
  if(status){status.textContent=window.CheckersAuth?.registered?'✓ Профиль MAX подтверждён':'Гостевой профиль';status.classList.toggle('is-guest',!window.CheckersAuth?.registered)}
  if(avatar&&user.photo){avatar.src=user.photo;avatar.style.display='block';if(fallback)fallback.style.display='none'}else if(avatar){avatar.removeAttribute('src');avatar.style.display='none';if(fallback)fallback.style.display='grid'}
  let stats={};try{stats=JSON.parse(localStorage.getItem(ACCOUNT_KEY)||'null')||{}}catch(e){}
- const games=Math.max(0,Number(stats.games)||0),wins=Math.max(0,Number(stats.wins)||0),losses=Math.max(0,Number(stats.losses)||0),draws=Math.max(0,Number(stats.draws)||0),winRate=games?Math.round((wins/games)*100):0;
+ const renderStats=s=>{const games=Math.max(0,Number(s.games)||0),wins=Math.max(0,Number(s.wins)||0),losses=Math.max(0,Number(s.losses)||0),draws=Math.max(0,Number(s.draws)||0),winRate=games?Math.round((wins/games)*100):0;
  const box=q('profile-stats');if(box)box.innerHTML=`<div class="profile-stat profile-stat--games"><span class="profile-stat-icon">🎮</span><b>${games}</b><span>Игр</span></div><div class="profile-stat profile-stat--wins"><span class="profile-stat-icon">🏆</span><b>${wins}</b><span>Побед</span></div><div class="profile-stat profile-stat--losses"><span class="profile-stat-icon">⚔️</span><b>${losses}</b><span>Поражений</span></div><div class="profile-stat profile-stat--draws"><span class="profile-stat-icon">🤝</span><b>${draws}</b><span>Ничьих</span></div>`;
- const extra=q('profile-extra');if(extra)extra.innerHTML=`<div class="profile-extra-row"><span>Процент побед</span><strong>${winRate}%</strong></div><div class="profile-progress"><span style="width:${Math.min(100,winRate)}%"></span></div><div class="profile-extra-row"><span>Статус</span><strong>${window.CheckersAuth?.registered?'Игрок MAX':'Гость'}</strong></div>`;
+ const extra=q('profile-extra');if(extra)extra.innerHTML=`<div class="profile-extra-row"><span>Процент побед</span><strong>${winRate}%</strong></div><div class="profile-progress"><span style="width:${Math.min(100,winRate)}%"></span></div><div class="profile-extra-row"><span>Статус</span><strong>${window.CheckersAuth?.registered?'Игрок MAX':'Гость'}</strong></div>`;};
+ renderStats(stats);
+ try{const init=window.WebApp?.initData||'';if(init)fetch(window.maxigraApiUrl('/api/profile'),{headers:{'x-max-init-data':init,'cache-control':'no-cache'}}).then(r=>r.json()).then(d=>{if(d?.ok&&d.stats){renderStats(d.stats);try{localStorage.setItem(ACCOUNT_KEY,JSON.stringify(d.stats))}catch{}}}).catch(()=>{})}catch{}
  renderOwnedBoards();
  try{window.CheckersShop?.sync?.().then(renderOwnedBoards).catch(()=>{})}catch{}
 }
