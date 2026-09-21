@@ -140,3 +140,9 @@ body:before{
 /* Small-screen polish */
 @media(max-width:390px){#app{padding-left:11px;padding-right:11px}.menu-card h1{font-size:34px!important}.menu-card:before{width:94px;height:94px;background-size:23px 23px}.menu-card:after{right:19px;top:86px}.menu-card #shop-btn,.menu-card #profile-btn,.menu-card #rules-btn{min-height:78px!important}.board-wrapper{padding:0!important;border-radius:19px!important}.board{border-radius:15px}}
 @media(min-width:500px){#app{padding-top:16px}}
+
+/* Main menu button artwork — direct local assets, independent of cache */
+.menu-card #shop-btn{background-image:url("assets/кнопки/IMG_4605.jpeg")!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
+.menu-card #profile-btn{background-image:url("assets/кнопки/IMG_4613.jpeg")!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
+.menu-card #leaderboard-btn{background-image:url("assets/кнопки/IMG_4609.jpeg")!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
+.menu-card #rules-btn{background-image:url("assets/кнопки/IMG_4612.jpeg")!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
