@@ -13,6 +13,18 @@ const catalog={
   hints:{title:'50 подсказок',price:5,icon:'💡',tag:'ПАКЕТ',desc:'50 подсказок для сложных позиций.'}
 };
 const boardIds=['board_90s','board_svo','board_max','board_orbita','board_original'];
+// Загружаем изображения досок заранее, чтобы при открытии магазина/игры они не появлялись с задержкой.
+const PRELOAD_IMAGES=Object.values(catalog).map(item=>item.image).filter(Boolean);
+function preloadImages(){
+ PRELOAD_IMAGES.forEach(src=>{
+  const img=new Image();
+  img.decoding='async';
+  img.loading='eager';
+  img.src=src;
+  if(img.decode)img.decode().catch(()=>{});
+ });
+}
+preloadImages();
 let local={};try{local=JSON.parse(localStorage.getItem(KEY)||'null')||{}}catch(e){}
 const state=local;
 state.owned=Array.isArray(state.owned)?state.owned:[];
