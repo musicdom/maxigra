@@ -54,7 +54,7 @@ function resign(){if(gameOver||thinking)return;if(window.confirm('Сдаться
 function toggleSound(){const off=localStorage.getItem('checkers-sound')==='off';localStorage.setItem('checkers-sound',off?'on':'off');update()}
 function addControls(){const footer=document.querySelector('.bottom-controls');if(!footer)return;const soundButton=$('sound-btn')||$('sound-toggle');if(soundButton){soundButton.onclick=toggleSound;soundButton.setAttribute('aria-label','Звук')}const resignButton=$('resign-btn');if(resignButton)resignButton.onclick=resign}
 if(board)board.addEventListener('click',e=>{const cell=e.target.closest('.cell');if(cell)choose(Number(cell.dataset.r),Number(cell.dataset.c))});
-$('play-btn').onclick=startGame;$('rules-play').onclick=startGame;$('rules-back').onclick=()=>showScreen('menu-screen');$('back-btn').onclick=()=>{stopGame();showScreen('menu-screen')};$('new-game-btn').onclick=startGame;$('undo-btn').onclick=()=>{if(thinking||gameOver||!history.length)return;restore(history.pop());if(turn===B&&history.length)restore(history.pop());sound('move')};$('hint-btn').onclick=hint;
+$('play-btn').onclick=startGame;$('rules-play').onclick=startGame;$('rules-back').onclick=()=>showScreen('menu-screen');$('back-btn').onclick=()=>{stopGame();showScreen('menu-screen')};$('new-game-btn').onclick=startGame;$('hint-btn').onclick=hint;
 try{window.WebApp?.ready?.();window.WebApp?.expand?.()}catch(e){}
 addControls();
 })();
