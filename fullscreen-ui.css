@@ -59,3 +59,8 @@ html{height:100%;overflow:hidden;overscroll-behavior:none}body{height:100%;min-h
 #menu-screen .menu-card .menu-small-row .menu-small{flex:1 1 0!important;width:auto!important;max-width:none!important;aspect-ratio:1!important;height:auto!important;min-height:0!important;margin:0!important;display:flex!important;align-items:center!important;justify-content:center!important;align-self:stretch!important;box-sizing:border-box!important;padding:6px!important;text-align:center!important;}
 #menu-screen .menu-card #shop-btn.menu-shop-wide{margin-top:4px!important;}
 @media(max-width:360px){#menu-screen .menu-card .menu-small-row{width:82%!important;gap:5px!important;}}
+
+/* COMPACT BUTTON ROW — preserve button size, change spacing only */
+#menu-screen .menu-card .menu-small-row{display:grid!important;grid-template-columns:repeat(3,1fr)!important;width:100%!important;gap:14px!important;margin-left:0!important;margin-right:0!important;justify-content:stretch!important;}
+#menu-screen .menu-card .menu-small-row .menu-small{width:100%!important;flex:none!important;max-width:none!important;}
+@media(max-width:360px){#menu-screen .menu-card .menu-small-row{gap:10px!important;width:100%!important;}}
