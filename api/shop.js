@@ -1,13 +1,13 @@
 import { auth, body, errorResponse, redis, reply } from './_lib.js';
 
 const CATALOG = {
-  board_90s: { price: 299 },
-  board_svo: { price: 299 },
-  board_max: { price: 299 },
-  board_orbita: { price: 299 },
+  board_90s: { price: 999 },
+  board_svo: { price: 999 },
+  board_max: { price: 999 },
+  board_orbita: { price: 999 },
   board_original: { price: 0 },
-  master: { price: 49 },
-  hints: { price: 29 }
+  master: { price: 149 },
+  hints: { price: 99 }
 };
 const BOARD_IDS = ['board_90s','board_svo','board_max','board_orbita','board_original'];
 const DEFAULT_BOARD = 'board_original';
