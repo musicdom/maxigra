@@ -25,7 +25,24 @@ function render(){
  }
 }
 function update(){
- whiteEl.textContent=pieces(W,boardState).length;blackEl.textContent=pieces(B,boardState).length;turnEl.textContent=turn===W?'Белые':'Компьютер';const mandatory=!chain&&hasCapture(turn,boardState),captureState=chain?'chain':mandatory?'mandatory':'';infoEl.className='player-label capture-info'+(captureState?' capture-info--'+captureState:'');infoEl.textContent=chain?'Продолжайте взятие':mandatory?'Взятие обязательно':'';thinkingEl.textContent=thinking?'думает…':'';const mc=$('move-count');if(mc)mc.textContent=Math.floor(halfMoves/2)+1;const h=$('shop-hints');if(h&&window.CheckersShop)h.textContent=window.CheckersShop.state.hints||0;const soundEl=$('sound-toggle');if(soundEl)soundEl.textContent=localStorage.getItem('checkers-sound')==='off'?'🔇':'🔊'
+ whiteEl.textContent=pieces(W,boardState).length;blackEl.textContent=pieces(B,boardState).length;
+ turnEl.textContent=turn===W?'Белые':'Компьютер';
+ const turnBox=turnEl?.closest('.turn-box');
+ if(turnBox){
+  const yourTurn=turn===W&&!thinking&&!gameOver;
+  const isThinking=thinking&&!gameOver;
+  turnBox.classList.toggle('is-your-turn',yourTurn);
+  turnBox.classList.toggle('is-thinking',isThinking);
+  const prev=turnBox.dataset.state||'';
+  const next=yourTurn?'your':isThinking?'thinking':'idle';
+  if(next!==prev){turnBox.dataset.state=next;turnBox.classList.remove('turn-arrived');void turnBox.offsetWidth;if(next!=='idle')turnBox.classList.add('turn-arrived')}
+ }
+ const mandatory=!chain&&hasCapture(turn,boardState),captureState=chain?'chain':mandatory?'mandatory':'';
+ infoEl.className='player-label capture-info'+(captureState?' capture-info--'+captureState:'');
+ infoEl.textContent=chain?'Продолжайте взятие':mandatory?'Взятие обязательно':'';
+ thinkingEl.className='player-label thinking-indicator';
+ thinkingEl.textContent=thinking?'Компьютер думает':'';
+ const mc=$('move-count');if(mc)mc.textContent=Math.floor(halfMoves/2)+1;const h=$('shop-hints');if(h&&window.CheckersShop)h.textContent=window.CheckersShop.state.hints||0;const soundEl=$('sound-toggle');if(soundEl)soundEl.textContent=localStorage.getItem('checkers-sound')==='off'?'🔇':'🔊'
 }
 function snapshot(){return{b:copy(boardState),turn,last:lastMove?JSON.parse(JSON.stringify(lastMove)):null,half:halfMoves,reps:Array.from(repetitions.entries())}}
 function restore(s){clearTimeout(aiTimer);boardState=copy(s.b);turn=s.turn;selected=chain=null;gameOver=false;thinking=false;lastMove=s.last;halfMoves=s.half;repetitions=new Map(s.reps||[]);render();update()}
