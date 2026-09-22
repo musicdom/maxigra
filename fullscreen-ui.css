@@ -109,7 +109,7 @@ html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
 @media(max-width:420px){
 #menu-screen{padding-left:14px;padding-right:14px}
 .menu-card{padding-top:4px!important;padding-bottom:22px!important}
-.menu-logo{width:min(360px,98vw)!important;height:auto!important;min-height:90px!important;font-size:0!important;margin:0 0 21px!important;border-radius:0!important;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important}.menu-logo img{display:block!important;width:100%!important;height:auto!important;max-height:175px!important;object-fit:contain!important;object-position:center center!important}
+.menu-logo{width:min(432px,100vw)!important;height:auto!important;min-height:90px!important;font-size:0!important;margin:0 auto 21px!important;border-radius:0!important;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important}.menu-logo img{display:block!important;width:100%!important;height:auto!important;max-height:210px!important;object-fit:contain!important;object-position:center center!important}
 .menu-card h1{font-size:39px!important}
 .menu-note{font-size:13px!important;margin-bottom:15px!important}
 .menu-card #play-btn,.menu-card #online-play-btn{min-height:61px!important}
