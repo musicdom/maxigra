@@ -8,7 +8,8 @@ const CATALOG = {
   board_orbita: { price: 999 },
   board_original: { price: 0 },
   master: { price: 149 },
-  hints: { price: 99 }
+  hints: { price: 99 },
+  starter_pack: { price: 599 }
 };
 const ORDER_TTL = 86400;
 const RECEIVER = String(process.env.YOOMONEY_RECEIVER || '').trim();
