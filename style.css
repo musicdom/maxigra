@@ -39,6 +39,8 @@
 @keyframes startup-load{0%{transform:translateX(-125%)}50%{transform:translateX(145%)}100%{transform:translateX(280%)}}
 @media(prefers-reduced-motion:reduce){.startup-loader span{animation:none;transform:translateX(140%)}}
 
-/* Защита главного меню от горизонтального перетягивания */
-#menu-screen,#menu-screen .menu-card{touch-action:pan-y;overflow-x:hidden}
-#menu-screen .menu-logo,#menu-screen .menu-logo img,#menu-screen .menu-card .btn{touch-action:manipulation;-webkit-user-drag:none;user-select:none}
+/* Жёсткая блокировка горизонтального жеста главного меню */
+#menu-screen{touch-action:none!important;overscroll-behavior:none!important;overflow:hidden!important;overflow-x:hidden!important;overflow-y:hidden!important;transform:none!important}
+#menu-screen .menu-card{touch-action:none!important;overflow:hidden!important;overflow-x:hidden!important;max-width:100%!important}
+#menu-screen .menu-logo,#menu-screen .menu-logo img,#menu-screen .menu-card .btn{touch-action:none!important;-webkit-user-drag:none!important;user-select:none!important}
+#menu-screen .menu-logo img{pointer-events:none!important}
