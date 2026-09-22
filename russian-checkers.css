@@ -29,3 +29,20 @@
 @keyframes turn-arrived{0%{transform:scale(.96);filter:brightness(.85)}55%{transform:scale(1.045);filter:brightness(1.12)}100%{transform:scale(1);filter:brightness(1)}}
 @keyframes thinking-dots{0%{clip-path:inset(0 12px 0 0)}50%{clip-path:inset(0 6px 0 0)}100%{clip-path:inset(0 0 0 0)}}
 @media (prefers-reduced-motion:reduce){.turn-box.turn-arrived{animation:none}.thinking-indicator::after{animation:none}}
+
+
+/* Unified back navigation */
+#online-cancel-btn,#game-back,#shop-back,#admin-back,#profile-back,#leaderboard-back,#rules-back{
+  width:42px;
+  height:42px;
+  min-width:42px;
+  padding:0;
+  border-radius:13px;
+  font-size:22px;
+  line-height:1;
+  font-weight:500;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+#online-cancel-btn:active,#game-back:active,#shop-back:active,#admin-back:active,#profile-back:active,#leaderboard-back:active,#rules-back:active{
+  transform:scale(.94);
+}
