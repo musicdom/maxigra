@@ -51,7 +51,16 @@ function initStarterOffer(){
 }
 function startOnlineFromButton(){const openRooms=()=>window.CheckersRooms?.open?.();if(window.CheckersRooms?.open){openRooms();return}show('online-search-screen');const el=q('online-search-text');if(el)el.textContent='Загрузка комнат…';const handler=()=>{window.removeEventListener('checkers-online-ready',handler);openRooms()};window.addEventListener('checkers-online-ready',handler,{once:true})}
 function ensureAdminButton(){const panel=q('profile-screen')?.querySelector('.profile-panel');if(!panel)return;let b=q('profile-admin-btn');const isAdmin=String(window.CheckersAuth?.user?.id)==='163701646';if(!isAdmin){b?.remove();return}if(!b){b=document.createElement('button');b.id='profile-admin-btn';b.className='btn btn--primary';b.textContent='⚙️ Админ-панель';b.addEventListener('click',()=>window.CheckersAdmin?.show?.());panel.appendChild(b)}}
+function lockMenuHorizontalGesture(){
+ const menu=q('menu-screen');if(!menu||menu.dataset.gestureLocked==='1')return;
+ menu.dataset.gestureLocked='1';
+ let sx=0,sy=0,tracking=false;
+ menu.addEventListener('touchstart',e=>{const t=e.touches?.[0];if(!t)return;sx=t.clientX;sy=t.clientY;tracking=true},{passive:true});
+ menu.addEventListener('touchmove',e=>{if(!tracking)return;const t=e.touches?.[0];if(!t)return;const dx=t.clientX-sx,dy=t.clientY-sy;if(Math.abs(dx)>Math.abs(dy)+3)e.preventDefault()},{passive:false});
+ menu.addEventListener('touchend',()=>{tracking=false},{passive:true});
+ menu.addEventListener('touchcancel',()=>{tracking=false},{passive:true});
+}
 function bindNavigation(){q('shop-btn')?.addEventListener('click',()=>show('shop-screen'));q('profile-btn')?.addEventListener('click',()=>{syncProfile();show('profile-screen')});q('rules-btn')?.addEventListener('click',()=>show('rules-screen'));q('shop-back')?.addEventListener('click',()=>show('menu-screen'));q('profile-back')?.addEventListener('click',()=>show('menu-screen'));q('rules-back')?.addEventListener('click',()=>show('menu-screen'));ensureAdminButton();const onlineBtn=q('online-play-btn');if(onlineBtn)onlineBtn.onclick=e=>{e.preventDefault();e.stopPropagation();startOnlineFromButton()};const cancel=q('online-cancel-btn');if(cancel)cancel.onclick=e=>{e.preventDefault();e.stopPropagation();show('menu-screen')}}
-function boot(){bindNavigation();setTimeout(initStarterOffer,900);q('game-back')?.addEventListener('click',gameBack);window.addEventListener('max-profile-ready',()=>{syncProfile();ensureAdminButton();setTimeout(initStarterOffer,180)});window.addEventListener('shop-state-ready',()=>{renderOwnedBoards();syncProfile()});window.addEventListener('online-game-started',()=>show('game-screen'));syncProfile()}
+function boot(){lockMenuHorizontalGesture();bindNavigation();setTimeout(initStarterOffer,900);q('game-back')?.addEventListener('click',gameBack);window.addEventListener('max-profile-ready',()=>{syncProfile();ensureAdminButton();setTimeout(initStarterOffer,180)});window.addEventListener('shop-state-ready',()=>{renderOwnedBoards();syncProfile()});window.addEventListener('online-game-started',()=>show('game-screen'));syncProfile()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
