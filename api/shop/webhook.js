@@ -38,6 +38,11 @@ async function grant(order) {
   const itemId = String(order.itemId);
   if (itemId === 'hints') {
     state.hints = Math.max(0, Number(state.hints) || 0) + 50;
+  } else if (itemId === 'starter_pack') {
+    state.hints = Math.max(0, Number(state.hints) || 0) + 25;
+    if (!owned.includes('board_svo')) owned.push('board_svo');
+    if (!owned.includes('board_90s')) owned.push('board_90s');
+    if (!owned.includes('starter_pack')) owned.push('starter_pack');
   } else if (!owned.includes(itemId)) {
     owned.push(itemId);
   }
