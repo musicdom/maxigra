@@ -1,7 +1,7 @@
 import fs from "fs";
 import https from "https";
 import path from "path";
-import {handlePostings,handlePostingsCallback} from "../lib/postings.js";
+import {handlePostings,handlePostingsCallback,handleChannelUpdate} from "../lib/postings.js";
 
 function maxRequest({token,method="GET",apiPath,body=null}){
  return new Promise((resolve,reject)=>{
@@ -30,7 +30,7 @@ export default async function handler(req,res){
   try{
    const token=process.env.MAX_BOT_TOKEN||process.env.MAX_BOT_TOKEN_VALUE;
    if(!token)return res.status(500).json({ok:false,error:"MAX_BOT_TOKEN not configured"});
-   const r=await maxRequest({token,method:"POST",apiPath:"/subscriptions",body:{url:"https://maxigra.vercel.app/api/webhook",update_types:["message_created","message_callback","bot_started"]}});
+   const r=await maxRequest({token,method:"POST",apiPath:"/subscriptions",body:{url:"https://maxigra.vercel.app/api/webhook",update_types:["bot_added","bot_removed","message_created","message_removed","message_callback","bot_started"]}});
    return res.status(200).json({ok:r.ok,webhook:"https://maxigra.vercel.app/api/webhook",max_status:r.status,result:r.data||r.raw});
   }catch(e){console.error("MAX SUBSCRIBE ERROR",e);return res.status(500).json({ok:false,error:e.message})}
  }
@@ -40,7 +40,8 @@ export default async function handler(req,res){
   const updates=Array.isArray(root?.updates)?root.updates:[root];
   for(const u of updates){
    const type=u?.update_type||u?.type||root?.update_type||root?.type||"";
-   const id=uid(u);console.log("MAXИГРА WEBHOOK",{type,id});
+   const id=uid(u);console.log("MAXИГРА WEBHOOK",{type,id,chat_id:u?.chat_id??u?.message?.recipient?.chat_id??null,is_channel:u?.is_channel??u?.message?.recipient?.type});
+   await handleChannelUpdate(u);
    if(!id)continue;
    if(type==="message_callback"){await handlePostingsCallback(id,u?.callback?.payload??u?.payload??"",u?.callback?.callback_id??u?.callback?.id??null);continue}
    if(type==="message_created")await handlePostings(id,txt(u));
