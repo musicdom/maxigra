@@ -4,13 +4,13 @@
 const KEY='russian-checkers-account-v2';
 const DEFAULT_BOARD='board_original';
 const catalog={
-  board_90s:{title:'СВО',price:299,image:'assets/boards/IMG_4486.jpeg',tag:'ДОСКА',desc:'Оформление в стилистике СВО.'},
-  board_svo:{title:'90-е',price:299,image:'assets/boards/IMG_4487.jpeg',tag:'ДОСКА',desc:'Ретро-стиль с атмосферой классических 90-х.'},
-  board_max:{title:'MAX',price:299,image:'assets/boards/IMG_4586.jpeg',tag:'ДОСКА',desc:'Фирменное оформление в стиле MAX.'},
-  board_orbita:{title:'ОРБИТА',price:299,image:'assets/boards/IMG_4587.jpeg',tag:'ДОСКА',desc:'Космическое оформление в стиле ОРБИТА.'},
+  board_90s:{title:'СВО',price:999,image:'assets/boards/IMG_4486.jpeg',tag:'ДОСКА',desc:'Оформление в стилистике СВО.'},
+  board_svo:{title:'90-е',price:999,image:'assets/boards/IMG_4487.jpeg',tag:'ДОСКА',desc:'Ретро-стиль с атмосферой классических 90-х.'},
+  board_max:{title:'MAX',price:999,image:'assets/boards/IMG_4586.jpeg',tag:'ДОСКА',desc:'Фирменное оформление в стиле MAX.'},
+  board_orbita:{title:'ОРБИТА',price:999,image:'assets/boards/IMG_4587.jpeg',tag:'ДОСКА',desc:'Космическое оформление в стиле ОРБИТА.'},
   board_original:{title:'Оригинал',price:0,image:'assets/boards/IMG_4589.jpeg',tag:'ДОСКА',desc:'Оригинальное оформление игры.'},
-  master:{title:'Гроссмейстер',price:49,icon:'🏆',tag:'ИИ',desc:'Открывает максимальный уровень компьютера.'},
-  hints:{title:'50 подсказок',price:29,icon:'💡',tag:'ПАКЕТ',desc:'50 подсказок для сложных позиций.'}
+  master:{title:'Гроссмейстер',price:149,icon:'🏆',tag:'ИИ',desc:'Открывает максимальный уровень компьютера.'},
+  hints:{title:'50 подсказок',price:99,icon:'💡',tag:'ПАКЕТ',desc:'50 подсказок для сложных позиций.'}
 };
 const boardIds=['board_90s','board_svo','board_max','board_orbita','board_original'];
 // В MAX используем DeviceStorage для сохранения уже загруженных изображений между запусками.
