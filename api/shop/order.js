@@ -7,8 +7,8 @@ const CATALOG = {
   board_max: { price: 299 },
   board_orbita: { price: 299 },
   board_original: { price: 0 },
-  master: { price: 9 },
-  hints: { price: 5 }
+  master: { price: 49 },
+  hints: { price: 29 }
 };
 const ORDER_TTL = 86400;
 const RECEIVER = String(process.env.YOOMONEY_RECEIVER || '').trim();
