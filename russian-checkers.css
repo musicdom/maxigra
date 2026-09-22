@@ -17,3 +17,15 @@
 .checkers-toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);padding:12px 18px;border-radius:14px;background:rgba(0,0,0,.82);color:#fff;z-index:10000;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.35);display:none;pointer-events:none}
 @keyframes piece-in{from{transform:scale(.86);opacity:.7}to{transform:scale(1);opacity:1}}
 .capture-info{transition:all .2s ease}.capture-info--mandatory{color:#ffc857!important;font-weight:800!important;text-shadow:0 0 12px rgba(255,200,87,.22)}.capture-info--chain{color:#62d8ff!important;font-weight:850!important;text-shadow:0 0 12px rgba(98,216,255,.24)}.capture-info--chain::before{content:'●';margin-right:6px;font-size:8px;vertical-align:1px}@keyframes selected-piece{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.045);filter:brightness(1.08)}}@keyframes move-dot{0%,100%{transform:scale(.88);opacity:.72}50%{transform:scale(1);opacity:1}}@media (prefers-reduced-motion:reduce){.cell.possible:after,.cell.selected .piece{animation:none}}
+
+
+/* Turn transition UX */
+.turn-box{transition:transform .22s ease,filter .22s ease}
+.turn-box.is-your-turn strong{color:#ffc857;text-shadow:0 0 16px rgba(255,200,87,.28)}
+.turn-box.is-thinking strong{color:#62d8ff;text-shadow:0 0 14px rgba(98,216,255,.22)}
+.turn-box.turn-arrived{animation:turn-arrived .42s ease-out}
+.thinking-indicator{color:#62d8ff!important;font-weight:750!important;letter-spacing:.2px}
+.thinking-indicator::after{content:'•••';display:inline-block;width:18px;margin-left:4px;letter-spacing:2px;animation:thinking-dots 1s steps(4,end) infinite}
+@keyframes turn-arrived{0%{transform:scale(.96);filter:brightness(.85)}55%{transform:scale(1.045);filter:brightness(1.12)}100%{transform:scale(1);filter:brightness(1)}}
+@keyframes thinking-dots{0%{clip-path:inset(0 12px 0 0)}50%{clip-path:inset(0 6px 0 0)}100%{clip-path:inset(0 0 0 0)}}
+@media (prefers-reduced-motion:reduce){.turn-box.turn-arrived{animation:none}.thinking-indicator::after{animation:none}}
