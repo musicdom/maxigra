@@ -19,9 +19,9 @@ async function init(){
   if(window.__maxAuthStarted)return;
   window.__maxAuthStarted=true;
   let user=null;
-  for(let i=0;i<20&&!user;i++){
+  for(let i=0;i<60&&!user;i++){
     user=readMaxUser();
-    if(!user)await new Promise(resolve=>setTimeout(resolve,150));
+    if(!user)await new Promise(resolve=>setTimeout(resolve,250));
   }
   if(!user){
     try{
