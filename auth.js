@@ -6,22 +6,38 @@ const goMenu=()=>{
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('menu-screen')?.classList.add('active');
 };
+function parseInitUser(raw){
+  try{
+    const params=new URLSearchParams(String(raw||''));
+    const encoded=params.get('user');
+    if(!encoded)return null;
+    const u=JSON.parse(encoded);
+    if(!u?.id)return null;
+    const first=String(u.first_name||'').trim();
+    const last=String(u.last_name||'').trim();
+    const name=[first,last].filter(Boolean).join(' ')||String(u.username||'').trim()||'Игрок';
+    return {id:String(u.id),name,username:String(u.username||''),photo:String(u.photo_url||''),guest:false,max:true};
+  }catch(e){return null}
+}
 function readMaxUser(){
   const wa=window.WebApp;
-  const u=wa?.initDataUnsafe?.user;
-  if(!u?.id)return null;
-  const first=String(u.first_name||'').trim();
-  const last=String(u.last_name||'').trim();
-  const name=[first,last].filter(Boolean).join(' ')||'Игрок';
-  return {id:String(u.id),name,username:String(u.username||''),photo:String(u.photo_url||''),guest:false,max:true};
+  return parseInitUser(wa?.initData)||(()=>{
+    const u=wa?.initDataUnsafe?.user;
+    if(!u?.id)return null;
+    const first=String(u.first_name||'').trim();
+    const last=String(u.last_name||'').trim();
+    const name=[first,last].filter(Boolean).join(' ')||'Игрок';
+    return {id:String(u.id),name,username:String(u.username||''),photo:String(u.photo_url||''),guest:false,max:true};
+  })();
 }
 async function init(){
   if(window.__maxAuthStarted)return;
   window.__maxAuthStarted=true;
-  let user=null;
-  for(let i=0;i<60&&!user;i++){
+  let user=null, initData='';
+  for(let i=0;i<60&&(!user||!initData);i++){
+    initData=String(window.WebApp?.initData||'').trim();
     user=readMaxUser();
-    if(!user)await new Promise(resolve=>setTimeout(resolve,250));
+    if(!user||!initData)await new Promise(resolve=>setTimeout(resolve,250));
   }
   if(!user){
     try{
@@ -35,7 +51,7 @@ async function init(){
   // Регистрируем пользователя через уже существующий /api/profile,
   // чтобы не создавать отдельную Serverless Function на Vercel.
   try{
-    const init=window.WebApp?.initData||'';
+    const init=String(window.WebApp?.initData||'').trim();
     if(init)fetch(window.maxigraApiUrl('/api/profile'),{
       method:'POST',
       headers:{'content-type':'application/json','x-max-init-data':init},
@@ -43,7 +59,7 @@ async function init(){
       keepalive:true
     }).catch(()=>{});
   }catch(e){}
-  window.CheckersAuth={user,registered:!user.guest,ready:true,guest:!!user.guest,max:!!user.max};
+  window.CheckersAuth={user,registered:!user.guest,ready:true,guest:!!user.guest,max:!!user.max,initData:init};
   document.body.classList.remove('max-auth-blocked');
   window.dispatchEvent(new CustomEvent('max-profile-ready',{detail:user}));
   // На iOS/Android MAX ждём завершения нативного кэша изображений,
