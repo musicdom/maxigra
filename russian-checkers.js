@@ -25,7 +25,7 @@ function render(){
  }
 }
 function update(){
- whiteEl.textContent=pieces(W,boardState).length;blackEl.textContent=pieces(B,boardState).length;turnEl.textContent=turn===W?'Белые':'Компьютер';infoEl.textContent=chain?'⚔ Продолжайте взятие':hasCapture(turn,boardState)?'⚔ Взятие обязательно':'';thinkingEl.textContent=thinking?'думает…':'';const mc=$('move-count');if(mc)mc.textContent=Math.floor(halfMoves/2)+1;const h=$('shop-hints');if(h&&window.CheckersShop)h.textContent=window.CheckersShop.state.hints||0;const soundEl=$('sound-toggle');if(soundEl)soundEl.textContent=localStorage.getItem('checkers-sound')==='off'?'🔇':'🔊'
+ whiteEl.textContent=pieces(W,boardState).length;blackEl.textContent=pieces(B,boardState).length;turnEl.textContent=turn===W?'Белые':'Компьютер';const mandatory=!chain&&hasCapture(turn,boardState),captureState=chain?'chain':mandatory?'mandatory':'';infoEl.className='player-label capture-info'+(captureState?' capture-info--'+captureState:'');infoEl.textContent=chain?'Продолжайте взятие':mandatory?'Взятие обязательно':'';thinkingEl.textContent=thinking?'думает…':'';const mc=$('move-count');if(mc)mc.textContent=Math.floor(halfMoves/2)+1;const h=$('shop-hints');if(h&&window.CheckersShop)h.textContent=window.CheckersShop.state.hints||0;const soundEl=$('sound-toggle');if(soundEl)soundEl.textContent=localStorage.getItem('checkers-sound')==='off'?'🔇':'🔊'
 }
 function snapshot(){return{b:copy(boardState),turn,last:lastMove?JSON.parse(JSON.stringify(lastMove)):null,half:halfMoves,reps:Array.from(repetitions.entries())}}
 function restore(s){clearTimeout(aiTimer);boardState=copy(s.b);turn=s.turn;selected=chain=null;gameOver=false;thinking=false;lastMove=s.last;halfMoves=s.half;repetitions=new Map(s.reps||[]);render();update()}
