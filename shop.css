@@ -35,7 +35,7 @@
 .starter-offer-sheet::before{content:"";display:block;width:42px;height:4px;margin:0 auto 6px;border-radius:99px;background:rgba(210,235,255,.18)}
 .starter-offer-close{position:absolute!important;z-index:5;right:12px;top:10px;width:32px;height:32px;border:1px solid rgba(255,255,255,.08);border-radius:50%;background:rgba(255,255,255,.07);color:#edf6ff;font-size:22px;line-height:1;display:grid;place-items:center;cursor:pointer}
 .starter-offer-art-wrap{width:calc(100% + 36px);height:300px;margin:-2px -18px 2px;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.starter-offer-art{display:block!important;width:55%!important;height:55%!important;max-width:55%!important;max-height:55%!important;object-fit:contain!important;object-position:center!important;transform:none!important;filter:drop-shadow(0 12px 24px rgba(0,0,0,.28))}
+.starter-offer-art{display:block!important;width:120%!important;height:120%!important;max-width:120%!important;max-height:120%!important;object-fit:contain!important;object-position:center!important;transform:none!important;filter:drop-shadow(0 12px 24px rgba(0,0,0,.28))}
 .starter-offer-kicker{margin:0 0 4px;font-size:9px;font-weight:850;letter-spacing:.14em;color:#70bfff}
 .starter-offer-sheet h2{margin:0 44px 5px 0;font-size:23px;line-height:1.12;letter-spacing:-.02em}
 .starter-offer-lead{margin:0 22px 10px 0;font-size:11px;line-height:1.35;color:rgba(220,235,250,.58)}
@@ -48,7 +48,7 @@
 @media(max-width:380px){
  .starter-offer-sheet{padding:10px 13px calc(13px + env(safe-area-inset-bottom));border-radius:23px 23px 0 0}
  .starter-offer-art-wrap{width:calc(100% + 26px);height:255px;margin:-2px -13px 2px}
- .starter-offer-art{width:55%!important;height:55%!important;max-width:55%!important;max-height:55%!important;transform:none!important}
+ .starter-offer-art{width:120%!important;height:120%!important;max-width:120%!important;max-height:120%!important;transform:none!important}
  .starter-offer-sheet h2{font-size:21px}
  .starter-offer-lead{font-size:10.5px;margin-bottom:9px}
  .starter-offer-item{padding:6px;gap:5px}
