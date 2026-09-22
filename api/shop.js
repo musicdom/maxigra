@@ -7,7 +7,8 @@ const CATALOG = {
   board_orbita: { price: 999 },
   board_original: { price: 0 },
   master: { price: 149 },
-  hints: { price: 99 }
+  hints: { price: 99 },
+  starter_pack: { price: 599 }
 };
 const BOARD_IDS = ['board_90s','board_svo','board_max','board_orbita','board_original'];
 const DEFAULT_BOARD = 'board_original';
