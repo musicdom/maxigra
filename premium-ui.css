@@ -1,25 +1,26 @@
-/* MAXИГРА — FULL MINI APP REDESIGN v2
+/* MAXИГРА — PREMIUM UI LAYER
    Direction: native MAX-style dark surface + premium board-game identity.
    Visual only: existing JS/API/game logic remains untouched.
 */
+/* Canonical MAXИГРА tokens — aliases kept for backwards-compatible component selectors. */
 :root{
-  --mx-bg:#070b12;
-  --mx-bg2:#0b111b;
+  --mx-bg:var(--bg);
+  --mx-bg2:var(--bg2);
   --mx-card:#101722;
   --mx-card2:#151e2b;
-  --mx-line:rgba(255,255,255,.085);
+  --mx-line:var(--line);
   --mx-line-strong:rgba(255,255,255,.13);
-  --mx-text:#f5f7fa;
-  --mx-muted:#8e99a8;
-  --mx-dim:#5e6a7a;
-  --mx-blue:#4da3ff;
-  --mx-blue2:#2477d5;
-  --mx-gold:#ffc857;
-  --mx-green:#39d39a;
-  --mx-red:#ff5d67;
-  --mx-radius:22px;
+  --mx-text:var(--white);
+  --mx-muted:var(--muted);
+  --mx-dim:var(--dim);
+  --mx-blue:var(--blue);
+  --mx-blue2:var(--blue2);
+  --mx-gold:var(--gold);
+  --mx-green:var(--green);
+  --mx-red:var(--danger);
+  --mx-radius:var(--radius);
   --mx-shadow:0 22px 70px rgba(0,0,0,.38);
-  --mx-font:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mx-font:var(--font);
 }
 
 *{box-sizing:border-box}
