@@ -26,3 +26,15 @@
 .menu-card #profile-btn.menu-small,.menu-card #leaderboard-btn.menu-small,.menu-card #rules-btn.menu-small{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-width:0!important;max-width:none!important;aspect-ratio:1 / 1!important;height:auto!important;min-height:0!important;box-sizing:border-box!important;padding:8px!important;font-size:13px!important;line-height:1.1!important;margin:0!important;flex-direction:row!important;}
 
 @media(max-width:360px){.menu-card .menu-small-row{gap:6px!important}.menu-card #profile-btn.menu-small,.menu-card #leaderboard-btn.menu-small,.menu-card #rules-btn.menu-small{font-size:13px!important;padding-left:5px!important;padding-right:5px!important;}.menu-card #shop-btn.menu-shop-wide{height:56px!important;min-height:56px!important;}}
+
+/* Startup screen — shown only while MAX profile and critical images are preparing. */
+.startup-screen{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,rgba(35,105,170,.16),transparent 38%),linear-gradient(145deg,var(--bg),var(--bg2));opacity:1;visibility:visible;transition:opacity .28s ease,visibility .28s ease}
+.startup-screen--hide{opacity:0;visibility:hidden;pointer-events:none}
+.startup-card{width:min(250px,calc(100vw - 48px));padding:30px 24px 27px;border:1px solid rgba(103,172,239,.18);border-radius:26px;background:linear-gradient(145deg,rgba(16,23,34,.94),rgba(8,15,24,.92));box-shadow:0 24px 70px rgba(0,0,0,.42),0 0 50px rgba(45,132,219,.08);text-align:center;box-sizing:border-box}
+.startup-piece{width:58px;height:58px;margin:0 auto 12px;display:grid;place-items:center;border-radius:18px;background:linear-gradient(145deg,rgba(77,163,255,.20),rgba(77,163,255,.06));border:1px solid rgba(77,163,255,.28);color:var(--white);font-family:Georgia,serif;font-size:34px;line-height:1;box-shadow:0 10px 28px rgba(0,0,0,.22)}
+.startup-title{font-size:22px;font-weight:900;letter-spacing:.2px;color:var(--white)}
+.startup-sub{margin-top:5px;color:var(--muted);font-size:11px}
+.startup-loader{width:128px;height:3px;margin:19px auto 0;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.08)}
+.startup-loader span{display:block;width:42%;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--blue2),var(--cyan));animation:startup-load 1.15s ease-in-out infinite}
+@keyframes startup-load{0%{transform:translateX(-125%)}50%{transform:translateX(145%)}100%{transform:translateX(280%)}}
+@media(prefers-reduced-motion:reduce){.startup-loader span{animation:none;transform:translateX(140%)}}
