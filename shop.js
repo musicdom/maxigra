@@ -9,8 +9,8 @@ const catalog={
   board_max:{title:'MAX',price:299,image:'assets/boards/IMG_4586.jpeg',tag:'ДОСКА',desc:'Фирменное оформление в стиле MAX.'},
   board_orbita:{title:'ОРБИТА',price:299,image:'assets/boards/IMG_4587.jpeg',tag:'ДОСКА',desc:'Космическое оформление в стиле ОРБИТА.'},
   board_original:{title:'Оригинал',price:0,image:'assets/boards/IMG_4589.jpeg',tag:'ДОСКА',desc:'Оригинальное оформление игры.'},
-  master:{title:'Гроссмейстер',price:9,icon:'🏆',tag:'ИИ',desc:'Открывает максимальный уровень компьютера.'},
-  hints:{title:'50 подсказок',price:5,icon:'💡',tag:'ПАКЕТ',desc:'50 подсказок для сложных позиций.'}
+  master:{title:'Гроссмейстер',price:49,icon:'🏆',tag:'ИИ',desc:'Открывает максимальный уровень компьютера.'},
+  hints:{title:'50 подсказок',price:29,icon:'💡',tag:'ПАКЕТ',desc:'50 подсказок для сложных позиций.'}
 };
 const boardIds=['board_90s','board_svo','board_max','board_orbita','board_original'];
 // В MAX используем DeviceStorage для сохранения уже загруженных изображений между запусками.
@@ -79,7 +79,7 @@ async function createOrder(id){
  const r=await fetch(window.maxigraApiUrl('/api/shop/order'),{method:'POST',headers:{'content-type':'application/json','x-max-init-data':init},body:JSON.stringify({id}),cache:'no-store'});
  const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);return d.order;
 }
-async function buy(id){if(!catalog[id]||owned(id)||id===DEFAULT_BOARD)return false;if(catalog[id].price===0)return request('purchase',id);return createOrder(id)}
+async function buy(id){if(!catalog[id]||id===DEFAULT_BOARD)return false;if(id==='hints')return createOrder(id);if(owned(id))return false;if(catalog[id].price===0)return request('purchase',id);return createOrder(id)}
 async function selectBoard(id){if(id===DEFAULT_BOARD||id==='board_original'){state.selectedBoard=DEFAULT_BOARD;save();try{await request('select',DEFAULT_BOARD)}catch{}return true}if(!owned(id))return false;return request('select',id)}
 async function resetForTest(){
  const result=await request('reset-test','');
