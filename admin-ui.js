@@ -15,26 +15,17 @@ function render(){
  const box=q('admin-content');if(!box)return;
  if(!accounts.length){box.innerHTML='<div class="admin-empty">Пока нет зарегистрированных аккаунтов.</div>';return}
  box.innerHTML=accounts.map(u=>{const owned=u.shop?.owned||[];return `<article class="admin-account">
-  <div class="admin-user" data-max-user="${esc(u.id)}" data-max-username="${esc(u.username||'')}" role="link" tabindex="0" aria-label="Открыть аккаунт в MAX"><div class="admin-avatar">${u.photo?'<img src="'+esc(u.photo)+'" alt="">':'♟️'}</div><div class="admin-user-main"><b>${esc(u.name||'Игрок')}</b><span>ID: ${esc(u.id)}</span>${u.username?'<span>@'+esc(u.username)+'</span>':''}</div>${String(u.id)==='163701646'?'<em>АДМИН</em>':''}</div>
+  <div class="admin-user"><div class="admin-avatar">${u.photo?'<img src="'+esc(u.photo)+'" alt="">':'♟️'}<button type="button" class="admin-open-max" data-max-user="${esc(u.id)}" data-max-username="${esc(u.username||'')}" aria-label="Открыть аккаунт в MAX">MAX ↗</button></div><div class="admin-user-main"><b>${esc(u.name||'Игрок')}</b><span>ID: ${esc(u.id)}</span>${u.username?'<span>@'+esc(u.username)+'</span>':''}</div>${String(u.id)==='163701646'?'<em>АДМИН</em>':''}</div>
   <div class="admin-boards">${Object.entries(boards).map(([id,x])=>`<button class="admin-board ${owned.includes(id)?'is-owned':''}" data-user="${esc(u.id)}" data-board="${id}"><span>${esc(x.title)}</span><small>${owned.includes(id)?'✓ доступна':'299 ₽'}</small></button>`).join('')}</div>
   <button class="btn btn--secondary admin-reset" data-reset="${esc(u.id)}">🧹 Очистить покупки</button>
  </article>`}).join('');
- box.querySelectorAll('[data-max-user]').forEach(b=>{
-   const openUser=()=>{
-     const username=String(b.dataset.maxUsername||'').trim().replace(/^@/,'');
-     const id=String(b.dataset.maxUser||'').trim();
-     if(!username&&!id)return;
-     // Публичный профиль MAX открывается по username. Если username отсутствует,
-     // используем user deep-link как запасной вариант.
-     const url=username?'https://max.ru/'+encodeURIComponent(username):'max://user/'+encodeURIComponent(id);
-     try{
-       if(window.WebApp?.openLink) window.WebApp.openLink(url);
-       else window.location.href=url;
-     }catch{window.location.href=url}
-   };
-   b.addEventListener('click',openUser);
-   b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openUser()}});
- });
+ box.querySelectorAll('[data-max-user]').forEach(b=>b.addEventListener('click',()=>{
+    const username=String(b.dataset.maxUsername||'').trim().replace(/^@/,'');
+    const id=String(b.dataset.maxUser||'').trim();
+    if(!username&&!id)return;
+    const url=username?'https://max.ru/'+encodeURIComponent(username):'max://user/'+encodeURIComponent(id);
+    try{if(window.WebApp?.openLink)window.WebApp.openLink(url);else window.location.href=url}catch{window.location.href=url}
+  }));
  box.querySelectorAll('[data-board]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{const own=b.classList.contains('is-owned');await api({action:own?'revoke':'grant',userId:b.dataset.user,boardId:b.dataset.board});await load();notice(own?'Доступ к доске снят':'Доска выдана аккаунту')}catch(e){notice(e.message)}finally{b.disabled=false}});
  box.querySelectorAll('[data-reset]').forEach(b=>b.onclick=async()=>{if(!confirm('Очистить купленные доски у этого аккаунта? Оригинал останется бесплатно.'))return;b.disabled=true;try{await api({action:'reset',userId:b.dataset.reset});await load();notice('Покупки очищены. Осталась «Оригинал».')}catch(e){notice(e.message)}finally{b.disabled=false}});
 }
