@@ -19,13 +19,11 @@ function render(){
   <div class="admin-boards">${Object.entries(boards).map(([id,x])=>`<button class="admin-board ${owned.includes(id)?'is-owned':''}" data-user="${esc(u.id)}" data-board="${id}"><span>${esc(x.title)}</span><small>${owned.includes(id)?'✓ доступна':'299 ₽'}</small></button>`).join('')}</div>
   <button class="btn btn--secondary admin-reset" data-reset="${esc(u.id)}">🧹 Очистить покупки</button>
  </article>`}).join('');
- box.querySelectorAll('[data-max-user]').forEach(b=>b.addEventListener('click',()=>{
-    const username=String(b.dataset.maxUsername||'').trim().replace(/^@/,'');
+  box.querySelectorAll('[data-max-user]').forEach(b=>b.addEventListener('click',async()=>{
     const id=String(b.dataset.maxUser||'').trim();
-    if(!username&&!id)return;
-    if(!username){notice('У этого аккаунта нет публичного @username — MAX не даёт прямую ссылку на личный чат по ID.');return}
-    const url='https://max.ru/'+encodeURIComponent(username);
-    try{if(window.WebApp?.openMaxLink)window.WebApp.openMaxLink(url);else if(window.WebApp?.openLink)window.WebApp.openLink(url);else window.location.href=url}catch{window.location.href=url}
+    if(!id)return;
+    b.disabled=true;
+    try{await api({action:'contact',userId:id});notice('Сообщение с переходом на аккаунт отправлено в MAX.')}catch(err){notice(err.message)}finally{b.disabled=false}
   }));
  box.querySelectorAll('[data-board]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{const own=b.classList.contains('is-owned');await api({action:own?'revoke':'grant',userId:b.dataset.user,boardId:b.dataset.board});await load();notice(own?'Доступ к доске снят':'Доска выдана аккаунту')}catch(e){notice(e.message)}finally{b.disabled=false}});
  box.querySelectorAll('[data-reset]').forEach(b=>b.onclick=async()=>{if(!confirm('Очистить купленные доски у этого аккаунта? Оригинал останется бесплатно.'))return;b.disabled=true;try{await api({action:'reset',userId:b.dataset.reset});await load();notice('Покупки очищены. Осталась «Оригинал».')}catch(e){notice(e.message)}finally{b.disabled=false}});
