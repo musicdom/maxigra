@@ -1,4 +1,5 @@
 import { auth, body, errorResponse, redis, reply } from './_lib.js';
+import { send as sendMaxMessage } from '../lib/postings.js';
 
 const ADMIN_ID='163701646';
 const INVENTORY_KEY=id=>`checkers:shop:user:${id}`;
@@ -8,6 +9,8 @@ const CATALOG={
 };
 const BOARD_IDS=Object.keys(CATALOG);
 
+
+function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function admin(request){
   const user=auth(request);
   if(String(user.id)!==ADMIN_ID)throw Object.assign(new Error('FORBIDDEN'),{status:403});
@@ -51,6 +54,14 @@ export async function POST(request){
     admin(request);const p=await body(request);const id=String(p?.userId||'');
     if(!id)return reply({ok:false,error:'USER_ID_REQUIRED'},400);
     const state=await readInventory(id);const action=String(p?.action||'');
+    if(action==='contact'){
+      const users=await getUsers();
+      const target=users.find(u=>String(u.id)===id);
+      if(!target)return reply({ok:false,error:'USER_NOT_FOUND'},404);
+      const name=escapeHtml(target.name||'Пользователь');
+      await sendMaxMessage(ADMIN_ID, '👤 <a href="max://user/'+encodeURIComponent(id)+'">'+name+'</a>', null, 'html');
+      return reply({ok:true,userId:id});
+    }
     if(action==='reset'){state.owned=['board_original'];state.selectedBoard='board_original';state.resetAt=Date.now();}
     else if(action==='grant'){const board=String(p?.boardId||'');if(!BOARD_IDS.includes(board))return reply({ok:false,error:'BOARD_NOT_FOUND'},404);if(!state.owned.includes(board))state.owned.push(board);}
     else if(action==='revoke'){const board=String(p?.boardId||'');if(board==='board_original')return reply({ok:false,error:'ORIGINAL_CANNOT_BE_REMOVED'},400);if(!BOARD_IDS.includes(board))return reply({ok:false,error:'BOARD_NOT_FOUND'},404);state.owned=state.owned.filter(x=>x!==board);if(state.selectedBoard===board)state.selectedBoard='board_original';state.resetAt=Date.now();}
