@@ -23,8 +23,9 @@ function render(){
     const username=String(b.dataset.maxUsername||'').trim().replace(/^@/,'');
     const id=String(b.dataset.maxUser||'').trim();
     if(!username&&!id)return;
-    const url=username?'https://max.ru/'+encodeURIComponent(username):'max://user/'+encodeURIComponent(id);
-    try{if(window.WebApp?.openLink)window.WebApp.openLink(url);else window.location.href=url}catch{window.location.href=url}
+    if(!username){notice('У этого аккаунта нет публичного @username — MAX не даёт прямую ссылку на личный чат по ID.');return}
+    const url='https://max.ru/'+encodeURIComponent(username);
+    try{if(window.WebApp?.openMaxLink)window.WebApp.openMaxLink(url);else if(window.WebApp?.openLink)window.WebApp.openLink(url);else window.location.href=url}catch{window.location.href=url}
   }));
  box.querySelectorAll('[data-board]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{const own=b.classList.contains('is-owned');await api({action:own?'revoke':'grant',userId:b.dataset.user,boardId:b.dataset.board});await load();notice(own?'Доступ к доске снят':'Доска выдана аккаунту')}catch(e){notice(e.message)}finally{b.disabled=false}});
  box.querySelectorAll('[data-reset]').forEach(b=>b.onclick=async()=>{if(!confirm('Очистить купленные доски у этого аккаунта? Оригинал останется бесплатно.'))return;b.disabled=true;try{await api({action:'reset',userId:b.dataset.reset});await load();notice('Покупки очищены. Осталась «Оригинал».')}catch(e){notice(e.message)}finally{b.disabled=false}});
