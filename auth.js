@@ -19,6 +19,16 @@ function parseInitUser(raw){
     return {id:String(u.id),name,username:String(u.username||''),photo:String(u.photo_url||''),guest:false,max:true};
   }catch(e){return null}
 }
+function readLaunchInitData(){
+  const bridge=String(window.WebApp?.initData||'').trim();
+  if(bridge)return bridge;
+  try{
+    const params=new URLSearchParams(String(location.hash||'').replace(/^#/,'').replace(/^#/,''));
+    const raw=params.get('WebAppData');
+    if(raw)return String(raw).trim();
+  }catch(e){}
+  return '';
+}
 function readMaxUser(){
   const wa=window.WebApp;
   return parseInitUser(wa?.initData)||(()=>{
@@ -35,7 +45,7 @@ async function init(){
   window.__maxAuthStarted=true;
   let user=null, initData='';
   for(let i=0;i<60&&(!user||!initData);i++){
-    initData=String(window.WebApp?.initData||'').trim();
+    initData=readLaunchInitData();
     user=readMaxUser();
     if(!user||!initData)await new Promise(resolve=>setTimeout(resolve,250));
   }
@@ -51,7 +61,7 @@ async function init(){
   // Регистрируем пользователя через уже существующий /api/profile,
   // чтобы не создавать отдельную Serverless Function на Vercel.
   try{
-    const init=String(window.WebApp?.initData||'').trim();
+    const init=readLaunchInitData();
     if(init)fetch(window.maxigraApiUrl('/api/profile'),{
       method:'POST',
       headers:{'content-type':'application/json','x-max-init-data':init},
