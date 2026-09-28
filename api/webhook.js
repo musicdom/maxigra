@@ -6,7 +6,7 @@ import {handlePostings,handlePostingsCallback,handleChannelUpdate} from "../lib/
 function maxRequest({token,method="GET",apiPath,body=null}){
  return new Promise((resolve,reject)=>{
   const bodyText=body?JSON.stringify(body):null;
-  const ca=fs.readFileSync(path.join(process.cwd(),"certs","russian_trusted_root_ca.cer"));
+  const ca=[\n   fs.readFileSync(path.join(process.cwd(),"certs","russian_trusted_root_ca.cer")),\n   fs.readFileSync(path.join(process.cwd(),"certs","russian_trusted_root_ca_gost_2025.cer"))\n  ];
   const req=https.request({
    hostname:"platform-api2.max.ru",path:apiPath,method,
    headers:{Authorization:token,Accept:"application/json","Content-Type":"application/json",...(bodyText?{"Content-Length":Buffer.byteLength(bodyText)}:{})},
