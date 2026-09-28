@@ -7,22 +7,28 @@ window.addEventListener('max-profile-ready',hide,{once:true});
 setTimeout(hide,2500);
 })();
 </script></head>
-<body><div id="max-diag" style="position:fixed;inset:0;z-index:2147483647;background:#fff;color:#111;font:16px/1.45 -apple-system,BlinkMacSystemFont,sans-serif;padding:28px 20px;overflow:auto"><div style="width:min(520px,100%);margin:auto"><h2 style="margin:0 0 18px">Диагностика загрузки Шашек</h2><div id="max-diag-status" style="padding:16px;border-radius:14px;background:#f2f2f2">Проверяем JavaScript…</div><pre id="max-diag-details" style="white-space:pre-wrap;margin-top:14px;font-size:13px;color:#555"></pre></div></div><script>
+<body><div id="menu-screen" class="screen" style="display:none"></div><div id="auth-screen" class="screen" style="display:none"></div><div id="max-diag" style="position:fixed;inset:0;z-index:2147483647;background:#fff;color:#111;font:15px/1.45 -apple-system,BlinkMacSystemFont,sans-serif;padding:24px 18px;overflow:auto"><div style="width:min(620px,100%);margin:auto"><h2 style="margin:0 0 14px">Диагностика запуска Шашек</h2><div id="s" style="padding:14px;border-radius:12px;background:#f2f2f2">Запуск…</div><pre id="d" style="white-space:pre-wrap;margin-top:12px;font-size:12px;color:#555"></pre></div></div>
+<script>
 (async()=>{
- const status=document.getElementById('max-diag-status'),details=document.getElementById('max-diag-details');
- const files=['max.js?v=20260928-2','api-base.js?v=20260928-1','auth.js?v=20260928-2','shop.js?v=20260923-4','checkers-engine.js?v=20260917-2','russian-checkers.js?v=20260917-2','online-core.js?v=20260917-2','online-api.js?v=20260917-2','online.js?v=20260917-2','online-lobby.js?v=20260917-2','shop-ui.js?v=20260923-1','admin-ui.js?v=20260926-5','leaderboard.js?v=20260922-2','app.js?v=20260923-2','asset-cache.js?v=20260928-2'];
- const out=[];
- for(const file of files){
-   try{
-     const r=await fetch(file,{cache:'no-store'});
-     const t=await r.text();
-     const ok=r.ok&&t.length>0;
-     out.push((ok?'OK ':'FAIL ')+file+' — HTTP '+r.status+' — '+t.length+' bytes');
-   }catch(e){out.push('ERROR '+file+' — '+e.message)}
- }
- let bridge='есть',user='есть';
- try{bridge=window.WebApp?'есть':'НЕТ';user=window.WebApp?.initDataUnsafe?.user?.id?'есть':'нет'}catch(e){}
- status.textContent='Проверка завершена';
- details.textContent='MAX Bridge: '+bridge+'\nMAX user: '+user+'\n\n'+out.join('\n');
+const s=document.getElementById('s'),d=document.getElementById('d'),log=[];
+window.addEventListener('error',e=>log.push('RUNTIME ERROR: '+(e.message||'unknown')+' @ '+(e.filename||'')+':'+(e.lineno||'')));
+window.addEventListener('unhandledrejection',e=>log.push('UNHANDLED: '+(e.reason?.message||e.reason||'unknown')));
+const files=['max.js?v=20260928-2','api-base.js?v=20260928-1','online-api.js?v=20260917-2','auth.js?v=20260928-2','shop.js?v=20260923-4','checkers-engine.js?v=20260917-2','russian-checkers.js?v=20260917-2','online-core.js?v=20260917-2','online.js?v=20260917-2','online-lobby.js?v=20260917-2','shop-ui.js?v=20260923-1','admin-ui.js?v=20260926-5','leaderboard.js?v=20260922-2','app.js?v=20260923-2'];
+for(const src of files){
+ await new Promise(resolve=>{
+  const x=document.createElement('script'); x.src=src; x.onload=()=>{log.push('EXEC OK '+src);setTimeout(resolve,250)}; x.onerror=()=>{log.push('EXEC LOAD ERROR '+src);resolve()}; document.body.appendChild(x);
+ });
+}
+let profile='not tested';
+try{
+ const init=window.WebApp?.initData||'';
+ const r=await fetch('/api/profile',{method:'POST',headers:{'content-type':'application/json','x-max-init-data':init},body:JSON.stringify({name:'Диагностика'}),cache:'no-store'});
+ const t=await r.text(); profile='HTTP '+r.status+' — '+t.slice(0,300);
+}catch(e){profile='ERROR — '+e.message}
+log.push('PROFILE: '+profile);
+log.push('CheckersAuth: '+(window.CheckersAuth?JSON.stringify({ready:window.CheckersAuth.ready,guest:window.CheckersAuth.guest,id:window.CheckersAuth.user?.id}):'нет'));
+log.push('MAXIGRA_MAX: '+(window.MAXIGRA_MAX?'есть':'нет'));
+log.push('API URL: '+(window.maxigraApiUrl?window.maxigraApiUrl('/api/profile'):'нет'));
+s.textContent='Проверка завершена'; d.textContent=log.join('\n');
 })();
 </script></body></html>
