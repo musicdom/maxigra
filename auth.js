@@ -30,8 +30,10 @@ function readLaunchInitData(){
   return '';
 }
 function readMaxUser(){
+  const launch=readLaunchInitData();
   const wa=window.WebApp;
-  return parseInitUser(wa?.initData)||(()=>{
+  // MAX передаёт WebAppData во fragment URL, поэтому не зависим от Bridge CDN.
+  return parseInitUser(launch)||parseInitUser(wa?.initData)||(()=>{
     const u=wa?.initDataUnsafe?.user;
     if(!u?.id)return null;
     const first=String(u.first_name||'').trim();
@@ -43,7 +45,10 @@ function readMaxUser(){
 async function init(){
   if(window.__maxAuthStarted)return;
   window.__maxAuthStarted=true;
-  let user=null, initData='';
+  // Сначала читаем launch data напрямую из URL. Если Bridge не загрузился,
+  // приложение всё равно может получить пользователя и пройти авторизацию.
+  let initData=readLaunchInitData();
+  let user=readMaxUser();
   for(let i=0;i<60&&(!user||!initData);i++){
     initData=readLaunchInitData();
     user=readMaxUser();
@@ -69,7 +74,7 @@ async function init(){
       keepalive:true
     }).catch(()=>{});
   }catch(e){}
-  window.CheckersAuth={user,registered:!user.guest,ready:true,guest:!!user.guest,max:!!user.max,initData:init};
+  window.CheckersAuth={user,registered:!user.guest,ready:true,guest:!!user.guest,max:!!user.max,initData:initData||readLaunchInitData()};
   document.body.classList.remove('max-auth-blocked');
   window.dispatchEvent(new CustomEvent('max-profile-ready',{detail:user}));
   // На iOS/Android MAX ждём завершения нативного кэша изображений,
