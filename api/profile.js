@@ -30,7 +30,7 @@ export async function OPTIONS(){return reply({ok:true});}
 
 export async function GET(request){
   try{
-    const user=auth(request);
+    const user=auth(request, url.searchParams.get('initData')||'');
     const url=new URL(request.url);
     if(url.searchParams.get('leaderboard')==='1'){
       const mode=url.searchParams.get('mode')==='online'?'online':'offline';
