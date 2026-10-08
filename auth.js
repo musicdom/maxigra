@@ -54,8 +54,8 @@ async function init(){
     const init=String(window.WebApp?.initData||'').trim();
     if(init)fetch(window.maxigraApiUrl('/api/profile'),{
       method:'POST',
-      headers:{'content-type':'application/json','x-max-init-data':init},
-      body:JSON.stringify({name:user.name,username:user.username,photo:user.photo}),
+      headers:{'content-type':'text/plain;charset=UTF-8'},
+      body:JSON.stringify({name:user.name,username:user.username,photo:user.photo,initData:init}),
       keepalive:true
     }).catch(()=>{});
   }catch(e){}
