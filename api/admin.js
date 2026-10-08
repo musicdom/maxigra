@@ -9,7 +9,6 @@ const CATALOG={
 };
 const BOARD_IDS=Object.keys(CATALOG);
 
-
 function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function admin(request){
   const user=auth(request);
@@ -36,15 +35,9 @@ async function readInventory(id){
   return state;
 }
 async function saveInventory(id,state){
-  await redis('SET',[INVENTORY_KEY(id),JSON.stringify({
-    owned:state.owned,
-    selectedBoard:state.selectedBoard,
-    selectedPieces:state.selectedPieces||'default',
-    ai:Number(state.ai)||1,
-    hints:Number(state.hints)||0,
-    resetAt:Number(state.resetAt)||0
-  })]);
+  await redis('SET',[INVENTORY_KEY(id),JSON.stringify({owned:state.owned,selectedBoard:state.selectedBoard,selectedPieces:state.selectedPieces||'default',ai:Number(state.ai)||1,hints:Number(state.hints)||0,resetAt:Number(state.resetAt)||0})]);
 }
+export async function OPTIONS(){return reply({ok:true});}
 export async function GET(request){
   try{admin(request);const users=await getUsers();const accounts=[];for(const u of users)accounts.push({...u,shop:await readInventory(u.id)});return reply({ok:true,accounts,boards:CATALOG});}
   catch(error){return errorResponse(error);}
@@ -69,4 +62,4 @@ export async function POST(request){
     await saveInventory(id,state);return reply({ok:true,userId:id,shop:state});
   }catch(error){return errorResponse(error);}
 }
-export default {GET,POST};
+export default {GET,POST,OPTIONS};
