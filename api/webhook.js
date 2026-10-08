@@ -1,27 +1,16 @@
-import fs from "fs";
-import https from "https";
-import path from "path";
 import {handlePostings,handlePostingsCallback,handleChannelUpdate} from "../lib/postings.js";
 
-function maxRequest({token,method="GET",apiPath,body=null}){
- return new Promise((resolve,reject)=>{
-  const bodyText=body?JSON.stringify(body):null;
-  const ca=fs.readFileSync(path.join(process.cwd(),"certs","russian_trusted_root_ca.cer"));
-  const req=https.request({
-   hostname:"platform-api2.max.ru",path:apiPath,method,
-   headers:{Authorization:token,Accept:"application/json","Content-Type":"application/json",...(bodyText?{"Content-Length":Buffer.byteLength(bodyText)}:{})},
-   ca,rejectUnauthorized:true,timeout:15000
-  },r=>{
-   let raw="";r.setEncoding("utf8");r.on("data",c=>raw+=c);r.on("end",()=>{
-    let data=null;try{data=raw?JSON.parse(raw):null}catch{}
-    resolve({status:r.statusCode,ok:r.statusCode>=200&&r.statusCode<300,data,raw});
-   });
-  });
-  req.on("timeout",()=>req.destroy(new Error("MAX API timeout")));
-  req.on("error",reject);
-  if(bodyText)req.write(bodyText);
-  req.end();
+async function maxRequest({token,method="GET",apiPath,body=null}){
+ if(!token) throw new Error("MAX_BOT_TOKEN not configured");
+ const response=await fetch("https://platform-api2.max.ru"+apiPath,{
+  method,
+  headers:{Authorization:token,Accept:"application/json","Content-Type":"application/json"},
+  body:body==null?undefined:JSON.stringify(body),
+  signal:AbortSignal.timeout(15000)
  });
+ const raw=await response.text();
+ let data=null;try{data=raw?JSON.parse(raw):null}catch{}
+ return {status:response.status,ok:response.ok,data,raw};
 }
 function uid(u){return u?.callback?.user?.user_id??u?.callback?.user?.id??u?.user?.user_id??u?.user?.id??u?.message?.sender?.user_id??u?.message?.sender?.id??null}
 function txt(u){return String(u?.message?.body?.text??u?.message?.text??u?.body?.text??u?.text??"").trim()}
