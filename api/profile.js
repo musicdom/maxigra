@@ -4,7 +4,7 @@ const statsKey = (id,mode='offline') => `checkers:stats:${mode}:${id}`;
 const leaderboardSeasonKey = 'checkers:leaderboard:season';
 const leaderboardResetKey = 'checkers:leaderboard:resetAt';
 const leaderboardStatsKey = (season,id) => `checkers:leaderboard:${season}:${id}`;
-async function currentLeaderboardSeason(){ const raw=await redis('GET',[leaderboardSeasonKey]); const n=Number(raw); return Number.isFinite(n)&&n>0?Math.floor(n):1; }
+async function currentLeaderboardSeason(){ const raw=await redis('GET',[leaderboardSeasonKey]); if(raw===null||raw===undefined||raw==='')return null; const n=Number(raw); return Number.isFinite(n)&&n>0?Math.floor(n):1; }
 
 function emptyStats(user){
   return { id:String(user.id), name:user.name||'Игрок', username:user.username||'', photo:user.photo||'', games:0, wins:0, losses:0, draws:0, updatedAt:Date.now() };
@@ -15,7 +15,7 @@ async function recordResult(user, resultId, result, mode='offline'){
   if(!resultId) throw Object.assign(new Error('RESULT_ID_REQUIRED'),{status:400});
   const key=statsKey(user.id,mode);
   const season=await currentLeaderboardSeason();
-  const leaderboardKey=leaderboardStatsKey(season,user.id);
+  const leaderboardKey=leaderboardStatsKey(season||1,user.id);
   const raw=await redis('GET',[key]);
   let stats;
   try{stats=raw?JSON.parse(raw):emptyStats(user)}catch{stats=emptyStats(user)}
@@ -49,7 +49,7 @@ export async function GET(request){
     if(url.searchParams.get('leaderboard')==='1'){
       const mode=url.searchParams.get('mode')==='online'?'online':'offline';
       const season=await currentLeaderboardSeason();
-      const keys=await redis('KEYS',[`checkers:leaderboard:${season}:*`]);
+      const keys=season?await redis('KEYS',[`checkers:leaderboard:${season}:*`]):await redis('KEYS',[`checkers:stats:${mode}:*`]);
       const rows=[];
       for(const key of (keys||[])){
         const raw=await redis('GET',[key]);if(!raw)continue;
