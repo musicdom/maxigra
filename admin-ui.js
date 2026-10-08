@@ -8,7 +8,7 @@ function showAdmin(){document.querySelectorAll('.screen').forEach(s=>s.classList
 function notice(t){const e=q('admin-notice');if(e){e.textContent=t;e.classList.add('is-visible');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('is-visible'),2500)}}
 async function api(body=null){
  const init=await window.CheckersShop?.getInitData?.();if(!init)throw Error('MAX_INIT_DATA_REQUIRED');
- const opts=body?{method:'POST',headers:{'content-type':'application/json','x-max-init-data':init},body:JSON.stringify(body),cache:'no-store'}:{headers:{'x-max-init-data':init},cache:'no-store'};
+ const opts=body?{method:'POST',headers:{'content-type':'text/plain;charset=UTF-8'},body:JSON.stringify({...body,initData:init}),cache:'no-store'}:{headers:{'x-max-init-data':init},cache:'no-store'};
  const r=await fetch(window.maxigraApiUrl('/api/admin'),opts),d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'ADMIN_ERROR');return d;
 }
 function render(){
