@@ -7,9 +7,18 @@ function showMenu(){document.querySelectorAll('.screen').forEach(s=>s.classList.
 function showAdmin(){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));q('admin-screen')?.classList.add('active');load();}
 function notice(t){const e=q('admin-notice');if(e){e.textContent=t;e.classList.add('is-visible');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('is-visible'),2500)}}
 async function api(body=null){
- const init=await window.CheckersShop?.getInitData?.();if(!init)throw Error('MAX_INIT_DATA_REQUIRED');
- const opts=body?{method:'POST',headers:{'content-type':'application/json','x-max-init-data':init},body:JSON.stringify(body),cache:'no-store'}:{headers:{'x-max-init-data':init},cache:'no-store'};
- const r=await fetch(window.maxigraApiUrl('/api/admin'),opts),d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'ADMIN_ERROR');return d;
+ const init=String(await window.CheckersShop?.getInitData?.()||'').trim();if(!init)throw Error('MAX_INIT_DATA_REQUIRED');
+ const url=window.maxigraApiUrl('/api/admin');
+ const opts={method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body||{action:'list'}),cache:'no-store'};
+ try{opts.headers['x-max-init-data']=init;const r=await fetch(url,opts);const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));if(!r.ok||!d.ok)throw Error(d.error||'ADMIN_ERROR');return d}
+ catch(e){
+   if(e?.name==='TypeError'&&/pattern|header|invalid/i.test(String(e.message||''))){
+     const safeInit=init.replace(/[\\r\\n]/g,'');
+     const retry={...opts,headers:{'content-type':'application/json','x-max-init-data':safeInit}};
+     const r=await fetch(url,retry);const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));if(!r.ok||!d.ok)throw Error(d.error||'ADMIN_ERROR');return d;
+   }
+   throw e;
+ }
 }
 async function resetLeaderboard(){
  if(!confirm('Сбросить рейтинг? Текущий месячный лидерборд будет закрыт, а новый начнётся с нуля. Статистика профилей не удаляется.'))return;
