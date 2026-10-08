@@ -1,17 +1,5 @@
 import { auth, body, errorResponse, redis, reply } from './_lib.js';
-
-const CATALOG = {
-  board_90s: { price: 299 },
-  board_svo: { price: 299 },
-  board_max: { price: 299 },
-  board_orbita: { price: 299 },
-  board_original: { price: 0 },
-  master: { price: 149 },
-  hints: { price: 99 },
-  starter_pack: { price: 599 }
-};
-const BOARD_IDS = ['board_90s','board_svo','board_max','board_orbita','board_original'];
-const DEFAULT_BOARD = 'board_original';
+import { SHOP_CATALOG as CATALOG, BOARD_IDS, DEFAULT_BOARD } from '../lib/catalog.js';
 
 function inventoryKey(id) { return `checkers:shop:user:${id}`; }
 function coinsKey(id) { return `checkers:coins:${id}`; }
