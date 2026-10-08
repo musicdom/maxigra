@@ -19,7 +19,7 @@ function admin(request){
   return user;
 }
 async function getUsers(){
-  const keys=await redis('KEYS',[`${USER_KEY_PREFIX}*`]);
+  const keys=await redis('KEYS',[USER_KEY_PREFIX+'*']);
   const out=[];
   for(const key of (Array.isArray(keys)?keys:[])){
     const raw=await redis('GET',[key]);
