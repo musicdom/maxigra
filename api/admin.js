@@ -8,6 +8,8 @@ const CATALOG={
   board_90s:{title:'СВО'},board_svo:{title:'90-е'},board_max:{title:'MAX'},board_orbita:{title:'ОРБИТА'},board_original:{title:'Оригинал'}
 };
 const BOARD_IDS=Object.keys(CATALOG);
+const LEADERBOARD_SEASON_KEY='checkers:leaderboard:season';
+const LEADERBOARD_RESET_KEY='checkers:leaderboard:resetAt';
 
 
 function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -54,6 +56,14 @@ export async function POST(request){
     admin(request);const p=await body(request);const id=String(p?.userId||'');
     if(!id)return reply({ok:false,error:'USER_ID_REQUIRED'},400);
     const state=await readInventory(id);const action=String(p?.action||'');
+    if(action==='reset_leaderboard'){
+      const currentRaw=await redis('GET',[LEADERBOARD_SEASON_KEY]);
+      const current=Math.max(1,Number(currentRaw)||1);
+      const next=current+1;
+      await redis('SET',[LEADERBOARD_SEASON_KEY,String(next)]);
+      await redis('SET',[LEADERBOARD_RESET_KEY,String(Date.now())]);
+      return reply({ok:true,season:next,resetAt:Date.now()});
+    }
     if(action==='contact'){
       const users=await getUsers();
       const target=users.find(u=>String(u.id)===id);
