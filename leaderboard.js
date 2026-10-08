@@ -43,7 +43,7 @@ async function load(){
   try{
     let raw='';
     for(let i=0;i<40&&!raw;i++){raw=String(window.WebApp?.initData||'').trim();if(!raw)await new Promise(resolve=>setTimeout(resolve,250));}
-    const r=await fetch(window.maxigraApiUrl('/api/profile?leaderboard=1&mode='+mode),{headers:{'x-max-init-data':raw,'cache-control':'no-cache'}});
+    const r=await fetch(window.maxigraApiUrl('/api/profile?leaderboard=1&mode='+mode+'&initData='+encodeURIComponent(raw)),{cache:'no-store'});
     const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||'Ошибка');
     render(d.leaderboard||[],d.me);
     const me=d.me,el=$('leaderboard-me');
