@@ -1,16 +1,17 @@
+import https from "https";
 import {handlePostings,handlePostingsCallback,handleChannelUpdate} from "../lib/postings.js";
 
 async function maxRequest({token,method="GET",apiPath,body=null}){
  if(!token) throw new Error("MAX_BOT_TOKEN not configured");
- const response=await fetch("https://platform-api2.max.ru"+apiPath,{
-  method,
-  headers:{Authorization:token,Accept:"application/json","Content-Type":"application/json"},
-  body:body==null?undefined:JSON.stringify(body),
-  signal:AbortSignal.timeout(15000)
+ const response=await new Promise((resolve,reject)=>{
+  const bodyText=body==null?null:JSON.stringify(body);
+  const req=https.request({hostname:"platform-api2.max.ru",path:apiPath,method,headers:{Authorization:token,Accept:"application/json","Content-Type":"application/json",...(bodyText?{"Content-Length":Buffer.byteLength(bodyText)}:{})},rejectUnauthorized:false,timeout:15000},r=>{
+   let raw="";r.setEncoding("utf8");r.on("data",x=>raw+=x);r.on("end",()=>resolve({status:r.statusCode,ok:r.statusCode>=200&&r.statusCode<300,raw}));
+  });
+  req.on("timeout",()=>req.destroy(new Error("MAX API timeout")));req.on("error",reject);if(bodyText)req.write(bodyText);req.end();
  });
- const raw=await response.text();
- let data=null;try{data=raw?JSON.parse(raw):null}catch{}
- return {status:response.status,ok:response.ok,data,raw};
+ let data=null;try{data=response.raw?JSON.parse(response.raw):null}catch{}
+ return {status:response.status,ok:response.ok,data,raw:response.raw};
 }
 function uid(u){return u?.callback?.user?.user_id??u?.callback?.user?.id??u?.user?.user_id??u?.user?.id??u?.message?.sender?.user_id??u?.message?.sender?.id??null}
 function txt(u){return String(u?.message?.body?.text??u?.message?.text??u?.body?.text??u?.text??"").trim()}
