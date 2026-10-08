@@ -8,7 +8,7 @@ export function reply(data, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type,x-max-init-data', 'access-control-allow-methods': 'GET,POST,OPTIONS' } });
 }
 export function cors(request) { if(request.method==='OPTIONS') return reply({ok:true}); return null; }
-export async function body(request) { try { return await request.json(); } catch { return {}; } }
+export async function body(request) { try { const text=await request.text(); return JSON.parse(text||'{}'); } catch { return {}; } }
 export async function redis(command, args = []) {
   if (!REDIS_URL || !REDIS_TOKEN) throw new Error('REDIS_NOT_CONFIGURED');
   const response = await fetch(REDIS_URL, { method:'POST', headers:{authorization:`Bearer ${REDIS_TOKEN}`,'content-type':'application/json'}, body:JSON.stringify([command,...args]) });
