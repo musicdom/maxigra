@@ -26,6 +26,8 @@ async function recordResult(user, resultId, result, mode='offline'){
   return stats;
 }
 
+export async function OPTIONS(){return reply({ok:true});}
+
 export async function GET(request){
   try{
     const user=auth(request);
@@ -68,4 +70,4 @@ export async function POST(request){
   }catch(error){return errorResponse(error)}
 }
 
-export default {GET,POST};
+export default {GET,POST,OPTIONS};
