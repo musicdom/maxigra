@@ -10,8 +10,8 @@ const CATALOG={
 const BOARD_IDS=Object.keys(CATALOG);
 
 function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function admin(request){
-  const user=auth(request);
+function admin(request, initData=''){
+  const user=auth(request,initData);
   if(String(user.id)!==ADMIN_ID)throw Object.assign(new Error('FORBIDDEN'),{status:403});
   return user;
 }
@@ -44,7 +44,7 @@ export async function GET(request){
 }
 export async function POST(request){
   try{
-    admin(request);const p=await body(request);const id=String(p?.userId||'');
+    const p=await body(request); admin(request,p?.initData||'');const id=String(p?.userId||'');
     if(!id)return reply({ok:false,error:'USER_ID_REQUIRED'},400);
     const state=await readInventory(id);const action=String(p?.action||'');
     if(action==='contact'){
