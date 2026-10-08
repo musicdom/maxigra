@@ -19,13 +19,19 @@ function admin(request){
   return user;
 }
 async function getUsers(){
-  const keys=await redis('KEYS',[USER_KEY_PREFIX+'*']);
   const out=[];
-  for(const key of (Array.isArray(keys)?keys:[])){
-    const raw=await redis('GET',[key]);
-    if(!raw)continue;
-    try{const v=JSON.parse(raw);if(v?.id)out.push(v);}catch{}
-  }
+  let cursor='0';
+  do{
+    const result=await redis('SCAN',[cursor,'MATCH',USER_KEY_PREFIX+'*','COUNT','100']);
+    const next=Array.isArray(result)?String(result[0]??'0'):'0';
+    const keys=Array.isArray(result?.[1])?result[1]:[];
+    for(const key of keys){
+      const raw=await redis('GET',[key]);
+      if(!raw)continue;
+      try{const v=JSON.parse(raw);if(v?.id)out.push(v)}catch{}
+    }
+    cursor=next;
+  }while(cursor!=='0');
   return out.sort((a,b)=>Number(b.lastSeenAt||0)-Number(a.lastSeenAt||0));
 }
 async function readInventory(id){
