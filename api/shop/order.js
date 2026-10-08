@@ -1,16 +1,7 @@
 import crypto from 'node:crypto';
 import { auth, body, errorResponse, redis, reply } from '../_lib.js';
+import { SHOP_CATALOG as CATALOG } from '../../lib/catalog.js';
 
-const CATALOG = {
-  board_90s: { price: 299 },
-  board_svo: { price: 299 },
-  board_max: { price: 299 },
-  board_orbita: { price: 299 },
-  board_original: { price: 0 },
-  master: { price: 149 },
-  hints: { price: 99 },
-  starter_pack: { price: 599 }
-};
 const ORDER_TTL = 86400;
 const RECEIVER = String(process.env.YOOMONEY_RECEIVER || '').trim();
 const PAYMENT_PAGE = String(process.env.YOOMONEY_PAYMENT_PAGE_URL || 'https://maxigra.vercel.app/api/shop/pay').trim();
