@@ -16,7 +16,21 @@ async function api(payload=null){
  if(!isList){headers['content-type']='application/json';opts.body=JSON.stringify(payload);}
  try{
    const r=await fetch(url,opts);
-   const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));
+   const raw=await r.text();
+   let d=null;
+   try{d=raw?JSON.parse(raw):null}catch{}
+   if(!d){
+     // На MAX/старом WebView иногда API может вернуть HTML вместо JSON.
+     // Пробуем production API напрямую один раз.
+     const fallbackUrl='https://maxigra.vercel.app/api/admin';
+     if(url!==fallbackUrl){
+       const fr=await fetch(fallbackUrl,opts);
+       const fraw=await fr.text();
+       try{d=fraw?JSON.parse(fraw):null}catch{}
+       if(d){if(!fr.ok||!d.ok)throw Error(d.error||('ADMIN_HTTP_'+fr.status));return d;}
+     }
+     throw Error(r.ok?'BAD_RESPONSE':'ADMIN_HTTP_'+r.status);
+   }
    if(!r.ok||!d.ok)throw Error(d.error||'ADMIN_ERROR');
    return d;
  }catch(e){
@@ -27,7 +41,8 @@ async function api(payload=null){
      const retry={method,headers:retryHeaders,cache:'no-store'};
      if(!isList)retry.body=JSON.stringify(payload);
      const r=await fetch(url,retry);
-     const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));
+     const raw=await r.text();let d=null;try{d=raw?JSON.parse(raw):null}catch{}
+     if(!d)throw Error(r.ok?'BAD_RESPONSE':'ADMIN_HTTP_'+r.status);
      if(!r.ok||!d.ok)throw Error(d.error||'ADMIN_ERROR');
      return d;
    }
