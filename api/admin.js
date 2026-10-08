@@ -8,8 +8,6 @@ const CATALOG={
   board_90s:{title:'СВО'},board_svo:{title:'90-е'},board_max:{title:'MAX'},board_orbita:{title:'ОРБИТА'},board_original:{title:'Оригинал'}
 };
 const BOARD_IDS=Object.keys(CATALOG);
-const LEADERBOARD_SEASON_KEY='checkers:leaderboard:season';
-const LEADERBOARD_RESET_KEY='checkers:leaderboard:resetAt';
 
 
 function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -19,19 +17,13 @@ function admin(request){
   return user;
 }
 async function getUsers(){
+  const keys=await redis('KEYS',[`${USER_KEY_PREFIX}*`]);
   const out=[];
-  let cursor='0';
-  do{
-    const result=await redis('SCAN',[cursor,'MATCH',USER_KEY_PREFIX+'*','COUNT','100']);
-    const next=Array.isArray(result)?String(result[0]??'0'):'0';
-    const keys=Array.isArray(result?.[1])?result[1]:[];
-    for(const key of keys){
-      const raw=await redis('GET',[key]);
-      if(!raw)continue;
-      try{const v=JSON.parse(raw);if(v?.id)out.push(v)}catch{}
-    }
-    cursor=next;
-  }while(cursor!=='0');
+  for(const key of (Array.isArray(keys)?keys:[])){
+    const raw=await redis('GET',[key]);
+    if(!raw)continue;
+    try{const v=JSON.parse(raw);if(v?.id)out.push(v);}catch{}
+  }
   return out.sort((a,b)=>Number(b.lastSeenAt||0)-Number(a.lastSeenAt||0));
 }
 async function readInventory(id){
@@ -59,19 +51,9 @@ export async function GET(request){
 }
 export async function POST(request){
   try{
-    admin(request);const p=await body(request);const action=String(p?.action||'');
-    if(action==='reset_leaderboard'){
-      const currentRaw=await redis('GET',[LEADERBOARD_SEASON_KEY]);
-      const current=Math.max(1,Number(currentRaw)||1);
-      const next=current+1;
-      const resetAt=Date.now();
-      await redis('SET',[LEADERBOARD_SEASON_KEY,String(next)]);
-      await redis('SET',[LEADERBOARD_RESET_KEY,String(resetAt)]);
-      return reply({ok:true,season:next,resetAt});
-    }
-    const id=String(p?.userId||'');
+    admin(request);const p=await body(request);const id=String(p?.userId||'');
     if(!id)return reply({ok:false,error:'USER_ID_REQUIRED'},400);
-    const state=await readInventory(id);
+    const state=await readInventory(id);const action=String(p?.action||'');
     if(action==='contact'){
       const users=await getUsers();
       const target=users.find(u=>String(u.id)===id);

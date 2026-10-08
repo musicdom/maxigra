@@ -24,7 +24,7 @@ function syncProfile(){
  const box=q('profile-stats');if(box)box.innerHTML=`<div class="profile-stat profile-stat--games"><span class="profile-stat-icon">🎮</span><b>${games}</b><span>Игр</span></div><div class="profile-stat profile-stat--wins"><span class="profile-stat-icon">🏆</span><b>${wins}</b><span>Побед</span></div><div class="profile-stat profile-stat--losses"><span class="profile-stat-icon">⚔️</span><b>${losses}</b><span>Поражений</span></div><div class="profile-stat profile-stat--draws"><span class="profile-stat-icon">🤝</span><b>${draws}</b><span>Ничьих</span></div>`;
  const extra=q('profile-extra');if(extra)extra.innerHTML=`<div class="profile-extra-row"><span>Процент побед</span><strong>${winRate}%</strong></div><div class="profile-progress"><span style="width:${Math.min(100,winRate)}%"></span></div><div class="profile-extra-row"><span>Статус</span><strong>${window.CheckersAuth?.registered?'Игрок MAX':'Гость'}</strong></div>`;};
  renderStats(stats);
- try{const init=window.CheckersAuth?.initData||window.WebApp?.initData||'';if(init)fetch(window.maxigraApiUrl('/api/profile'),{headers:{'x-max-init-data':init,'cache-control':'no-cache'}}).then(r=>r.json()).then(d=>{if(d?.ok&&d.stats){renderStats(d.stats);try{localStorage.setItem(ACCOUNT_KEY,JSON.stringify(d.stats))}catch{}}}).catch(()=>{})}catch{}
+ try{const init=window.WebApp?.initData||'';if(init)fetch(window.maxigraApiUrl('/api/profile'),{headers:{'x-max-init-data':init,'cache-control':'no-cache'}}).then(r=>r.json()).then(d=>{if(d?.ok&&d.stats){renderStats(d.stats);try{localStorage.setItem(ACCOUNT_KEY,JSON.stringify(d.stats))}catch{}}}).catch(()=>{})}catch{}
  renderOwnedBoards();
  try{window.CheckersShop?.sync?.().then(renderOwnedBoards).catch(()=>{})}catch{}
 }

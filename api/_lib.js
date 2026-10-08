@@ -56,37 +56,3 @@ export function publicGame(state,userId){
   return {id:state.id,status:state.status,board:state.board,turn:Number(state.turn||1),side,chain:state.chain,winner:state.winner,halfMoves:Number(state.halfMoves||0),lastMove:state.lastMove,updatedAt:Number(state.updatedAt||0),version:Number(state.updatedAt||0),opponent:opponent||{name:'Соперник'}};
 }
 export function errorResponse(error){return reply({ok:false,error:error.message||'SERVER_ERROR'},error.status||500)}
-
-
-// MAX API HTTPS client — доверенные сертификаты Минцифры, как в ORBITA.
-// Используется серверными функциями для запросов к platform-api2.max.ru.
-import https from 'node:https';
-import fs from 'node:fs';
-import path from 'node:path';
-
-function maxCertificates(){
-  return [
-    fs.readFileSync(path.join(process.cwd(),'certs','russian_trusted_root_ca.cer')),
-    fs.readFileSync(path.join(process.cwd(),'certs','russian_trusted_root_ca_gost_2025.cer'))
-  ];
-}
-
-export function maxHttpsRequest(options, body=''){
-  return new Promise((resolve,reject)=>{
-    const request=https.request({
-      ...options,
-      hostname: options.hostname || 'platform-api2.max.ru',
-      ca:maxCertificates(),
-      rejectUnauthorized:true,
-      timeout:15000
-    },response=>{
-      let data='';
-      response.on('data',chunk=>data+=chunk);
-      response.on('end',()=>resolve({status:response.statusCode,headers:response.headers,body:data}));
-    });
-    request.on('error',reject);
-    request.on('timeout',()=>request.destroy(new Error('MAX API timeout')));
-    if(body)request.write(body);
-    request.end();
-  });
-}

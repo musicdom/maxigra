@@ -37,7 +37,7 @@ const state=local;
 state.owned=Array.isArray(state.owned)?state.owned:[];
 state.selectedBoard=state.selectedBoard||DEFAULT_BOARD;
 state.selectedPieces=state.selectedPieces||'default';
-state.ai=Math.max(1,Math.min(4,Number(state.ai)||1));state.hints=Math.max(0,Number(state.hints)||0);
+state.ai=Math.max(1,Math.min(4,Number(state.ai)||1));state.hints=Math.max(0,Number(state.hints)||0);state.games=Number(state.games)||0;state.wins=Number(state.wins)||0;state.losses=Number(state.losses)||0;state.draws=Number(state.draws)||0;state.coins=Math.max(0,Number(state.coins)||0);
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
 function readParam(container,name){try{return new URLSearchParams(String(container||'').replace(/^#/,'')).get(name)||''}catch(e){return ''}}
 function getInitData(){

@@ -10,5 +10,3 @@
 
 .admin-open-max{flex:none;border:1px solid rgba(77,163,255,.32);background:rgba(77,163,255,.12);color:#8fcaff;border-radius:11px;padding:8px 10px;font-size:10px;font-weight:800;letter-spacing:.2px;cursor:pointer;white-space:nowrap;transition:.18s}.admin-open-max:hover,.admin-open-max:active{background:rgba(77,163,255,.22);border-color:rgba(77,163,255,.5);color:#fff}.admin-open-max:focus-visible{outline:2px solid rgba(98,216,255,.6);outline-offset:2px}
 @media(max-width:380px){.admin-open-max{padding:7px 8px;font-size:9px}}
-
-.admin-actions{display:flex;gap:8px;align-items:center}.admin-actions .ctrl-btn{font-size:16px}.admin-reset-leaderboard{border-color:rgba(255,200,80,.28)!important;color:#ffd76b!important}.admin-reset-leaderboard:active{transform:scale(.94)}
