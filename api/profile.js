@@ -30,7 +30,7 @@ export async function OPTIONS(){return reply({ok:true});}
 
 export async function GET(request){
   try{
-    const user=auth(request, url.searchParams.get('initData')||'');
+    const user=auth(request);
     const url=new URL(request.url);
     if(url.searchParams.get('leaderboard')==='1'){
       const mode=url.searchParams.get('mode')==='online'?'online':'offline';
@@ -57,8 +57,8 @@ export async function GET(request){
 
 export async function POST(request){
   try{
-    const user=auth(request);
     const payload=await body(request);
+    const user=auth(request,payload?.initData||'');
     if(payload?.action==='record_result')return reply({ok:true,stats:await recordResult(user,String(payload.resultId||''),String(payload.result||''),payload.mode==='online'?'online':'offline')});
     const now=Date.now(),key=`checkers:user:${user.id}`;
     const existingRaw=await redis('GET',[key]);let existing=null;
