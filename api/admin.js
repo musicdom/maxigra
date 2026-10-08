@@ -53,17 +53,19 @@ export async function GET(request){
 }
 export async function POST(request){
   try{
-    admin(request);const p=await body(request);const id=String(p?.userId||'');
-    if(!id)return reply({ok:false,error:'USER_ID_REQUIRED'},400);
-    const state=await readInventory(id);const action=String(p?.action||'');
+    admin(request);const p=await body(request);const action=String(p?.action||'');
     if(action==='reset_leaderboard'){
       const currentRaw=await redis('GET',[LEADERBOARD_SEASON_KEY]);
       const current=Math.max(1,Number(currentRaw)||1);
       const next=current+1;
+      const resetAt=Date.now();
       await redis('SET',[LEADERBOARD_SEASON_KEY,String(next)]);
-      await redis('SET',[LEADERBOARD_RESET_KEY,String(Date.now())]);
-      return reply({ok:true,season:next,resetAt:Date.now()});
+      await redis('SET',[LEADERBOARD_RESET_KEY,String(resetAt)]);
+      return reply({ok:true,season:next,resetAt});
     }
+    const id=String(p?.userId||'');
+    if(!id)return reply({ok:false,error:'USER_ID_REQUIRED'},400);
+    const state=await readInventory(id);
     if(action==='contact'){
       const users=await getUsers();
       const target=users.find(u=>String(u.id)===id);
