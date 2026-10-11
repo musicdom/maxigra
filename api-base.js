@@ -36,12 +36,12 @@ window.maxigraFetch=async function(path,options={}){
         const timer=controller?setTimeout(()=>controller.abort(),4500):null;
         if(timer)timers.push(timer);
         return fetch(base+clean,{...options,...(controller?{signal:controller.signal}:{})})
-          .then(response=>{preferredBase=base;return response;})
-          .catch(error=>{throw error;});
+          .then(response=>({response,controller,base}));
       });
-      const response=await Promise.any(attempts);
-      controllers.forEach(c=>c.abort());
-      return response;
+      const winner=await Promise.any(attempts);
+      preferredBase=winner.base;
+      controllers.forEach(c=>{if(c!==winner.controller)c.abort()});
+      return winner.response;
     }finally{
       timers.forEach(clearTimeout);
     }
