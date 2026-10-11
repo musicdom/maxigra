@@ -3,9 +3,8 @@
 const host=location.hostname;
 const isGithubPages=host.endsWith('.github.io');
 // Existing aliases of the same Vercel project; no new service is required.
+// The only confirmed project domain is maxigra.vercel.app.
 const apiHosts=[
-  'https://maxigra-git-main-sasharemiws-projects.vercel.app',
-  'https://maxigra-sasharemiws-projects.vercel.app',
   'https://maxigra.vercel.app'
 ];
 const primary=isGithubPages?apiHosts[0]:'';
