@@ -9,7 +9,7 @@ function notice(t){const e=q('admin-notice');if(e){e.textContent=t;e.classList.a
 async function api(body=null){
  const init=await window.CheckersShop?.getInitData?.();if(!init)throw Error('MAX_INIT_DATA_REQUIRED');
  const opts=body?{method:'POST',headers:{'content-type':'text/plain;charset=UTF-8'},body:JSON.stringify({...body,initData:init}),cache:'no-store'}:{headers:{'x-max-init-data':init},cache:'no-store'};
- const r=await fetch(window.maxigraApiUrl('/api/admin'),opts),d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'ADMIN_ERROR');return d;
+ const r=window.maxigraFetch?await window.maxigraFetch('/api/admin',opts):await fetch(window.maxigraApiUrl('/api/admin'),opts),d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'ADMIN_ERROR');return d;
 }
 function render(){
  const box=q('admin-content');if(!box)return;
