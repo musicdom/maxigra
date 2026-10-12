@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { redis, reply } from '../_lib.js';
+import { BOT_URL, linkKeyboard, sendMaxMessage, supportUrl } from '../_max-bot.js';
 
 const SECRET = String(process.env.YOOMONEY_NOTIFICATION_SECRET || '').trim();
 const orderKey = id => `checkers:shop:order:${id}`;
@@ -7,6 +8,36 @@ const inventoryKey = id => `checkers:shop:user:${id}`;
 const operationKey = id => `checkers:shop:payment:${id}`;
 const lockKey = id => `checkers:shop:payment-lock:${id}`;
 const grantKey = id => `checkers:shop:grant:${id}`;
+const notifyLockKey = id => `checkers:shop:notify-lock:${id}`;
+const ITEM_TITLES = { board_90s: 'СВО', board_svo: '90-е', board_max: 'MAX', board_orbita: 'ОРБИТА', board_original: 'Оригинал', master: 'Гроссмейстер', hints: '50 подсказок', starter_pack: 'Набор новичка' };
+
+async function notifyPaid(order) {
+  if (order.notificationSentAt) return order;
+  const lock = await redis('SET', [notifyLockKey(order.id), '1', 'NX', 'EX', '60']);
+  if (lock !== 'OK') return order;
+  try {
+    const title = ITEM_TITLES[String(order.itemId)] || 'покупка';
+    const isBoard = String(order.itemId).startsWith('board_');
+    const text = isBoard
+      ? `✅ Оплата прошла успешно!\n\nДоска «${title}» за ${Number(order.price).toFixed(0)} ₽ закреплена за вашим аккаунтом MAX. Она уже доступна в профиле игры «Шашки».\n\nЕсли возникли проблемы, нажмите «Техническая поддержка».`
+      : `✅ Оплата прошла успешно!\n\nПокупка «${title}» за ${Number(order.price).toFixed(0)} ₽ закреплена за вашим аккаунтом MAX.\n\nЕсли возникли проблемы, нажмите «Техническая поддержка».`;
+    await sendMaxMessage(order.userId, {
+      text,
+      attachments: [linkKeyboard([
+        [{ text: 'Открыть игру', url: BOT_URL }],
+        [{ text: 'Техническая поддержка', url: supportUrl() }]
+      ])]
+    });
+    const updated = { ...order, notificationSentAt: Date.now() };
+    await redis('SET', [orderKey(order.id), JSON.stringify(updated)]);
+    return updated;
+  } catch (error) {
+    console.error('MAX payment confirmation failed', { orderId: order.id, error: error.message });
+    return order;
+  } finally {
+    await redis('DEL', [notifyLockKey(order.id)]).catch(() => {});
+  }
+}
 
 function formValue(form, key) {
   const value = form.get(key);
@@ -86,7 +117,7 @@ export async function POST(request) {
   try { order = JSON.parse(orderRaw); } catch { return reply({ ok: false, error: 'ORDER_INVALID' }, 500); }
 
   if (String(order.currency) !== 'RUB' || Number(order.price) <= 0) return reply({ ok: false, error: 'ORDER_INVALID' }, 400);
-  if (order.status === 'paid') return reply({ ok: true, status: 'paid' });
+  if (order.status === 'paid') { await notifyPaid(order); return reply({ ok: true, status: 'paid' }); }
   // YooMoney can deduct a commission from the credited amount. `amount` is what
   // reaches the wallet, while `withdraw_amount` is what the payer actually pays.
   // The order must therefore be checked against withdraw_amount, not amount.
@@ -123,6 +154,7 @@ export async function POST(request) {
       };
       await redis('SET', [orderKey(orderId), JSON.stringify(paidOrder)]);
       await redis('SET', [grantKey(orderId), 'done']);
+      await notifyPaid(paidOrder);
       return reply({ ok: true, status: 'paid' });
     } catch (error) {
       await redis('DEL', [grantKey(orderId)]).catch(() => {});
