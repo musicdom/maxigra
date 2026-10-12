@@ -2,10 +2,11 @@
 'use strict';
 const host=location.hostname;
 const isGithubPages=host.endsWith('.github.io');
-// Existing aliases of the same Vercel project; no new service is required.
-// The only confirmed project domain is maxigra.vercel.app.
+// Confirmed production aliases for this Vercel project. Try them in parallel for GETs.
 const apiHosts=[
-  'https://maxigra.vercel.app'
+  'https://maxigra.vercel.app',
+  'https://maxigra-git-main-sasharemiws-projects.vercel.app',
+  'https://maxigra-sasharemiws-projects.vercel.app'
 ];
 const primary=isGithubPages?apiHosts[0]:'';
 let preferredBase=primary;
@@ -17,14 +18,13 @@ window.MAXIGRA_CONFIG={
 };
 window.maxigraApiUrl=function(path){
   const clean=String(path||'').replace(/^\/+/, '');
-  return `${window.MAXIGRA_CONFIG.apiBase}/${clean}`;
+  const base=preferredBase||window.MAXIGRA_CONFIG.apiBase;
+  return `${base}/${clean}`;
 };
 window.maxigraFetch=async function(path,options={}){
   const clean='/'+String(path||'').replace(/^\/+/, '');
   const bases=window.MAXIGRA_CONFIG.apiHosts||[''];
   const method=String(options.method||'GET').toUpperCase();
-  // GET requests are safe to race: use the first reachable alias instead of
-  // waiting up to five seconds for each blocked hostname in sequence.
   if(method==='GET'||method==='HEAD'){
     const controllers=[];
     const timers=[];
@@ -45,8 +45,7 @@ window.maxigraFetch=async function(path,options={}){
       timers.forEach(clearTimeout);
     }
   }
-  // Do not retry writes across aliases: a timeout can happen after the server
-  // has already processed an action, and retrying could apply it twice.
+  // Writes use the most recently confirmed reachable host; never race duplicate writes.
   const base=preferredBase||bases[0]||'';
   const controller=typeof AbortController!=='undefined'?new AbortController():null;
   const timer=controller?setTimeout(()=>controller.abort(),8000):null;
