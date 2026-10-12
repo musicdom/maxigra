@@ -18,12 +18,12 @@ const orderKey = id => `checkers:shop:order:${id}`;
 const userOrdersKey = id => `checkers:shop:orders:user:${id}`;
 const inventoryKey = id => `checkers:shop:user:${id}`;
 
-function paymentUrl(orderId, price) {
+function paymentUrl(orderId, price, base = PAYMENT_PAGE) {
   if (!RECEIVER || price <= 0) return '';
-  return `${PAYMENT_PAGE}?id=${encodeURIComponent(orderId)}`;
+  return `${base}?id=${encodeURIComponent(orderId)}`;
 }
-function paymentOptions(orderId, price) {
-  const url = paymentUrl(orderId, price);
+function paymentOptions(orderId, price, base = PAYMENT_PAGE) {
+  const url = paymentUrl(orderId, price, base);
   return { wallet: url, card: url };
 }
 async function alreadyOwned(userId, itemId) {
@@ -51,7 +51,8 @@ export async function POST(request) {
     if (created !== 'OK') throw new Error('ORDER_CREATE_FAILED');
     await redis('SADD', [userOrdersKey(user.id), orderId]);
     await redis('EXPIRE', [userOrdersKey(user.id), String(ORDER_TTL)]);
-    return reply({ ok: true, order: { id: orderId, itemId, price, currency: 'RUB', status: 'pending', paymentUrl: paymentUrl(orderId, price), paymentOptions: paymentOptions(orderId, price) } }, 201);
+    const paymentPage = `${new URL(request.url).origin}/api/shop/pay`;
+    return reply({ ok: true, order: { id: orderId, itemId, price, currency: 'RUB', status: 'pending', paymentUrl: paymentUrl(orderId, price, paymentPage), paymentOptions: paymentOptions(orderId, price, paymentPage) } }, 201);
   } catch (error) { return errorResponse(error); }
 }
 export async function GET(request) {
@@ -64,7 +65,7 @@ export async function GET(request) {
     if (!raw) return reply({ ok: false, error: 'ORDER_NOT_FOUND' }, 404);
     const order = JSON.parse(raw);
     if (String(order.userId) !== String(user.id)) return reply({ ok: false, error: 'ORDER_NOT_FOUND' }, 404);
-    return reply({ ok: true, order: { id: order.id, itemId: order.itemId, price: order.price, currency: order.currency, status: order.status, createdAt: order.createdAt, paymentUrl: order.status === 'pending' ? paymentUrl(order.id, order.price) : '', paymentOptions: order.status === 'pending' ? paymentOptions(order.id, order.price) : { wallet: '', card: '' } } });
+    return reply({ ok: true, order: { id: order.id, itemId: order.itemId, price: order.price, currency: order.currency, status: order.status, createdAt: order.createdAt, paymentUrl: order.status === 'pending' ? paymentUrl(order.id, order.price, `${new URL(request.url).origin}/api/shop/pay`) : '', paymentOptions: order.status === 'pending' ? paymentOptions(order.id, order.price, `${new URL(request.url).origin}/api/shop/pay`) : { wallet: '', card: '' } } });
   } catch (error) { return errorResponse(error); }
 }
 export default { POST, GET };
