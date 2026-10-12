@@ -48,6 +48,7 @@ function getInitData(){
  return '';
 }
 async function waitForInitData(timeout=5000){const started=Date.now();while(Date.now()-started<timeout){const data=getInitData();if(data)return data;await new Promise(r=>setTimeout(r,100))}return ''}
+async function apiFetch(path,options={}){return window.maxigraFetch?window.maxigraFetch(path,options):fetch(window.maxigraApiUrl(path),options)}
 let readyPromise=null;
 function mergeServerState(serverState){
  const previousPieces=state.selectedPieces;
@@ -63,8 +64,8 @@ async function sync(){
  if(readyPromise)return readyPromise;
  readyPromise=(async()=>{
   const init=await waitForInitData();if(!init)throw new Error('MAX_INIT_DATA_REQUIRED');
-  try{await fetch(window.maxigraApiUrl('/api/shop/status'),{method:'POST',headers:{'x-max-init-data':init},cache:'no-store'})}catch{}
-  const r=await fetch(window.maxigraApiUrl('/api/shop'),{headers:{'x-max-init-data':init},cache:'no-store'});
+  try{await apiFetch('/api/shop/status',{method:'POST',headers:{'x-max-init-data':init},cache:'no-store'})}catch{}
+  const r=await apiFetch('/api/shop',{headers:{'x-max-init-data':init},cache:'no-store'});
   const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);
   return mergeServerState(d.state||{});
  })().finally(()=>{readyPromise=null});return readyPromise;
@@ -72,12 +73,12 @@ async function sync(){
 const owned=id=>id==='default'||id===DEFAULT_BOARD||id==='board_original'||state.owned.includes(id)||id==='premium'&&state.owned.includes('premium');
 async function request(action,id){
  const init=await waitForInitData();if(!init)throw new Error('MAX_INIT_DATA_REQUIRED');
- const r=await fetch(window.maxigraApiUrl('/api/shop'),{method:'POST',headers:{'content-type':'application/json','x-max-init-data':init},body:JSON.stringify({action,id}),cache:'no-store'});
+ const r=await apiFetch('/api/shop',{method:'POST',headers:{'content-type':'application/json','x-max-init-data':init},body:JSON.stringify({action,id}),cache:'no-store'});
  const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);mergeServerState(d.state||{});return true;
 }
 async function createOrder(id){
  const init=await waitForInitData();if(!init)throw new Error('MAX_INIT_DATA_REQUIRED');
- const r=await fetch(window.maxigraApiUrl('/api/shop/order'),{method:'POST',headers:{'content-type':'application/json','x-max-init-data':init},body:JSON.stringify({id}),cache:'no-store'});
+ const r=await apiFetch('/api/shop/order',{method:'POST',headers:{'content-type':'application/json','x-max-init-data':init},body:JSON.stringify({id}),cache:'no-store'});
  const d=await r.json().catch(()=>({ok:false,error:'BAD_RESPONSE'}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);return d.order;
 }
 async function buy(id){if(!catalog[id]||id===DEFAULT_BOARD)return false;if(id==='hints')return createOrder(id);if(owned(id))return false;if(catalog[id].price===0)return request('purchase',id);return createOrder(id)}
