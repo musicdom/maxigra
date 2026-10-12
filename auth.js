@@ -52,12 +52,20 @@ async function init(){
   // чтобы не создавать отдельную Serverless Function на Vercel.
   try{
     const init=String(window.WebApp?.initData||'').trim();
-    if(init)fetch(window.maxigraApiUrl('/api/profile'),{
-      method:'POST',
-      headers:{'content-type':'text/plain;charset=UTF-8'},
-      body:JSON.stringify({name:user.name,username:user.username,photo:user.photo,initData:init}),
-      keepalive:true
-    }).catch(()=>{});
+    if(init){
+      const options={
+        method:'POST',
+        headers:{'content-type':'text/plain;charset=UTF-8'},
+        body:JSON.stringify({name:user.name,username:user.username,photo:user.photo,initData:init}),
+        keepalive:true
+      };
+      if(window.maxigraFetch){
+        window.maxigraFetch('/api/profile?initData='+encodeURIComponent(init),{cache:'no-store'})
+          .then(()=>window.maxigraFetch('/api/profile',options)).catch(()=>{});
+      }else{
+        fetch(window.maxigraApiUrl('/api/profile'),options).catch(()=>{});
+      }
+    }
   }catch(e){}
   window.CheckersAuth={user,registered:!user.guest,ready:true,guest:!!user.guest,max:!!user.max,initData:init};
   document.body.classList.remove('max-auth-blocked');
