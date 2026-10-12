@@ -42,7 +42,7 @@ async function load(){
   box.innerHTML='<div class="leader-empty">Загружаем рейтинг…</div>';
   try{
     let raw='';
-    for(let i=0;i<40&&!raw;i++){raw=String(window.WebApp?.initData||'').trim();if(!raw)await new Promise(resolve=>setTimeout(resolve,250));}
+    for(let i=0;i<40&&!raw;i++){raw=String(window.CheckersShop?.getInitData?.()||window.WebApp?.initData||'').trim();if(!raw)await new Promise(resolve=>setTimeout(resolve,250));}
     const path='/api/profile?leaderboard=1&mode='+mode+'&initData='+encodeURIComponent(raw);
     const r=window.maxigraFetch?await window.maxigraFetch(path,{cache:'no-store'}):await fetch(window.maxigraApiUrl(path),{cache:'no-store'});
     const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||'Ошибка');
