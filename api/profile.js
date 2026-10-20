@@ -59,6 +59,22 @@ export async function POST(request){
   try{
     const payload=await body(request);
     const user=auth(request,payload?.initData||'');
+    if(payload?.action==='reset_season'){
+      if(String(user.id)!=='163701646')throw Object.assign(new Error('FORBIDDEN'),{status:403});
+      const modes=['offline','online'];
+      let removed=0;
+      for(const mode of modes){
+        const keys=await redis('KEYS',[\`checkers:stats:\${mode}:*\`]);
+        const list=Array.isArray(keys)?keys:[];
+        if(list.length){
+          const result=await redis('DEL',list);
+          removed+=Number(result)||0;
+        }
+      }
+      const startedAt=Date.now();
+      await redis('SET',['checkers:season:startedAt',String(startedAt)]);
+      return reply({ok:true,removed,startedAt});
+    }
     if(payload?.action==='record_result')return reply({ok:true,stats:await recordResult(user,String(payload.resultId||''),String(payload.result||''),payload.mode==='online'?'online':'offline')});
     const now=Date.now(),key=`checkers:user:${user.id}`;
     const existingRaw=await redis('GET',[key]);let existing=null;
