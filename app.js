@@ -50,7 +50,32 @@ function initStarterOffer(){
  showOffer();
 }
 function startOnlineFromButton(){const openRooms=()=>window.CheckersRooms?.open?.();if(window.CheckersRooms?.open){openRooms();return}show('online-search-screen');const el=q('online-search-text');if(el)el.textContent='Загрузка комнат…';const handler=()=>{window.removeEventListener('checkers-online-ready',handler);openRooms()};window.addEventListener('checkers-online-ready',handler,{once:true})}
-function ensureAdminButton(){const panel=q('profile-screen')?.querySelector('.profile-panel');if(!panel)return;let b=q('profile-admin-btn');const isAdmin=String(window.CheckersAuth?.user?.id)==='163701646';if(!isAdmin){b?.remove();return}if(!b){b=document.createElement('button');b.id='profile-admin-btn';b.className='btn btn--primary';b.textContent='⚙️ Админ-панель';b.addEventListener('click',()=>window.CheckersAdmin?.show?.());panel.appendChild(b)}}
+function ensureAdminButton(){
+ const panel=q('profile-screen')?.querySelector('.profile-panel');if(!panel)return;
+ const isAdmin=String(window.CheckersAuth?.user?.id)==='163701646';
+ let adminButton=q('profile-admin-btn'),seasonButton=q('profile-reset-season-btn');
+ if(!isAdmin){adminButton?.remove();seasonButton?.remove();return}
+ if(!adminButton){adminButton=document.createElement('button');adminButton.id='profile-admin-btn';adminButton.className='btn btn--primary';adminButton.textContent='⚙️ Админ-панель';adminButton.addEventListener('click',()=>window.CheckersAdmin?.show?.());panel.appendChild(adminButton)}
+ if(!seasonButton){
+  seasonButton=document.createElement('button');seasonButton.id='profile-reset-season-btn';seasonButton.className='btn btn--secondary';seasonButton.textContent='🏆 Начать новый сезон';
+  seasonButton.addEventListener('click',async()=>{
+   if(!confirm('Начать новый сезон? Рейтинг и статистика ВСЕХ игроков — офлайн и онлайн — будут сброшены. Это действие нельзя отменить.'))return;
+   seasonButton.disabled=true;seasonButton.textContent='Сбрасываем рейтинг…';
+   try{
+    const init=window.WebApp?.initData||await window.CheckersShop?.getInitData?.()||'';
+    if(!init)throw Error('MAX_INIT_DATA_REQUIRED');
+    const response=await fetch(window.maxigraApiUrl('/api/profile'),{method:'POST',headers:{'content-type':'text/plain;charset=UTF-8'},body:JSON.stringify({action:'reset_season',initData:init}),cache:'no-store'});
+    const data=await response.json();
+    if(!response.ok||!data.ok)throw Error(data.error||'RESET_SEASON_FAILED');
+    try{localStorage.removeItem(ACCOUNT_KEY)}catch{}
+    syncProfile();
+    alert('Новый сезон начат. Сброшена статистика '+Number(data.resetCount||0)+' записей игроков.');
+   }catch(error){alert(error.message==='FORBIDDEN'?'Нет доступа к сбросу рейтинга.':'Не удалось сбросить рейтинг: '+error.message)}
+   finally{seasonButton.disabled=false;seasonButton.textContent='🏆 Начать новый сезон'}
+  });
+  panel.appendChild(seasonButton);
+ }
+}
 function lockMenuHorizontalGesture(){
  const menu=q('menu-screen');if(!menu||menu.dataset.gestureLocked==='1')return;
  menu.dataset.gestureLocked='1';
