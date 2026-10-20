@@ -47,7 +47,7 @@ export async function GET(request){
       const limit=Math.min(100,Math.max(1,Number(url.searchParams.get('limit')||100)));
       const leaderboard=rows.slice(0,limit).map((x,i)=>({...x,rank:i+1}));
       const me=leaderboard.find(x=>x.id===String(user.id));
-      return reply({ok:true,leaderboard,me:me||null,total:rows.length});
+      const seasonStartedAt=Number(await redis('GET',['checkers:season:startedAt'])||0);\n      let seasonEndsAt=0;if(seasonStartedAt){const end=new Date(seasonStartedAt);const day=end.getDate();end.setDate(1);end.setMonth(end.getMonth()+1);const lastDay=new Date(end.getFullYear(),end.getMonth()+1,0).getDate();end.setDate(Math.min(day,lastDay));seasonEndsAt=end.getTime();}\n      return reply({ok:true,leaderboard,me:me||null,total:rows.length,season:{startedAt:seasonStartedAt,endsAt:seasonEndsAt}});
     }
     const raw=await redis('GET',[statsKey(user.id)]);
     let stats=null;try{stats=raw?JSON.parse(raw):null}catch{}
