@@ -54,27 +54,42 @@ function ensureAdminButton(){
  const panel=q('profile-screen')?.querySelector('.profile-panel');if(!panel)return;
  const isAdmin=String(window.CheckersAuth?.user?.id)==='163701646';
  let adminButton=q('profile-admin-btn'),seasonButton=q('profile-reset-season-btn');
- if(!isAdmin){adminButton?.remove();seasonButton?.remove();return}
+ if(!isAdmin){adminButton?.remove();seasonButton?.remove();q('profile-reset-season-dialog')?.remove();return}
  if(!adminButton){adminButton=document.createElement('button');adminButton.id='profile-admin-btn';adminButton.className='btn btn--primary';adminButton.textContent='⚙️ Админ-панель';adminButton.addEventListener('click',()=>window.CheckersAdmin?.show?.());panel.appendChild(adminButton)}
- if(!seasonButton){
-  seasonButton=document.createElement('button');seasonButton.id='profile-reset-season-btn';seasonButton.className='btn btn--secondary';seasonButton.textContent='🏆 Начать новый сезон';
-  seasonButton.addEventListener('click',async()=>{
-   if(!confirm('Начать новый сезон? Рейтинг и статистика ВСЕХ игроков — офлайн и онлайн — будут сброшены. Это действие нельзя отменить.'))return;
-   seasonButton.disabled=true;seasonButton.textContent='Сбрасываем рейтинг…';
+ const closeDialog=()=>q('profile-reset-season-dialog')?.remove();
+ const showDialog=()=>{
+  closeDialog();
+  const overlay=document.createElement('div');overlay.id='profile-reset-season-dialog';
+  overlay.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(8,15,28,.76);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
+  overlay.innerHTML='<div role="dialog" aria-modal="true" aria-labelledby="season-reset-title" style="width:100%;max-width:360px;background:#fff;color:#172536;border-radius:20px;padding:22px;box-sizing:border-box;box-shadow:0 18px 60px rgba(0,0,0,.3)"><div style="font-size:30px;margin-bottom:8px">🏆</div><div id="season-reset-title" style="font-size:20px;font-weight:800;margin-bottom:10px">Начать новый сезон?</div><div style="font-size:14px;line-height:1.5;margin-bottom:18px">Рейтинг и статистика всех игроков в онлайн- и офлайн-играх будут обнулены. Профили и покупки сохранятся. Действие нельзя отменить.</div><div id="season-reset-error" role="alert" style="display:none;color:#b42318;font-size:13px;line-height:1.4;margin-bottom:12px"></div><div style="display:flex;gap:10px"><button type="button" id="season-reset-cancel" style="flex:1;min-height:44px;border:0;border-radius:12px;background:#eef2f7;color:#172536;font-weight:700">Отмена</button><button type="button" id="season-reset-confirm" style="flex:1;min-height:44px;border:0;border-radius:12px;background:#246fe5;color:white;font-weight:700">Сбросить рейтинг</button></div></div>';
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click',e=>{if(e.target===overlay)closeDialog()});
+  q('season-reset-cancel')?.addEventListener('click',closeDialog);
+  q('season-reset-confirm')?.addEventListener('click',async()=>{
+   const confirmButton=q('season-reset-confirm'),cancelButton=q('season-reset-cancel'),errorBox=q('season-reset-error');
+   confirmButton.disabled=true;cancelButton.disabled=true;confirmButton.textContent='Сбрасываем…';errorBox.style.display='none';
    try{
     const init=window.WebApp?.initData||await window.CheckersShop?.getInitData?.()||'';
-    if(!init)throw Error('MAX_INIT_DATA_REQUIRED');
+    if(!init)throw Error('Не удалось получить данные авторизации MAX. Закрой и заново открой мини-приложение.');
     const response=await fetch(window.maxigraApiUrl('/api/profile'),{method:'POST',headers:{'content-type':'text/plain;charset=UTF-8'},body:JSON.stringify({action:'reset_season',initData:init}),cache:'no-store'});
-    const data=await response.json();
-    if(!response.ok||!data.ok)throw Error(data.error||'RESET_SEASON_FAILED');
+    let data={};try{data=await response.json()}catch{}
+    if(!response.ok||!data.ok){
+     if(response.status===403||data.error==='FORBIDDEN')throw Error('Сервер не распознал этот аккаунт как администратора. Проверь, что открыл игру под нужным аккаунтом MAX.');
+     throw Error(data.error||('Ошибка сервера: '+response.status));
+    }
     try{localStorage.removeItem(ACCOUNT_KEY)}catch{}
+    closeDialog();
     syncProfile();
-    alert('Новый сезон начат. Сброшена статистика '+Number(data.resetCount||0)+' записей игроков.');
-   }catch(error){alert(error.message==='FORBIDDEN'?'Нет доступа к сбросу рейтинга.':'Не удалось сбросить рейтинг: '+error.message)}
-   finally{seasonButton.disabled=false;seasonButton.textContent='🏆 Начать новый сезон'}
+    const done=document.createElement('div');done.id='profile-reset-season-success';done.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(8,15,28,.72);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
+    done.innerHTML='<div style="width:100%;max-width:340px;background:#fff;color:#172536;border-radius:20px;padding:24px;text-align:center;box-sizing:border-box"><div style="font-size:32px">✅</div><div style="font-size:20px;font-weight:800;margin:10px 0">Новый сезон начат!</div><div style="font-size:14px;line-height:1.5;margin-bottom:18px">Обнулено записей статистики: '+Number(data.resetCount||0)+'. Можно начинать соревнование заново.</div><button type="button" id="season-reset-success-close" style="width:100%;min-height:44px;border:0;border-radius:12px;background:#246fe5;color:white;font-weight:700">Готово</button></div>';
+    document.body.appendChild(done);q('season-reset-success-close')?.addEventListener('click',()=>done.remove());
+   }catch(error){
+    errorBox.textContent=error?.message||'Не удалось сбросить рейтинг. Попробуй ещё раз.';
+    errorBox.style.display='block';confirmButton.disabled=false;cancelButton.disabled=false;confirmButton.textContent='Повторить';
+   }
   });
-  panel.appendChild(seasonButton);
- }
+ };
+ if(!seasonButton){seasonButton=document.createElement('button');seasonButton.id='profile-reset-season-btn';seasonButton.className='btn btn--secondary';seasonButton.textContent='🏆 Начать новый сезон';seasonButton.addEventListener('click',showDialog);panel.appendChild(seasonButton)}
 }
 function lockMenuHorizontalGesture(){
  const menu=q('menu-screen');if(!menu||menu.dataset.gestureLocked==='1')return;
