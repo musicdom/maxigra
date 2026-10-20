@@ -62,18 +62,24 @@ export async function POST(request){
     if(payload?.action==='reset_season'){
       if(String(user.id)!=='163701646')throw Object.assign(new Error('FORBIDDEN'),{status:403});
       const modes=['offline','online'];
-      let removed=0;
+      let resetCount=0;
       for(const mode of modes){
-        const keys=await redis('KEYS',[\`checkers:stats:\${mode}:*\`]);
-        const list=Array.isArray(keys)?keys:[];
-        if(list.length){
-          const result=await redis('DEL',list);
-          removed+=Number(result)||0;
+        const keys=await redis('KEYS',['checkers:stats:'+mode+':*']);
+        for(const key of (Array.isArray(keys)?keys:[])){
+          const raw=await redis('GET',[key]);
+          if(!raw)continue;
+          try{
+            const stats=JSON.parse(raw);
+            stats.games=0;stats.wins=0;stats.losses=0;stats.draws=0;
+            stats.resultIds=[];stats.updatedAt=Date.now();
+            await redis('SET',[key,JSON.stringify(stats)]);
+            resetCount++;
+          }catch{}
         }
       }
       const startedAt=Date.now();
       await redis('SET',['checkers:season:startedAt',String(startedAt)]);
-      return reply({ok:true,removed,startedAt});
+      return reply({ok:true,resetCount,startedAt});
     }
     if(payload?.action==='record_result')return reply({ok:true,stats:await recordResult(user,String(payload.resultId||''),String(payload.result||''),payload.mode==='online'?'online':'offline')});
     const now=Date.now(),key=`checkers:user:${user.id}`;
