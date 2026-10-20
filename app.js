@@ -69,7 +69,7 @@ function ensureAdminButton(){
     if(!response.ok||!data.ok)throw Error(data.error||'RESET_SEASON_FAILED');
     try{localStorage.removeItem(ACCOUNT_KEY)}catch{}
     syncProfile();
-    alert('Новый сезон начат. Сброшена статистика '+Number(data.removed||0)+' записей игроков.');
+    alert('Новый сезон начат. Сброшена статистика '+Number(data.resetCount||0)+' записей игроков.');
    }catch(error){alert(error.message==='FORBIDDEN'?'Нет доступа к сбросу рейтинга.':'Не удалось сбросить рейтинг: '+error.message)}
    finally{seasonButton.disabled=false;seasonButton.textContent='🏆 Начать новый сезон'}
   });
