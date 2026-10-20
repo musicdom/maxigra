@@ -1,6 +1,7 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
-let mode='offline';\nlet seasonTimer=null;
+let mode='offline';
+let seasonTimer=null;
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function avatar(x,cls='leader-avatar'){return x?.photo?'<img class="'+cls+'" src="'+esc(x.photo)+'" alt="">':'<div class="'+cls+' leader-avatar-fallback">♟</div>'}
 function podiumCard(x,place){
@@ -14,7 +15,14 @@ function podiumCard(x,place){
     '<div class="leader-podium-wins">'+x.wins+' <span>ПОБЕД</span></div>'+
     '</div>';
 }
-function renderSeason(season){\n const panel=$('leaderboard-season');if(!panel)return;\n const end=Number(season?.endsAt||0);\n if(!end){panel.innerHTML='<div class=\"season-countdown-title\">🏆 СЕЗОННЫЙ РЕЙТИНГ</div><div class=\"season-countdown-empty\">Новый сезон ещё не запущен администратором.</div>';if(seasonTimer){clearInterval(seasonTimer);seasonTimer=null}return}\n const update=()=>{const left=Math.max(0,end-Date.now());const totalSeconds=Math.floor(left/1000);const days=Math.floor(totalSeconds/86400),hours=Math.floor(totalSeconds%86400/3600),minutes=Math.floor(totalSeconds%3600/60),seconds=totalSeconds%60;const months=Math.floor(days/30),remainingDays=days%30;const units=[['МЕСЯЦ',months],['ДНЕЙ',remainingDays],['ЧАСОВ',hours],['МИНУТ',minutes],['СЕКУНД',seconds]];panel.innerHTML='<div class=\"season-countdown-title\">🏆 ДО КОНЦА СЕЗОНА</div><div class=\"season-countdown-grid\">'+units.map(([label,value])=>'<div class=\"season-countdown-unit\"><b>'+String(value).padStart(2,'0')+'</b><span>'+label+'</span></div>').join('')+'</div>'+(left===0?'<div class=\"season-countdown-finished\">Сезон завершён</div>':'');if(left===0&&seasonTimer){clearInterval(seasonTimer);seasonTimer=null}};\n update();if(seasonTimer)clearInterval(seasonTimer);if(end>Date.now())seasonTimer=setInterval(update,1000);\n}\nfunction render(rows,me){
+function renderSeason(season){
+ const panel=$('leaderboard-season');if(!panel)return;
+ const end=Number(season?.endsAt||0);
+ if(!end){panel.innerHTML='<div class=\"season-countdown-title\">🏆 СЕЗОННЫЙ РЕЙТИНГ</div><div class=\"season-countdown-empty\">Новый сезон ещё не запущен администратором.</div>';if(seasonTimer){clearInterval(seasonTimer);seasonTimer=null}return}
+ const update=()=>{const left=Math.max(0,end-Date.now());const totalSeconds=Math.floor(left/1000);let months=0;const nowDate=new Date(),endDate=new Date(end);while(true){const candidate=new Date(nowDate);candidate.setDate(1);candidate.setMonth(candidate.getMonth()+months+1);const day=nowDate.getDate();const last=new Date(candidate.getFullYear(),candidate.getMonth()+1,0).getDate();candidate.setDate(Math.min(day,last));if(candidate.getTime()<=endDate.getTime())months++;else break;}const monthAnchor=new Date(nowDate);monthAnchor.setDate(1);monthAnchor.setMonth(monthAnchor.getMonth()+months);monthAnchor.setDate(Math.min(nowDate.getDate(),new Date(monthAnchor.getFullYear(),monthAnchor.getMonth()+1,0).getDate()));const days=Math.floor((endDate.getTime()-monthAnchor.getTime())/86400000),hours=Math.floor(totalSeconds%86400/3600),minutes=Math.floor(totalSeconds%3600/60),seconds=totalSeconds%60;const remainingDays=days;const units=[['МЕСЯЦ',months],['ДНЕЙ',remainingDays],['ЧАСОВ',hours],['МИНУТ',minutes],['СЕКУНД',seconds]];panel.innerHTML='<div class=\"season-countdown-title\">🏆 ДО КОНЦА СЕЗОНА</div><div class=\"season-countdown-grid\">'+units.map(([label,value])=>'<div class=\"season-countdown-unit\"><b>'+String(value).padStart(2,'0')+'</b><span>'+label+'</span></div>').join('')+'</div>'+(left===0?'<div class=\"season-countdown-finished\">Сезон завершён</div>':'');if(left===0&&seasonTimer){clearInterval(seasonTimer);seasonTimer=null}};
+ update();if(seasonTimer)clearInterval(seasonTimer);if(end>Date.now())seasonTimer=setInterval(update,1000);
+}
+function render(rows,me){
   const box=$('leaderboard-list');
   if(!box)return;
   if(!rows.length){
@@ -46,7 +54,8 @@ async function load(){
     const path='/api/profile?leaderboard=1&mode='+mode+'&initData='+encodeURIComponent(raw);
     const r=window.maxigraFetch?await window.maxigraFetch(path,{cache:'no-store'}):await fetch(window.maxigraApiUrl(path),{cache:'no-store'});
     const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||'Ошибка');
-    renderSeason(d.season||{});\n    render(d.leaderboard||[],d.me);
+    renderSeason(d.season||{});
+    render(d.leaderboard||[],d.me);
     const me=d.me,el=$('leaderboard-me');
     if(el)el.innerHTML=me?
       '<div class="leader-me-label">ВАШ РЕЗУЛЬТАТ</div><div class="leader-me-main"><strong>#'+me.rank+'</strong><span>'+me.wins+' побед · '+me.games+' игр</span></div>':
