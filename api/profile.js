@@ -47,7 +47,9 @@ export async function GET(request){
       const limit=Math.min(100,Math.max(1,Number(url.searchParams.get('limit')||100)));
       const leaderboard=rows.slice(0,limit).map((x,i)=>({...x,rank:i+1}));
       const me=leaderboard.find(x=>x.id===String(user.id));
-      return reply({ok:true,leaderboard,me:me||null,total:rows.length});
+      const seasonStartedAt=Number(await redis('GET',['checkers:season:startedAt'])||0);
+      let seasonEndsAt=0;if(seasonStartedAt){const end=new Date(seasonStartedAt);const day=end.getDate();end.setDate(1);end.setMonth(end.getMonth()+1);const lastDay=new Date(end.getFullYear(),end.getMonth()+1,0).getDate();end.setDate(Math.min(day,lastDay));seasonEndsAt=end.getTime();}
+      return reply({ok:true,leaderboard,me:me||null,total:rows.length,season:{startedAt:seasonStartedAt,endsAt:seasonEndsAt}});
     }
     const raw=await redis('GET',[statsKey(user.id)]);
     let stats=null;try{stats=raw?JSON.parse(raw):null}catch{}
@@ -78,8 +80,10 @@ export async function POST(request){
         }
       }
       const startedAt=Date.now();
+      const end=new Date(startedAt);const day=end.getDate();end.setDate(1);end.setMonth(end.getMonth()+1);const lastDay=new Date(end.getFullYear(),end.getMonth()+1,0).getDate();end.setDate(Math.min(day,lastDay));const endsAt=end.getTime();
       await redis('SET',['checkers:season:startedAt',String(startedAt)]);
-      return reply({ok:true,resetCount,startedAt});
+      await redis('SET',['checkers:season:endsAt',String(endsAt)]);
+      return reply({ok:true,resetCount,startedAt,endsAt});
     }
     if(payload?.action==='record_result')return reply({ok:true,stats:await recordResult(user,String(payload.resultId||''),String(payload.result||''),payload.mode==='online'?'online':'offline')});
     const now=Date.now(),key=`checkers:user:${user.id}`;
