@@ -38,7 +38,7 @@ export default async function handler(req,res){
    if(type==="message_callback"){await handlePostingsCallback(id,u?.callback?.payload??u?.payload??"",u?.callback?.callback_id??u?.callback?.id??null);continue}
    if(type==="message_created"){
     const message=txt(u);
-    if(/^\\/start(?:@\\S+)?(?:\\s|$)/i.test(message))await handleBotStart(id);
+    if(/^\/start(?:@\S+)?(?:\s|$)/i.test(message))await handleBotStart(id);
     else await handlePostings(id,message);
    }
   }
