@@ -4,6 +4,16 @@ const roomKey = id => `checkers:room:${id}`;
 const userRoomKey = id => `checkers:room:user:${id}`;
 const lockKey = id => `checkers:room:lock:${id}`;
 
+async function saveUserRecord(user){
+  const key=`checkers:user:${user.id}`;
+  let existing={};
+  try{const raw=await redis('GET',[key]);existing=raw?JSON.parse(raw):{}}catch{}
+  const now=Date.now();
+  const profile={...existing,id:String(user.id),name:user.name||existing.name||'Игрок',username:user.username||existing.username||'',photo:user.photo||existing.photo||'',createdAt:Number(existing.createdAt)||now,updatedAt:now,lastSeenAt:now,openCount:Math.max(0,Number(existing.openCount)||0)};
+  // Keep the admin/profile record permanent and preserve its counters.
+  await redis('SET',[key,JSON.stringify(profile)]);
+}
+
 export function OPTIONS(){ return reply({ok:true}); }
 
 export async function GET(request){
@@ -62,7 +72,7 @@ export async function POST(request){
       const ok=await redis('SET',[roomKey(id),JSON.stringify(room),'NX','EX','7200']);
       if(ok!=='OK')throw new Error('ROOM_CREATE_FAILED');
       await redis('SET',[userRoomKey(user.id),id,'EX',7200]);
-      await redis('SET',[`checkers:user:${user.id}`,JSON.stringify(user),'EX',2592000]);
+      await saveUserRecord(user);
       return reply({ok:true,room:{id,name:user.name}});
     }
 
@@ -87,7 +97,7 @@ export async function POST(request){
       if(oldRoomId&&oldRoomId!==id)await redis('DEL',[userRoomKey(user.id)]);
       room.p2=user; room.status='playing'; room.updatedAt=Date.now(); room.board=room.board?.length?room.board:initialBoard();
       const saved=await redis('SET',[key,JSON.stringify(room),'XX','EX',7200]); if(saved!=='OK')throw new Error('ROOM_BUSY');
-      await redis('SET',[userRoomKey(user.id),id,'EX',7200]); await redis('SET',[`checkers:user:${user.id}`,JSON.stringify(user),'EX',2592000]);
+      await redis('SET',[userRoomKey(user.id),id,'EX',7200]); await saveUserRecord(user);
       await redis('SET',[`checkers:presence:${room.p1.id}`,'1','EX',120]); await redis('SET',[`checkers:presence:${user.id}`,'1','EX',120]);
       return reply({ok:true,status:'matched',game:publicGame(room,user.id),roomId:id});
     }
