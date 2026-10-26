@@ -49,19 +49,45 @@ async function load(){
   const box=$('leaderboard-list');if(!box)return;
   box.innerHTML='<div class="leader-empty">Загружаем рейтинг…</div>';
   try{
+    let d=null,fromSnapshot=false;
     let raw='';
     for(let i=0;i<40&&!raw;i++){raw=String(window.CheckersShop?.getInitData?.()||window.WebApp?.initData||'').trim();if(!raw)await new Promise(resolve=>setTimeout(resolve,250));}
     const path='/api/profile?leaderboard=1&mode='+mode+'&initData='+encodeURIComponent(raw);
-    const r=window.maxigraFetch?await window.maxigraFetch(path,{cache:'no-store'}):await fetch(window.maxigraApiUrl(path),{cache:'no-store'});
-    const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||'Ошибка');
+    try{
+      const r=window.maxigraFetch?await window.maxigraFetch(path,{cache:'no-store'}):await fetch(window.maxigraApiUrl(path),{cache:'no-store'});
+      const live=await r.json();
+      if(!r.ok||!live.ok)throw new Error(live.error||'Vercel API unavailable');
+      d=live;
+    }catch(liveError){
+      const snapshotUrl=new URL('data/leaderboard-'+mode+'.json',location.href);
+      snapshotUrl.searchParams.set('v',String(Date.now()));
+      const snapshotResponse=await fetch(snapshotUrl.toString(),{cache:'no-store'});
+      if(!snapshotResponse.ok)throw liveError;
+      const snapshot=await snapshotResponse.json();
+      if(!snapshot.ok||!Array.isArray(snapshot.leaderboard))throw liveError;
+      d=snapshot;
+      fromSnapshot=true;
+    }
     renderSeason(d.season||{});
-    render(d.leaderboard||[],d.me);
-    const me=d.me,el=$('leaderboard-me');
+    const rows=d.leaderboard||[];
+    const currentId=String(window.CheckersAuth?.user?.id||'');
+    const me=d.me||rows.find(x=>currentId&&String(x.id)===currentId)||null;
+    render(rows,me);
+    const el=$('leaderboard-me');
     if(el)el.innerHTML=me?
       '<div class="leader-me-label">ВАШ РЕЗУЛЬТАТ</div><div class="leader-me-main"><strong>#'+me.rank+'</strong><span>'+me.wins+' побед · '+me.games+' игр</span></div>':
       '<div class="leader-me-label">ВАШ РЕЗУЛЬТАТ</div><div class="leader-me-main"><span>Сыграйте хотя бы одну партию, чтобы попасть в рейтинг.</span></div>';
+    if(fromSnapshot){
+      const stamp=Number(d.updatedAt||0);
+      const updated=stamp?new Date(stamp).toLocaleString('ru-RU'):'ожидается первая синхронизация';
+      const note=document.createElement('div');
+      note.className='leader-empty';
+      note.style.marginTop='10px';
+      note.textContent='Показаны данные, сохранённые из Vercel через GitHub. Обновлено: '+updated+'. При недоступности Vercel рейтинг может отставать до 15 минут.';
+      box.appendChild(note);
+    }
   }catch(e){
-    box.innerHTML='<div class="leader-empty">Не удалось загрузить рейтинг. Проверьте соединение и повторите попытку.<br><button class="btn btn--secondary" id="leaderboard-retry" style="margin-top:12px">Повторить</button></div>';
+    box.innerHTML='<div class="leader-empty">Не удалось загрузить рейтинг: нет свежего ответа Vercel и пока нет доступного снимка в GitHub. Проверьте соединение или повторите попытку.<br><button class="btn btn--secondary" id="leaderboard-retry" style="margin-top:12px">Повторить</button></div>';
     $('leaderboard-retry')?.addEventListener('click',load);
   }
 }
