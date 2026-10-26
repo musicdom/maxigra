@@ -1,5 +1,6 @@
 import https from "https";
 import {handlePostings,handlePostingsCallback,handleChannelUpdate} from "../lib/postings.js";
+import {handleBotStart} from "./_retention.js";
 
 async function maxRequest({token,method="GET",apiPath,body=null}){
  if(!token) throw new Error("MAX_BOT_TOKEN not configured");
@@ -33,8 +34,13 @@ export default async function handler(req,res){
    const id=uid(u);console.log("MAXИГРА WEBHOOK",{type,id,chat_id:u?.chat_id??u?.message?.recipient?.chat_id??null,is_channel:u?.is_channel??u?.message?.recipient?.type});
    await handleChannelUpdate(u);
    if(!id)continue;
+   if(type==="bot_started"){await handleBotStart(id);continue}
    if(type==="message_callback"){await handlePostingsCallback(id,u?.callback?.payload??u?.payload??"",u?.callback?.callback_id??u?.callback?.id??null);continue}
-   if(type==="message_created")await handlePostings(id,txt(u));
+   if(type==="message_created"){
+    const message=txt(u);
+    if(/^\\/start(?:@\\S+)?(?:\\s|$)/i.test(message))await handleBotStart(id);
+    else await handlePostings(id,message);
+   }
   }
   return res.status(200).json({ok:true,received:true});
  }catch(e){console.error("MAXИГРА WEBHOOK ERROR",e);return res.status(200).json({ok:false,received:false,error:e.message})}
