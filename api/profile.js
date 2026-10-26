@@ -89,8 +89,9 @@ export async function POST(request){
     const now=Date.now(),key=`checkers:user:${user.id}`;
     const existingRaw=await redis('GET',[key]);let existing=null;
     if(existingRaw){try{existing=JSON.parse(existingRaw)}catch{}}
-    const profile={id:user.id,name:user.name,username:user.username||'',photo:user.photo||'',createdAt:existing?.createdAt||Number(payload?.createdAt)||now,updatedAt:now,lastSeenAt:now};
-    await redis('SET',[key,JSON.stringify(profile),'EX','2592000']);
+    const profile={id:String(user.id),name:user.name,username:user.username||'',photo:user.photo||'',createdAt:existing?.createdAt||Number(payload?.createdAt)||now,updatedAt:now,lastSeenAt:now,openCount:Math.max(0,Number(existing?.openCount)||0)+1};
+    // Keep the account record permanently so older players remain visible in admin.
+    await redis('SET',[key,JSON.stringify(profile)]);
     await redis('SET',[`checkers:presence:${user.id}`,'1','EX','120']);
     return reply({ok:true,registered:Boolean(existing),isNew:!existing,user:profile});
   }catch(error){return errorResponse(error)}

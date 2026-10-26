@@ -19,7 +19,7 @@ export async function GET(request) {
     const url=new URL(request.url),orderId=String(url.searchParams.get('id')||'');
     if(!/^mx_[a-f0-9]{32}$/.test(orderId))return new Response(page({error:'Некорректный номер заказа.'}),{status:400,headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store'}});
     const raw=await redis('GET',[orderKey(orderId)]);if(!raw)return new Response(page({error:'Заказ не найден или срок его оплаты истёк.'}),{status:404,headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store'}});
-    const order=JSON.parse(raw);if(order.status!=='pending'||Number(order.price)<=0)return new Response(page({error:'Этот заказ уже обработан.'}),{status:409,headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store'}});
+    const order=JSON.parse(raw);if(order.status!=='pending'||Number(order.price)<=0)return new Response(page({error:'Этот заказ уже обработан.'}),{status:409,headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store'}});if(Number(order.expiresAt||0)>0&&Date.now()>Number(order.expiresAt)){await redis('SET',[orderKey(orderId),JSON.stringify({...order,status:'expired',expiredAt:Date.now()})]);return new Response(page({error:'Срок оплаты заказа истёк. Вернитесь в игру и создайте новый заказ.'}),{status:410,headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store'}})}
     return new Response(page({order,origin:url.origin}),{status:200,headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store'}});
   } catch(error){return reply({ok:false,error:'PAYMENT_PAGE_ERROR'},500);}
 }

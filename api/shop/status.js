@@ -62,6 +62,7 @@ export async function GET(request) {
     if (order.status === 'paid') {
       await reconcile(String(order.userId));
     }
+    if(order.status==='pending'&&Number(order.expiresAt||0)>0&&Date.now()>Number(order.expiresAt)){order.status='expired';order.expiredAt=Date.now();await redis('SET',[orderKey(id),JSON.stringify(order)]);}
     return reply({ ok:true, status:String(order.status||'pending'), itemId:String(order.itemId||''), paidAt:order.paidAt||null });
   } catch { return reply({ ok:false, error:'PAYMENT_STATUS_ERROR' }, 500); }
 }
