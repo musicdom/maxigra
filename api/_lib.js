@@ -33,7 +33,7 @@ export function validateInitData(raw) {
   const a=Buffer.from(calculated),b=Buffer.from(parsed.hash); if(a.length!==b.length||!crypto.timingSafeEqual(a,b)) throw new Error('INVALID_INIT_DATA');
   const authDate=Number(parsed.map.auth_date||0); if(!authDate||Math.abs(Math.floor(Date.now()/1000)-authDate)>86400) throw new Error('INIT_DATA_EXPIRED');
   let user; try{user=JSON.parse(parsed.map.user||'{}')}catch{throw new Error('INVALID_USER_DATA')}; if(!user.id)throw new Error('USER_NOT_FOUND');
-  return {id:String(user.id),name:[user.first_name,user.last_name].filter(Boolean).join(' ').trim()||user.username||'Игрок',username:user.username||'',photo:user.photo_url||''};
+  return {id:String(user.id),name:[user.first_name,user.last_name].filter(Boolean).join(' ').trim()||user.name||user.display_name||user.username||'Игрок',username:user.username||'',photo:user.photo_url||user.photo||user.avatar_url||user.avatar||user.picture||''};
 }
 export function auth(request, override=''){try{return validateInitData(String(override||request.headers.get('x-max-init-data')||''))}catch(error){throw Object.assign(new Error(error.message),{status:error.message==='MAX_BOT_TOKEN_NOT_CONFIGURED'||error.message==='REDIS_NOT_CONFIGURED'?500:401})}}
 export function initialBoard(){const board=Array.from({length:8},()=>Array(8).fill(0));for(let r=0;r<8;r++)for(let c=0;c<8;c++)if((r+c)%2){if(r<3)board[r][c]=2;else if(r>4)board[r][c]=1}return board}
