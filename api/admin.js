@@ -13,12 +13,25 @@ function admin(request, initData=''){const user=auth(request,initData);if(String
 async function getUsers(){
  const keys=await redis('KEYS',[`${USER_KEY_PREFIX}*`]),out=[];
  for(const key of(Array.isArray(keys)?keys:[])){const raw=await redis('GET',[key]);if(!raw)continue;try{const v=JSON.parse(raw);if(v?.id)out.push(v)}catch{}}
+ // Recover fields from older game-stat records if a room previously overwrote the profile.
+ for(const user of out){
+  if(user.photo&&user.username&&user.name&&user.createdAt&&user.lastSeenAt!==undefined&&user.openCount!==undefined)continue;
+  for(const mode of ['offline','online']){try{const raw=await redis('GET',[`checkers:stats:${mode}:${user.id}`]);if(!raw)continue;const stats=JSON.parse(raw);user.name=user.name&&user.name!=='Игрок'?user.name:(stats.name||user.name||'Игрок');user.username=user.username||stats.username||'';user.photo=user.photo||stats.photo||'';}catch{}}
+ }
  return out.sort((a,b)=>Number(b.lastSeenAt||0)-Number(a.lastSeenAt||0));
 }
-async function readInventory(id){
+async function readInventory(id,reconcilePaid=false){
  const raw=await redis('GET',[INVENTORY_KEY(id)]);let state={};try{state=raw?JSON.parse(raw):{}}catch{}
  state.owned=Array.isArray(state.owned)?state.owned.filter(x=>BOARD_IDS.includes(x)):['board_original'];if(!state.owned.includes('board_original'))state.owned.push('board_original');
- state.selectedBoard=BOARD_IDS.includes(state.selectedBoard)&&state.owned.includes(state.selectedBoard)?state.selectedBoard:'board_original';state.resetAt=Number(state.resetAt)||0;return state;
+ state.selectedBoard=BOARD_IDS.includes(state.selectedBoard)&&state.owned.includes(state.selectedBoard)?state.selectedBoard:'board_original';state.resetAt=Number(state.resetAt)||0;
+ if(reconcilePaid){
+  let ids=[];try{const result=await redis('SMEMBERS',[`checkers:shop:orders:user:${id}`]);ids=Array.isArray(result)?result:[]}catch{}
+  if(!ids.length){try{const keys=await redis('KEYS',['checkers:shop:order:*']);for(const key of(Array.isArray(keys)?keys:[])){try{const item=JSON.parse(await redis('GET',[key])||'null');if(String(item?.userId)===String(id))ids.push(String(item.id||String(key).split(':').pop()))}catch{}}}catch{}}
+  let changed=false;
+  for(const orderId of [...new Set(ids)]){try{const order=JSON.parse(await redis('GET',[`checkers:shop:order:${orderId}`])||'null');if(!order||String(order.userId)!==String(id)||order.status!=='paid'||Number(order.paidAt||0)<=state.resetAt)continue;const item=String(order.itemId||'');if(BOARD_IDS.includes(item)&&!state.owned.includes(item)){state.owned.push(item);changed=true}if(item==='starter_pack'){for(const board of ['board_90s','board_svo'])if(!state.owned.includes(board)){state.owned.push(board);changed=true}}if(item==='master'&&Number(state.ai)!==4){state.ai=4;changed=true}}catch{}}
+  if(changed)await saveInventory(id,state);
+ }
+ return state;
 }
 async function saveInventory(id,state){await redis('SET',[INVENTORY_KEY(id),JSON.stringify({owned:state.owned,selectedBoard:state.selectedBoard,selectedPieces:state.selectedPieces||'default',ai:Number(state.ai)||1,hints:Number(state.hints)||0,resetAt:Number(state.resetAt)||0})]);}
 async function readStats(id,mode){
@@ -37,7 +50,7 @@ export async function GET(request){
   admin(request);const url=new URL(request.url),userId=String(url.searchParams.get('userId')||'');
   if(userId){
    const users=await getUsers(),user=users.find(u=>String(u.id)===userId);if(!user)return reply({ok:false,error:'USER_NOT_FOUND'},404);
-   const [offline,online,shop]=await Promise.all([readStats(userId,'offline'),readStats(userId,'online'),readInventory(userId)]);
+   const [offline,online,shop]=await Promise.all([readStats(userId,'offline'),readStats(userId,'online'),readInventory(userId,true)]);
    let orderIds=[];try{const ids=await redis('SMEMBERS',[`checkers:shop:orders:user:${userId}`]);orderIds=Array.isArray(ids)?ids:[]}catch{}
    // Backward compatibility: older orders may exist without a per-user set index.
    if(!orderIds.length){try{const keys=await redis('KEYS',[`checkers:shop:order:*`]);for(const key of(Array.isArray(keys)?keys:[])){const raw=await redis('GET',[key]);if(!raw)continue;try{const order=JSON.parse(raw);if(String(order.userId)===userId)orderIds.push(String(order.id||String(key).split(':').pop()))}catch{}}}catch{}}
