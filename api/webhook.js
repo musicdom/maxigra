@@ -14,7 +14,7 @@ async function maxRequest({token,method="GET",apiPath,body=null}){
  let data=null;try{data=response.raw?JSON.parse(response.raw):null}catch{}
  return {status:response.status,ok:response.ok,data,raw:response.raw};
 }
-function uid(u){return u?.callback?.user?.user_id??u?.callback?.user?.id??u?.user?.user_id??u?.user?.id??u?.message?.sender?.user_id??u?.message?.sender?.id??null}
+function uid(u){return u?.callback?.user?.user_id??u?.callback?.user?.id??u?.user?.user_id??u?.user?.id??u?.user_id??u?.message?.sender?.user_id??u?.message?.sender?.id??u?.message?.from?.user_id??u?.message?.from?.id??null}
 function txt(u){return String(u?.message?.body?.text??u?.message?.text??u?.body?.text??u?.text??"").trim()}
 export default async function handler(req,res){
  if(req.method==="GET"){
@@ -34,7 +34,7 @@ export default async function handler(req,res){
    const id=uid(u);console.log("MAXИГРА WEBHOOK",{type,id,chat_id:u?.chat_id??u?.message?.recipient?.chat_id??null,is_channel:u?.is_channel??u?.message?.recipient?.type});
    await handleChannelUpdate(u);
    if(!id)continue;
-   if(type==="bot_started"){await handleBotStart(id);continue}
+   if(type==="bot_started"){const result=await handleBotStart(id);console.log("MAX BOT START RESULT",{id,...result});continue}
    if(type==="message_callback"){await handlePostingsCallback(id,u?.callback?.payload??u?.payload??"",u?.callback?.callback_id??u?.callback?.id??null);continue}
    if(type==="message_created"){
     const message=txt(u);
