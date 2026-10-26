@@ -77,15 +77,6 @@ async function load(){
     if(el)el.innerHTML=me?
       '<div class="leader-me-label">ВАШ РЕЗУЛЬТАТ</div><div class="leader-me-main"><strong>#'+me.rank+'</strong><span>'+me.wins+' побед · '+me.games+' игр</span></div>':
       '<div class="leader-me-label">ВАШ РЕЗУЛЬТАТ</div><div class="leader-me-main"><span>Сыграйте хотя бы одну партию, чтобы попасть в рейтинг.</span></div>';
-    if(fromSnapshot){
-      const stamp=Number(d.updatedAt||0);
-      const updated=stamp?new Date(stamp).toLocaleString('ru-RU'):'ожидается первая синхронизация';
-      const note=document.createElement('div');
-      note.className='leader-empty';
-      note.style.marginTop='10px';
-      note.textContent='Показаны данные, сохранённые из Vercel через GitHub. Обновлено: '+updated+'. При недоступности Vercel рейтинг может отставать до 15 минут.';
-      box.appendChild(note);
-    }
   }catch(e){
     box.innerHTML='<div class="leader-empty">Не удалось загрузить рейтинг: нет свежего ответа Vercel и пока нет доступного снимка в GitHub. Проверьте соединение или повторите попытку.<br><button class="btn btn--secondary" id="leaderboard-retry" style="margin-top:12px">Повторить</button></div>';
     $('leaderboard-retry')?.addEventListener('click',load);
