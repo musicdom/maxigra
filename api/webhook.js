@@ -1,6 +1,6 @@
 import https from "https";
 import {handlePostings,handlePostingsCallback,handleChannelUpdate} from "../lib/postings.js";
-import {handleBotStart} from "./_retention.js";
+import {handleBotStart,handleBotStop} from "./_retention.js";
 
 async function maxRequest({token,method="GET",apiPath,body=null}){
  if(!token) throw new Error("MAX_BOT_TOKEN not configured");
@@ -39,6 +39,7 @@ export default async function handler(req,res){
    if(type==="message_created"){
     const message=txt(u);
     if(/^\/start(?:@\S+)?(?:\s|$)/i.test(message))await handleBotStart(id);
+    else if(/^\/stop(?:@\S+)?(?:\s|$)/i.test(message))await handleBotStop(id);
     else await handlePostings(id,message);
    }
   }
