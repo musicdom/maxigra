@@ -27,7 +27,7 @@ function readMaxUser(){
     const first=String(u.first_name||'').trim();
     const last=String(u.last_name||'').trim();
     const name=[first,last].filter(Boolean).join(' ')||'Игрок';
-    return {id:String(u.id),name,username:String(u.username||''),photo:String(u.photo_url||''),guest:false,max:true};
+    return {id:String(u.id),name,username:String(u.username||''),photo:String(u.photo_url||u.photo||u.avatar_url||u.avatar||u.picture||''),guest:false,max:true};
   })();
 }
 async function init(){
