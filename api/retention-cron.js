@@ -39,7 +39,7 @@ export async function GET(request) {
     const now = Date.now();
     const result = { ok: true, scanned: 0, sent: 0, skipped: 0, failed: 0 };
     for (const key of (Array.isArray(keys) ? keys : [])) {
-      if (!/^checkers:retention:\\d+$/.test(String(key))) continue;
+      if (!/^checkers:retention:\d+$/.test(String(key))) continue;
       result.scanned++;
       const lockKey = `${key}:cron-lock`;
       const lock = await redis('SET', [lockKey, '1', 'NX', 'EX', '120']);
