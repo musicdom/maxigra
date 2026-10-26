@@ -41,7 +41,7 @@ export async function handleBotStart(userId) {
     ? 'С возвращением! 👋\n\n♟️ Доска ждёт, соперники не дремлют. Самое время сыграть ещё партию и улучшить свой результат! 🏆'
     : 'Привет! 👋 Добро пожаловать в «Шашки»!\n\nИспытай свою тактику, обыгрывай соперников и поднимайся в рейтинге. Возможно, именно ты станешь лидером сезона! 🏆\n\nГотов сделать первый ход?';
 
-  const rows = [[{ text: returning ? 'Продолжить игру' : 'Зайти в шашки', url: validHttpUrl(GAME_URL) || BOT_URL }]];
+  const rows = [[{ type: 'open_app', text: returning ? 'Продолжить игру' : 'Зайти в шашки', webApp: 'se13360501_bot' }]];
   const channel = validHttpUrl(CHANNEL_URL);
   if (channel) rows.push([{ text: 'Наш канал', url: channel }]);
 
