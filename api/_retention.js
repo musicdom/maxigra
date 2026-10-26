@@ -31,6 +31,8 @@ export async function handleBotStart(userId) {
   state.userId = id;
   state.botStartedAt = Number(state.botStartedAt) || now;
   state.lastBotStartAt = now;
+  delete state.disabled;
+  delete state.disabledAt;
   state.reminderSentDays = Array.isArray(state.reminderSentDays) ? state.reminderSentDays : [];
   state.reminderAttempts = state.reminderAttempts && typeof state.reminderAttempts === 'object' ? state.reminderAttempts : {};
   await redis('SET', [key, JSON.stringify(state)]);
@@ -66,4 +68,23 @@ export async function recordGameActivity(user) {
   delete state.disabled;
   delete state.deliveryError;
   await redis('SET', [key, JSON.stringify(state)]);
+}
+
+export async function handleBotStop(userId) {
+  const id = String(userId || '');
+  if (!id) return { ok: false, reason: 'USER_ID_REQUIRED' };
+  const key = retentionKey(id);
+  const raw = await redis('GET', [key]);
+  let state = {};
+  try { state = raw ? JSON.parse(raw) : {}; } catch {}
+  state.userId = id;
+  state.disabled = true;
+  state.disabledAt = Date.now();
+  await redis('SET', [key, JSON.stringify(state)]);
+  try {
+    await sendMaxMessage(id, { text: 'Хорошо, отключил автоматические напоминания о «Шашках». Если захочешь вернуться, просто отправь /start.' });
+  } catch (error) {
+    console.error('MAX reminder opt-out confirmation failed', { userId: id, error: error.message });
+  }
+  return { ok: true, disabled: true };
 }
