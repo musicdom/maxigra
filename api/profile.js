@@ -1,4 +1,5 @@
 import { auth, body, errorResponse, redis, reply } from './_lib.js';
+import { recordGameActivity } from './_retention.js';
 
 const statsKey = (id,mode='offline') => `checkers:stats:${mode}:${id}`;
 
@@ -93,6 +94,7 @@ export async function POST(request){
     // Keep the account record permanently so older players remain visible in admin.
     await redis('SET',[key,JSON.stringify(profile)]);
     await redis('SET',[`checkers:presence:${user.id}`,'1','EX','120']);
+    await recordGameActivity(user);
     return reply({ok:true,registered:Boolean(existing),isNew:!existing,user:profile});
   }catch(error){return errorResponse(error)}
 }
