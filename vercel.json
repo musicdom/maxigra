@@ -7,6 +7,10 @@
     {
       "source": "/api/matchmaking/resign",
       "destination": "/api/matchmaking/move"
+    },
+    {
+      "source": "/api/shop/status",
+      "destination": "/api/shop?status=1"
     }
   ],
   "crons": [
