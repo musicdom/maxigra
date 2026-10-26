@@ -31,7 +31,10 @@ export async function GET(request){
   if(userId){
    const users=await getUsers(),user=users.find(u=>String(u.id)===userId);if(!user)return reply({ok:false,error:'USER_NOT_FOUND'},404);
    const [offline,online,shop]=await Promise.all([readStats(userId,'offline'),readStats(userId,'online'),readInventory(userId)]);
-   return reply({ok:true,user,shop,stats:{offline,online}});
+   let orderIds=[];try{const ids=await redis('SMEMBERS',[`checkers:shop:orders:user:${userId}`]);orderIds=Array.isArray(ids)?ids:[]}catch{}
+   const orders=[];for(const id of orderIds){try{const raw=await redis('GET',[`checkers:shop:order:${String(id)}`]);if(!raw)continue;const o=JSON.parse(raw);if(String(o.userId)!==userId)continue;if(o.status==='pending'&&Number(o.expiresAt||0)>0&&Date.now()>Number(o.expiresAt)){o.status='expired';o.expiredAt=Date.now();await redis('SET',[`checkers:shop:order:${String(id)}`,JSON.stringify(o)]);}orders.push({id:String(o.id),itemId:String(o.itemId||''),price:Number(o.price)||0,currency:String(o.currency||'RUB'),status:String(o.status||'pending'),createdAt:Number(o.createdAt)||0,paidAt:Number(o.paidAt)||0,expiredAt:Number(o.expiredAt)||0,operationId:String(o.operationId||''),paidAmount:Number(o.withdrawAmount??o.paidAmount)||0});}catch{}}
+   orders.sort((a,b)=>b.createdAt-a.createdAt);
+   return reply({ok:true,user,shop,stats:{offline,online},orders});
   }
   const users=await getUsers(),accounts=[];for(const u of users)accounts.push({...u,shop:await readInventory(u.id)});
   return reply({ok:true,accounts,boards:CATALOG});
