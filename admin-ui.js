@@ -25,7 +25,7 @@ function render(){
  <span class="admin-avatar">${u.photo?'<img src="'+esc(u.photo)+'" alt="">':'♟️'}</span><span class="admin-user-main"><b>${esc(u.name||'Игрок')}</b><span>ID: ${esc(u.id)}</span><span>${u.username?'@'+esc(u.username):'Username не указан'}</span></span><span class="admin-account-meta"><b>${Number(u.openCount||0)} открытий</b><small>${u.lastSeenAt?'Последний вход: '+new Date(Number(u.lastSeenAt)).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Нет даты входа'}</small><span>Посмотреть профиль →</span></span>
  </button>`).join(''):'<div class="admin-empty">Ничего не найдено.</div>'}</div>${selectedId?'<section id="admin-player-detail" class="admin-player-detail"><div class="admin-loading">Загружаем профиль игрока…</div></section>':''}`;
  q('admin-search-input')?.addEventListener('input',e=>{search=e.target.value;const pos=e.target.selectionStart;render();const el=q('admin-search-input');el?.focus();el?.setSelectionRange(pos,pos)});
- box.querySelectorAll('[data-profile]').forEach(b=>b.addEventListener('click',()=>{selectedId=String(b.dataset.profile);render();loadDetail(selectedId)}));
+ box.querySelectorAll('[data-profile]').forEach(b=>b.addEventListener('click',()=>{selectedId=String(b.dataset.profile);detail=null;render();const id=selectedId;loadDetail(id).then(()=>{if(String(selectedId)===id)q('admin-player-detail')?.scrollIntoView({behavior:'smooth',block:'start'})})}));
  if(selectedId&&detail&&String(detail.user?.id)===selectedId)renderDetail();
 }
 function renderDetail(){
