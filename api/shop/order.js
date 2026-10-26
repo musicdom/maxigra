@@ -18,7 +18,7 @@ const BOARD_MESSAGES = {
   board_max: { title: 'MAX', image: 'https://musicdom.github.io/maxigra/assets/boards/IMG_4586.jpeg' },
   board_orbita: { title: 'ОРБИТА', image: 'https://musicdom.github.io/maxigra/assets/boards/IMG_4587.jpeg' }
 };
-const ORDER_TTL = 86400;
+const ORDER_TTL = 86400; // Payment window; order history itself is retained.
 const RECEIVER = String(process.env.YOOMONEY_RECEIVER || '').trim();
 const PAYMENT_PAGE = String(process.env.YOOMONEY_PAYMENT_PAGE_URL || 'https://maxigra.vercel.app/api/shop/pay').trim();
 const orderKey = id => `checkers:shop:order:${id}`;
@@ -74,11 +74,13 @@ export async function POST(request) {
     if (await alreadyOwned(user.id, itemId)) return reply({ ok: false, error: 'ITEM_ALREADY_OWNED' }, 409);
 
     const orderId = `mx_${crypto.randomUUID().replaceAll('-', '')}`;
-    const order = { id: orderId, userId: user.id, itemId, price, currency: 'RUB', status: 'pending', createdAt: Date.now() };
-    const created = await redis('SET', [orderKey(orderId), JSON.stringify(order), 'EX', String(ORDER_TTL), 'NX']);
+    const createdAt = Date.now();
+    const order = { id: orderId, userId: String(user.id), itemId, price, currency: 'RUB', status: 'pending', createdAt, expiresAt: createdAt + ORDER_TTL * 1000 };
+    // Keep order records for admin audit/history; only payment window expires after 24 hours.
+    const created = await redis('SET', [orderKey(orderId), JSON.stringify(order), 'NX']);
     if (created !== 'OK') throw new Error('ORDER_CREATE_FAILED');
     await redis('SADD', [userOrdersKey(user.id), orderId]);
-    await redis('EXPIRE', [userOrdersKey(user.id), String(ORDER_TTL)]);
+    // Keep the per-user index permanently so successful and unpaid orders remain visible.
 
     const paymentPage = `${new URL(request.url).origin}/api/shop/pay`;
     const payUrl = paymentUrl(orderId, price, paymentPage);
