@@ -61,11 +61,17 @@ export function linkKeyboard(rows) {
   return {
     type: 'inline_keyboard',
     payload: {
-      buttons: rows.map(row => row.map(button => ({
-        type: 'link',
-        text: button.text,
-        url: button.url
-      })))
+      buttons: rows.map(row => row.map(button => button.type === 'open_app'
+        ? {
+            type: 'open_app',
+            text: button.text,
+            web_app: button.webApp || 'se13360501_bot'
+          }
+        : {
+            type: 'link',
+            text: button.text,
+            url: button.url
+          }))
     }
   };
 }
