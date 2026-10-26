@@ -5,7 +5,7 @@ const ADMIN_ID='163701646';
 const INVENTORY_KEY=id=>`checkers:shop:user:${id}`;
 const USER_KEY_PREFIX='checkers:user:';
 const CATALOG={
-  board_90s:{title:'СВО'},board_svo:{title:'90-е'},board_max:{title:'MAX'},board_orbita:{title:'ОРБИТА'},board_original:{title:'Оригинал'}
+  board_90s:{title:'СВО',image:'assets/boards/IMG_4486.jpeg'},board_svo:{title:'90-е',image:'assets/boards/IMG_4487.jpeg'},board_max:{title:'MAX',image:'assets/boards/IMG_4586.jpeg'},board_orbita:{title:'ОРБИТА',image:'assets/boards/IMG_4587.jpeg'},board_original:{title:'Оригинал',image:'assets/boards/IMG_4589.jpeg'}
 };
 const BOARD_IDS=Object.keys(CATALOG);
 function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
