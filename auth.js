@@ -16,7 +16,7 @@ function parseInitUser(raw){
     const first=String(u.first_name||'').trim();
     const last=String(u.last_name||'').trim();
     const name=[first,last].filter(Boolean).join(' ')||String(u.username||'').trim()||'Игрок';
-    return {id:String(u.id),name,username:String(u.username||''),photo:String(u.photo_url||''),guest:false,max:true};
+    return {id:String(u.id),name,username:String(u.username||''),photo:String(u.photo_url||u.photo||u.avatar_url||u.avatar||u.picture||''),guest:false,max:true};
   }catch(e){return null}
 }
 function readMaxUser(){
@@ -46,6 +46,8 @@ async function init(){
     }catch(e){}
   }
   if(!user)user=GUEST;
+  // Keep a previously available avatar if MAX omits it from a later initData payload.
+  try{const cached=JSON.parse(localStorage.getItem(USER_KEY)||'null');if(user.id&&String(cached?.id)===String(user.id)){user={...cached,...user,photo:user.photo||cached.photo||'',username:user.username||cached.username||'',name:user.name&&user.name!=='Игрок'?user.name:(cached.name||user.name)}}}catch(e){}
   try{localStorage.setItem(USER_KEY,JSON.stringify(user));}catch(e){}
 
   // Регистрируем пользователя через уже существующий /api/profile,
