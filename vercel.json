@@ -8,5 +8,11 @@
       "source": "/api/matchmaking/resign",
       "destination": "/api/matchmaking/move"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/retention-cron",
+      "schedule": "0 8 * * *"
+    }
   ]
 }
