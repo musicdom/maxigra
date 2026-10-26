@@ -1,0 +1,41 @@
+name: Sync leaderboard snapshot
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/15 * * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: leaderboard-snapshot-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Fetch public leaderboard snapshots from Vercel
+        run: |
+          set -euo pipefail
+          mkdir -p data
+          curl --fail --silent --show-error --retry 2 --max-time 20 'https://maxigra.vercel.app/api/public-leaderboard?mode=offline' -o data/leaderboard-offline.json
+          curl --fail --silent --show-error --retry 2 --max-time 20 'https://maxigra.vercel.app/api/public-leaderboard?mode=online' -o data/leaderboard-online.json
+          node -e "for (const f of ['data/leaderboard-offline.json','data/leaderboard-online.json']) { const d=JSON.parse(require('fs').readFileSync(f,'utf8')); if (!d.ok || !Array.isArray(d.leaderboard)) throw new Error('Invalid snapshot: '+f); }"
+      - name: Commit changed snapshots
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- data/leaderboard-offline.json data/leaderboard-online.json; then
+            echo 'Leaderboard snapshots are unchanged.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/leaderboard-offline.json data/leaderboard-online.json
+          git commit -m 'Update leaderboard snapshots from Vercel'
+          git push
