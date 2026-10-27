@@ -23,12 +23,64 @@ function confirmPurchase(item){
 window.CheckersConfirmPurchase=confirmPurchase;
 
 function openPayment(url){if(!url)return false;try{if(window.WebApp?.openLink){window.WebApp.openLink(url);return true}}catch{}try{const opened=window.open(url,'_blank','noopener,noreferrer');if(opened)return true}catch{}try{location.href=url;return true}catch{return false}}
+const pendingPurchases=new Set();
+const productDescriptions={
+ board_90s:'Дополнительная игровая доска в стилистике СВО.',
+ board_svo:'Дополнительная игровая доска в ретро-стиле 90-х.',
+ board_max:'Фирменная игровая доска в стиле MAX.',
+ board_orbita:'Дополнительная игровая доска в космическом стиле ОРБИТА.',
+ master:'Постоянный доступ к максимальному уровню компьютера.',
+ hints:'Пакет из 50 подсказок для сложных игровых позиций.',
+ starter_pack:'Набор: 25 подсказок и две дополнительные доски — 90-е и СВО.'
+};
+function closePurchaseConfirm(){const overlay=document.getElementById('purchase-confirm-overlay');if(!overlay)return;overlay.classList.remove('is-visible');setTimeout(()=>overlay.remove(),190)}
+function confirmPurchase(id,item){
+ return new Promise(resolve=>{
+  document.getElementById('purchase-confirm-overlay')?.remove();
+  const overlay=document.createElement('div');overlay.id='purchase-confirm-overlay';overlay.className='purchase-confirm-overlay';
+  const isBoard=(window.CheckersShop?.boardIds||[]).includes(id);
+  const icon=item.image?'<img src="'+esc(item.image)+'" alt="">':esc(item.icon||'🎁');
+  overlay.innerHTML=`<section class="purchase-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="purchase-confirm-title"><button type="button" class="purchase-confirm-close" aria-label="Закрыть">×</button><div class="purchase-confirm-kicker">ПОДТВЕРЖДЕНИЕ ПОКУПКИ</div><h2 id="purchase-confirm-title">Покупаете этот предмет?</h2><p class="purchase-confirm-description">Проверьте состав и стоимость заказа перед переходом к оплате.</p><div class="purchase-confirm-summary"><div class="purchase-confirm-icon">${icon}</div><div class="purchase-confirm-product"><strong>${esc(item.title)}</strong><span>${esc(productDescriptions[id]||item.desc||'Цифровой товар для игры «Шашки».')}</span></div><div class="purchase-confirm-price">${Number(item.price).toLocaleString('ru-RU')} ₽</div></div><div class="purchase-confirm-payment"><span>К оплате</span><strong>${Number(item.price).toLocaleString('ru-RU')} ₽</strong></div><div class="purchase-confirm-actions"><button type="button" class="purchase-confirm-cancel">Отмена</button><button type="button" class="purchase-confirm-accept">Подтвердить</button></div><p class="purchase-confirm-note">После подтверждения заказ будет создан, затем откроется страница оплаты ЮMoney.</p></section>`;
+  document.body.appendChild(overlay);
+  let settled=false;
+  const finish=value=>{if(settled)return;settled=true;closePurchaseConfirm();resolve(value)};
+  overlay.querySelector('.purchase-confirm-close').addEventListener('click',()=>finish(false));
+  overlay.querySelector('.purchase-confirm-cancel').addEventListener('click',()=>finish(false));
+  overlay.addEventListener('click',e=>{if(e.target===overlay)finish(false)});
+  const accept=overlay.querySelector('.purchase-confirm-accept');
+  accept.addEventListener('click',()=>finish(true));
+  const onKey=e=>{if(e.key==='Escape'){finish(false);document.removeEventListener('keydown',onKey)}};
+  document.addEventListener('keydown',onKey);
+  requestAnimationFrame(()=>overlay.classList.add('is-visible'));
+  overlay.addEventListener('transitionend',()=>{if(settled)document.removeEventListener('keydown',onKey)},{once:true});
+ });
+}
 function render(){
  const box=document.getElementById('shop-content');const shop=window.CheckersShop;if(!box||!shop)return;
  const s=shop.state||{},c=shop.catalog||{};const boards=(shop.boardIds||[]).filter(id=>c[id]);const extras=Object.entries(c).filter(([id])=>!boards.includes(id)&&id!=='starter_pack');
  const card=(id,x)=>{const isFree=x.price===0,isOwned=shop.owned(id),selected=s.selectedBoard===id;return `<article class="shop-item board-shop-item ${isOwned?'is-owned':''} ${selected?'is-selected':''}"><div class="shop-board-preview"><img src="${esc(x.image)}" alt="${esc(x.title)}" loading="eager"></div><div class="shop-item-main"><span class="shop-tag">${esc(x.tag)}</span><h3>${esc(x.title)}</h3><p>${esc(x.desc)}</p><button class="shop-buy btn ${isOwned?'btn--secondary':'btn--primary'}" data-shop-id="${esc(id)}">${isFree?(isOwned?(selected?'✓ Выбрано':'Выбрать'):'Бесплатно'):isOwned?(selected?'✓ Выбрано':'Выбрать'):x.price+' ₽'}</button></div></article>`};
  box.innerHTML=`<div class="shop-balance"><span>Ваши предметы</span><b>${s.owned?.length||0}</b></div><h3 class="shop-section-title">Доски</h3><div class="shop-grid shop-board-grid">${boards.map(id=>card(id,c[id])).join('')}</div>${extras.length?`<h3 class="shop-section-title">Дополнительно</h3><div class="shop-grid">${extras.map(([id,x])=>{const isOwned=shop.owned(id),selected=s.selectedPieces===id;const isHints=id==='hints';return `<article class="shop-item ${isOwned?'is-owned':''} ${selected?'is-selected':''} ${isHints?'hints-shop-item':''}"><div class="shop-item-icon">${x.icon||'🎁'}</div><div class="shop-item-main"><span class="shop-tag">${esc(x.tag)}</span><h3>${esc(x.title)}</h3><p>${esc(x.desc)}</p>${isHints?`<div class="hints-balance"><span>У вас</span><b>${Number(s.hints)||0}</b><span>шт.</span></div>`:''}</div><button class="shop-buy btn btn--primary" data-shop-id="${esc(id)}">${isHints?'Купить 50 · '+x.price+' ₽':isOwned?(selected?'✓ Выбрано':'Использовать'):x.price+' ₽'}</button></article>`}).join('')}</div>`:''}`;
- box.querySelectorAll('[data-shop-id]').forEach(btn=>btn.addEventListener('click',async()=>{const id=btn.dataset.shopId;btn.disabled=true;try{if(shop.owned(id)){if(boards.includes(id))await shop.selectBoard(id);else if(id==='gold')await shop.selectPieces(id);else if(id==='master')shop.setAI(4)}else{const item=c[id];if(Number(item?.price)>0){const confirmed=await window.CheckersConfirmPurchase?.({title:item.title,price:item.price,desc:item.desc,icon:item.image?'♟️':(item.icon||'🛍️')});if(!confirmed){btn.disabled=false;return}}const order=await shop.buy(id);if(order?.sentToBot){showNotice('Сообщение с доской и кнопкой оплаты отправлено в бот MAX. Откройте чат с ботом.')}else{const paymentUrl=order?.paymentUrl||order?.paymentOptions?.wallet;if(!paymentUrl)throw new Error('PAYMENT_NOT_CONFIGURED');showNotice(`Заказ ${order.id} создан. Открываем оплату ЮMoney…`);if(!openPayment(paymentUrl))throw new Error('PAYMENT_OPEN_FAILED');}}render()}catch(e){console.error('[MAXIGRA SHOP] purchase failed:',e);btn.disabled=false;showNotice(errorText(e))}}));
+ box.querySelectorAll('[data-shop-id]').forEach(btn=>btn.addEventListener('click',async()=>{
+  const id=btn.dataset.shopId;if(pendingPurchases.has(id))return;
+  const item=c[id];if(!item)return;
+  btn.disabled=true;
+  try{
+   if(shop.owned(id)){
+    if(boards.includes(id))await shop.selectBoard(id);else if(id==='gold')await shop.selectPieces(id);else if(id==='master')shop.setAI(4);
+   }else{
+    const confirmed=await confirmPurchase(id,item);
+    if(!confirmed){btn.disabled=false;return}
+    pendingPurchases.add(id);
+    btn.disabled=true;
+    btn.textContent='Создаём заказ…';
+    const order=await shop.buy(id);
+    if(order?.sentToBot){showNotice('Сообщение с доской и кнопкой оплаты отправлено в бот MAX. Откройте чат с ботом.')}
+    else{const paymentUrl=order?.paymentUrl||order?.paymentOptions?.wallet;if(!paymentUrl)throw new Error('PAYMENT_NOT_CONFIGURED');showNotice('Заказ создан. Открываем оплату ЮMoney…');if(!openPayment(paymentUrl))throw new Error('PAYMENT_OPEN_FAILED')}
+   }
+   render();
+  }catch(e){console.error('[MAXIGRA SHOP] purchase failed:',e);showNotice(errorText(e));btn.disabled=false}
+  finally{pendingPurchases.delete(id)}
+ }));
 }
 function showNotice(text){let el=document.getElementById('shop-notice');if(!el){el=document.createElement('div');el.id='shop-notice';el.className='shop-notice';document.getElementById('shop-content')?.prepend(el)}el.textContent=text;el.style.display='block';clearTimeout(el._timer);el._timer=setTimeout(()=>el.style.display='none',3500)}
 async function boot(){
