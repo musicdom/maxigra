@@ -13,17 +13,26 @@ const CATALOG = {
 };
 const ORDER_TTL = 86400; // Payment window; order history itself is retained.
 const RECEIVER = String(process.env.YOOMONEY_RECEIVER || '').trim();
-const PAYMENT_PAGE = String(process.env.YOOMONEY_PAYMENT_PAGE_URL || 'https://maxigra.vercel.app/api/shop/pay').trim();
+const MINI_APP_URL = String(process.env.MAX_MINI_APP_URL || 'https://musicdom.github.io/maxigra/').trim();
 const orderKey = id => `checkers:shop:order:${id}`;
 const userOrdersKey = id => `checkers:shop:orders:user:${id}`;
 const inventoryKey = id => `checkers:shop:user:${id}`;
 
-function paymentUrl(orderId, price, base = PAYMENT_PAGE) {
+function paymentUrl(orderId, price) {
   if (!RECEIVER || price <= 0) return '';
-  return `${base}?id=${encodeURIComponent(orderId)}`;
+  // Send the user directly to YooMoney. The order is already saved in Redis;
+  // the label ties the incoming payment notification to that order.
+  const url = new URL('https://yoomoney.ru/quickpay/confirm.xml');
+  url.searchParams.set('receiver', RECEIVER);
+  url.searchParams.set('quickpay-form', 'button');
+  url.searchParams.set('sum', Number(price).toFixed(2));
+  url.searchParams.set('label', orderId);
+  url.searchParams.set('paymentType', 'AC');
+  url.searchParams.set('successURL', MINI_APP_URL);
+  return url.toString();
 }
-function paymentOptions(orderId, price, base = PAYMENT_PAGE) {
-  const url = paymentUrl(orderId, price, base);
+function paymentOptions(orderId, price) {
+  const url = paymentUrl(orderId, price);
   return { wallet: url, card: url };
 }
 async function alreadyOwned(userId, itemId) {
@@ -60,17 +69,15 @@ export async function POST(request) {
     const created = await redis('SET', [orderKey(orderId), JSON.stringify(order), 'NX']);
     if (created !== 'OK') throw new Error('ORDER_CREATE_FAILED');
     await redis('SADD', [userOrdersKey(user.id), orderId]);
-    // Keep the per-user index permanently so successful and unpaid orders remain visible.
 
-    const paymentPage = `${new URL(request.url).origin}/api/shop/pay`;
-    const payUrl = paymentUrl(orderId, price, paymentPage);
+    const payUrl = paymentUrl(orderId, price);
     if (!payUrl) return reply({ ok: false, error: 'PAYMENT_NOT_CONFIGURED' }, 503);
 
-    // Всегда возвращаем ссылку на страницу Vercel прямо в мини-приложение.
-    // Покупка доски не должна зависеть от доставки сообщения через MAX-бот.
+    // The API creates and records the order, but the client receives a direct YooMoney URL.
+    // Vercel is never opened as a checkout page.
     return reply({
       ok: true,
-      order: { id: orderId, itemId, price, currency: 'RUB', status: 'pending', paymentUrl: payUrl, paymentOptions: paymentOptions(orderId, price, paymentPage), sentToBot: false }
+      order: { id: orderId, itemId, price, currency: 'RUB', status: 'pending', paymentUrl: payUrl, paymentOptions: paymentOptions(orderId, price), sentToBot: false }
     }, 201);
   } catch (error) { return errorResponse(error); }
 }
@@ -84,7 +91,7 @@ export async function GET(request) {
     if (!raw) return reply({ ok: false, error: 'ORDER_NOT_FOUND' }, 404);
     const order = JSON.parse(raw);
     if (String(order.userId) !== String(user.id)) return reply({ ok: false, error: 'ORDER_NOT_FOUND' }, 404);
-    return reply({ ok: true, order: { id: order.id, itemId: order.itemId, price: order.price, currency: order.currency, status: order.status, createdAt: order.createdAt, paymentUrl: order.status === 'pending' ? paymentUrl(order.id, order.price, `${new URL(request.url).origin}/api/shop/pay`) : '', paymentOptions: order.status === 'pending' ? paymentOptions(order.id, order.price, `${new URL(request.url).origin}/api/shop/pay`) : { wallet: '', card: '' } } });
+    return reply({ ok: true, order: { id: order.id, itemId: order.itemId, price: order.price, currency: order.currency, status: order.status, createdAt: order.createdAt, paymentUrl: order.status === 'pending' ? paymentUrl(order.id, order.price) : '', paymentOptions: order.status === 'pending' ? paymentOptions(order.id, order.price) : { wallet: '', card: '' } } });
   } catch (error) { return errorResponse(error); }
 }
 export default { OPTIONS, POST, GET };
