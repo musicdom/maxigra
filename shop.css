@@ -93,3 +93,7 @@ html[data-theme="light"] .purchase-confirm-card{background:linear-gradient(145de
 html[data-theme="light"] .purchase-confirm-desc,html[data-theme="light"] .purchase-confirm-note,html[data-theme="light"] .purchase-confirm-total{color:#61758b}
 html[data-theme="light"] .purchase-confirm-total strong{color:#172536}
 html[data-theme="light"] .purchase-confirm-cancel{background:#f2f6fa;color:#172536;border-color:#d8e4f0}
+
+/* The shared confirmation helper inserts the dialog already open. */
+.purchase-confirm-overlay{opacity:1!important}
+.purchase-confirm-dialog{display:none}
