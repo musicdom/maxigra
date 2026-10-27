@@ -73,3 +73,23 @@ html[data-theme="light"] .purchase-confirm-summary{background:#f3f8fd;border-col
 html[data-theme="light"] .purchase-confirm-payment strong{color:#172536}
 html[data-theme="light"] .purchase-confirm-cancel{background:#f2f6fa;color:#172536;border-color:#d8e4f0}
 @media(prefers-reduced-motion:reduce){.purchase-confirm-overlay,.purchase-confirm-dialog{transition:none}}
+
+/* Shared purchase confirmation modal used by shop and starter bundle. */
+.purchase-confirm-backdrop{position:absolute;inset:0;background:rgba(3,9,16,.76);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.purchase-confirm-card{position:relative;width:100%;max-width:380px;max-height:calc(100dvh - 40px);overflow:auto;padding:24px;border:1px solid rgba(103,172,239,.22);border-radius:24px;background:linear-gradient(145deg,#10243a,#091522);color:#f5f8fc;box-shadow:0 24px 80px rgba(0,0,0,.48),inset 0 1px rgba(255,255,255,.05)}
+.purchase-confirm-icon{display:grid;place-items:center;width:52px;height:52px;margin-bottom:14px;border-radius:15px;background:rgba(77,163,245,.14);font-size:27px}
+.purchase-confirm-kicker{margin:0 40px 7px 0;color:#65b5ff;font-size:10px;font-weight:850;letter-spacing:.14em;text-transform:uppercase}
+.purchase-confirm-card h2{margin:0 36px 8px 0;font-size:24px;line-height:1.15}
+.purchase-confirm-desc{margin:0 0 18px;color:#b8c8d9;font-size:13px;line-height:1.5}
+.purchase-confirm-total{display:flex;justify-content:space-between;gap:12px;padding:14px 2px 16px;border-top:1px solid rgba(103,172,239,.16);color:#b8c8d9;font-size:13px}
+.purchase-confirm-total strong{color:#f5f8fc;font-size:20px}
+.purchase-confirm-note{margin:0 0 16px;color:#8ea5bb;font-size:10px;line-height:1.45}
+.purchase-confirm-close{position:absolute;right:13px;top:13px;width:34px;height:34px;border:1px solid rgba(116,180,239,.2);border-radius:50%;background:rgba(255,255,255,.06);color:inherit;font-size:21px;cursor:pointer}
+.purchase-confirm-actions{display:grid;grid-template-columns:1fr 1.2fr;gap:9px}
+.purchase-confirm-actions button{min-height:47px;padding:10px;border-radius:14px;font-weight:800;font-size:13px;cursor:pointer}
+.purchase-confirm-cancel{border:1px solid rgba(116,180,239,.2);background:rgba(255,255,255,.06);color:#e7f1fb}
+.purchase-confirm-submit{border:1px solid rgba(108,184,255,.32);background:linear-gradient(135deg,#2589e8,#1767ba);color:#fff;box-shadow:0 8px 22px rgba(24,112,203,.22)}
+html[data-theme="light"] .purchase-confirm-card{background:linear-gradient(145deg,#fff,#f0f6fc);color:#172536;border-color:#d6e4f1;box-shadow:0 24px 80px rgba(28,62,98,.24)}
+html[data-theme="light"] .purchase-confirm-desc,html[data-theme="light"] .purchase-confirm-note,html[data-theme="light"] .purchase-confirm-total{color:#61758b}
+html[data-theme="light"] .purchase-confirm-total strong{color:#172536}
+html[data-theme="light"] .purchase-confirm-cancel{background:#f2f6fa;color:#172536;border-color:#d8e4f0}
