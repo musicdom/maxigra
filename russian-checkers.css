@@ -63,3 +63,22 @@
 .rules-card details>a:focus-visible,.rules-card details summary:focus-visible{outline:2px solid #72bdff;outline-offset:2px}
 .rules-card #rules-play{margin-top:15px;flex-shrink:0}
 @media(max-height:700px){.rules-card{padding:14px 14px 18px}.rules-card h2{font-size:22px}.rules-card ul{margin-bottom:14px}.rules-card details summary{padding:12px}}
+
+
+/* Premium primary action on the rules screen */
+.rules-play-button{
+  position:relative;display:flex;align-items:center;justify-content:center;gap:11px;
+  width:100%;min-height:58px;margin:18px 0 0;padding:0 20px;border:1px solid rgba(159,213,255,.5);
+  border-radius:18px;background:linear-gradient(115deg,#4da3f5 0%,#318bea 52%,#1768c5 100%);
+  color:#fff;font-size:16px;font-weight:850;letter-spacing:.15px;
+  box-shadow:0 12px 28px rgba(34,126,224,.28),inset 0 1px 0 rgba(255,255,255,.28);
+  transition:transform .16s ease,filter .16s ease,box-shadow .16s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.rules-play-button .rules-play-icon{display:grid;place-items:center;width:27px;height:27px;border-radius:9px;background:rgba(255,255,255,.17);font-size:11px;padding-left:2px}
+.rules-play-button .rules-play-arrow{position:absolute;right:18px;font-size:18px;opacity:.82}
+.rules-play-button:active{transform:translateY(1px) scale(.985);filter:brightness(.94);box-shadow:0 5px 14px rgba(34,126,224,.2),inset 0 1px 0 rgba(255,255,255,.18)}
+.rules-play-button:focus-visible{outline:3px solid rgba(130,196,255,.7);outline-offset:3px}
+.rules-card details a{display:inline-flex;margin:0 14px 14px;color:#82c4ff;font-size:13px;font-weight:750;text-decoration:none}
+.rules-card details a:active{opacity:.72}
+@media (prefers-reduced-motion:reduce){.rules-play-button{transition:none}}
