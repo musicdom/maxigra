@@ -1,5 +1,6 @@
 import https from "https";
 import {handlePostings,handlePostingsCallback,handleChannelUpdate} from "../lib/postings.js";
+import {handlePubl,handlePublCallback,rememberBotUser} from "../lib/publ.js";
 import {handleBotStart,handleBotStop} from "./_retention.js";
 
 async function maxRequest({token,method="GET",apiPath,body=null}){
@@ -34,12 +35,14 @@ export default async function handler(req,res){
    const id=uid(u);console.log("MAXИГРА WEBHOOK",{type,id,chat_id:u?.chat_id??u?.message?.recipient?.chat_id??null,is_channel:u?.is_channel??u?.message?.recipient?.type});
    await handleChannelUpdate(u);
    if(!id)continue;
+   await rememberBotUser(id);
    if(type==="bot_started"){const result=await handleBotStart(id);console.log("MAX BOT START RESULT",{id,...result});continue}
    if(type==="message_callback"){await handlePostingsCallback(id,u?.callback?.payload??u?.payload??"",u?.callback?.callback_id??u?.callback?.id??null);continue}
    if(type==="message_created"){
     const message=txt(u);
     if(/^(?:\/start(?:@\S+)?|start)(?:\s|$)/i.test(message)){const result=await handleBotStart(id);console.log("MAX MESSAGE START RESULT",{id,...result});}
     else if(/^\/stop(?:@\S+)?(?:\s|$)/i.test(message))await handleBotStop(id);
+    else if(await handlePubl(id,message)){}
     else await handlePostings(id,message);
    }
   }
