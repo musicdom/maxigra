@@ -95,3 +95,6 @@ html[data-theme="light"] .board-wrapper{box-shadow:0 18px 42px rgba(28,62,98,.16
 html[data-theme="light"] .startup-card{background:linear-gradient(145deg,#fff,#f2f7fc)!important;border-color:#d8e4f0!important}
 html[data-theme="light"] .startup-sub{color:#61758b!important}
 @media(prefers-reduced-motion:reduce){.theme-option{transition:none}}
+
+/* Temporarily hide theme selector in the profile without removing theme support. */
+#profile-screen .theme-setting{display:none!important}
