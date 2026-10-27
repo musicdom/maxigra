@@ -87,4 +87,4 @@ export async function GET(request) {
     return reply({ ok: true, order: { id: order.id, itemId: order.itemId, price: order.price, currency: order.currency, status: order.status, createdAt: order.createdAt, paymentUrl: order.status === 'pending' ? paymentUrl(order.id, order.price, `${new URL(request.url).origin}/api/shop/pay`) : '', paymentOptions: order.status === 'pending' ? paymentOptions(order.id, order.price, `${new URL(request.url).origin}/api/shop/pay`) : { wallet: '', card: '' } } });
   } catch (error) { return errorResponse(error); }
 }
-export default { POST, GET };
+export default { OPTIONS, POST, GET };
