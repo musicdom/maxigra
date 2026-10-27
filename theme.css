@@ -1,0 +1,97 @@
+/* Theme selector and app-wide light theme for «Шашки». Dark remains the default. */
+.theme-setting{margin-top:14px;padding:16px;border-radius:20px;background:linear-gradient(145deg,rgba(77,163,255,.08),rgba(255,255,255,.025));border:1px solid var(--line,rgba(116,180,239,.12))}
+.theme-setting-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.theme-setting-title{font-size:14px;font-weight:850;color:var(--white,#f5f8fc)}
+.theme-setting-caption{font-size:11px;color:var(--muted,#93a4b8);margin-top:4px;line-height:1.4}
+.theme-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.theme-option{min-height:46px;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border-radius:13px;border:1px solid var(--line,rgba(116,180,239,.12));background:rgba(255,255,255,.035);color:var(--white,#f5f8fc);font:750 13px inherit;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
+.theme-option:active{transform:scale(.98)}
+.theme-option[aria-pressed="true"]{background:rgba(77,163,255,.15);border-color:#4da3ff;box-shadow:inset 0 0 0 1px rgba(77,163,255,.18)}
+.theme-option .theme-option-icon{font-size:17px;line-height:1}
+.theme-setting-status{margin-top:9px;font-size:11px;color:var(--muted,#93a4b8);min-height:14px}
+html[data-theme="light"],html[data-theme="light"] body{color-scheme:light}
+html[data-theme="light"] body{background:#f2f7fc!important;color:#172536!important}
+html[data-theme="light"] body:before{opacity:.14;background-image:linear-gradient(rgba(23,37,54,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(23,37,54,.035) 1px,transparent 1px)}
+html[data-theme="light"] #app{color:#172536}
+html[data-theme="light"] .screen{color:#172536}
+html[data-theme="light"] .auth-card,
+html[data-theme="light"] .online-search-card,
+html[data-theme="light"] .result-card{background:linear-gradient(145deg,#fff,#f4f8fd)!important;border-color:#d9e5f1!important;box-shadow:0 18px 48px rgba(28,62,98,.12)!important}
+html[data-theme="light"] .auth-card h1,
+html[data-theme="light"] .auth-card p,
+html[data-theme="light"] .auth-legal,
+html[data-theme="light"] .auth-legal a,
+html[data-theme="light"] .online-search-card h2,
+html[data-theme="light"] .online-search-card p,
+html[data-theme="light"] .result-title,
+html[data-theme="light"] .result-sub{color:#172536!important}
+html[data-theme="light"] .menu-note,
+html[data-theme="light"] .shop-top h2,
+html[data-theme="light"] .shop-top small,
+html[data-theme="light"] .rules-card h2,
+html[data-theme="light"] .rules-card p,
+html[data-theme="light"] .rules-card li{color:#172536!important}
+html[data-theme="light"] .menu-card:before{opacity:.2;box-shadow:0 12px 32px rgba(28,62,98,.1)}
+html[data-theme="light"] .menu-card:after{opacity:.6}
+html[data-theme="light"] .btn:not(.btn--primary){background:#fff!important;color:#172536!important;border-color:#d8e4f0!important;box-shadow:0 5px 16px rgba(28,62,98,.07)!important}
+html[data-theme="light"] .ctrl-btn{background:#fff!important;color:#172536!important;border-color:#d8e4f0!important;box-shadow:0 4px 14px rgba(28,62,98,.08)!important}
+html[data-theme="light"] .shop-card,
+html[data-theme="light"] .profile-panel,
+html[data-theme="light"] .rules-card,
+html[data-theme="light"] .leaderboard-panel,
+html[data-theme="light"] .admin-panel{color:#172536!important}
+html[data-theme="light"] .shop-top,
+html[data-theme="light"] .leaderboard-top,
+html[data-theme="light"] .admin-top{border-color:#d8e4f0!important}
+html[data-theme="light"] .shop-item{background:linear-gradient(145deg,#fff,#f5f9fd)!important;border-color:#d9e5f1!important;box-shadow:0 8px 24px rgba(28,62,98,.08)!important}
+html[data-theme="light"] .shop-item h3,
+html[data-theme="light"] .shop-item p,
+html[data-theme="light"] .shop-balance,
+html[data-theme="light"] .shop-balance b,
+html[data-theme="light"] .shop-section-title{color:#172536!important}
+html[data-theme="light"] .shop-board-preview{background:#e9f1f8!important}
+html[data-theme="light"] .shop-notice{background:#eef5fc!important;color:#172536!important;border-color:#d5e3f0!important}
+html[data-theme="light"] .max-profile-head{background:linear-gradient(145deg,#fff,#edf5fc)!important;border-color:#d6e4f1!important;box-shadow:0 12px 30px rgba(28,62,98,.08)!important}
+html[data-theme="light"] .max-profile-name,
+html[data-theme="light"] .profile-name,
+html[data-theme="light"] .profile-stat b,
+html[data-theme="light"] .profile-extra-row strong,
+html[data-theme="light"] .profile-section-title{color:#172536!important}
+html[data-theme="light"] .max-profile-username,
+html[data-theme="light"] .profile-extra-row,
+html[data-theme="light"] .profile-stat>span:last-child,
+html[data-theme="light"] .profile-empty,
+html[data-theme="light"] .owned-board small{color:#61758b!important}
+html[data-theme="light"] .profile-stat,
+html[data-theme="light"] .profile-extra,
+html[data-theme="light"] .profile-boards,
+html[data-theme="light"] .theme-setting{background:linear-gradient(145deg,#fff,#f4f8fd)!important;border-color:#d9e5f1!important;box-shadow:0 6px 18px rgba(28,62,98,.045)!important}
+html[data-theme="light"] .owned-board{background:#fff!important;color:#172536!important;border-color:#d9e5f1!important}
+html[data-theme="light"] .owned-board.is-selected{background:#eaf4ff!important;border-color:#4da3ff!important}
+html[data-theme="light"] .theme-setting-title{color:#172536}
+html[data-theme="light"] .theme-setting-caption,
+html[data-theme="light"] .theme-setting-status{color:#61758b}
+html[data-theme="light"] .theme-option{background:#fff;color:#172536;border-color:#d8e4f0}
+html[data-theme="light"] .theme-option[aria-pressed="true"]{background:#e8f3ff;border-color:#318bea;color:#145da8}
+html[data-theme="light"] .leader-tab{background:#fff!important;color:#172536!important;border-color:#d8e4f0!important}
+html[data-theme="light"] .leader-tab.active{background:#e7f2ff!important;border-color:#4da3ff!important;color:#145da8!important}
+html[data-theme="light"] .leaderboard-season,
+html[data-theme="light"] .leaderboard-list,
+html[data-theme="light"] .leaderboard-me,
+html[data-theme="light"] .admin-notice{color:#172536}
+html[data-theme="light"] .leader-row,
+html[data-theme="light"] .leaderboard-row,
+html[data-theme="light"] .admin-account,
+html[data-theme="light"] .admin-user{background:#fff!important;color:#172536!important;border-color:#d9e5f1!important}
+html[data-theme="light"] .turn-box{background:rgba(255,255,255,.94)!important;border-color:#d8e4f0!important}
+html[data-theme="light"] .turn-box strong,
+html[data-theme="light"] .score,
+html[data-theme="light"] .player-label,
+html[data-theme="light"] .player-label span:first-child{color:#172536!important}
+html[data-theme="light"] .game-header .ctrl-btn,
+html[data-theme="light"] .bottom-controls .ctrl-btn{background:#fff!important;color:#172536!important;border-color:#d8e4f0!important}
+html[data-theme="light"] .board-wrapper{box-shadow:0 18px 42px rgba(28,62,98,.16)!important;border-color:#d0dce8!important}
+/* Keep checkerboard and pieces unchanged in both themes. */
+html[data-theme="light"] .startup-card{background:linear-gradient(145deg,#fff,#f2f7fc)!important;border-color:#d8e4f0!important}
+html[data-theme="light"] .startup-sub{color:#61758b!important}
+@media(prefers-reduced-motion:reduce){.theme-option{transition:none}}
