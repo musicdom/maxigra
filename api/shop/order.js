@@ -36,6 +36,12 @@ async function alreadyOwned(userId, itemId) {
   } catch { return false; }
 }
 
+export async function OPTIONS() {
+  // GitHub Pages is a different origin from Vercel. Explicitly answer the browser's
+  // CORS preflight for JSON POST requests carrying x-max-init-data.
+  return reply({ ok: true });
+}
+
 export async function POST(request) {
   try {
     const user = auth(request);
