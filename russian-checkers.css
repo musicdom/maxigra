@@ -46,3 +46,20 @@
 #online-cancel-btn:active,#game-back:active,#shop-back:active,#admin-back:active,#profile-back:active,#leaderboard-back:active,#rules-back:active{
   transform:scale(.94);
 }
+
+/* Rules screen and collapsed legal documents */
+.rules-card{width:100%;max-width:480px;margin:auto;overflow:auto;overscroll-behavior:contain;padding:18px 16px 24px;border-radius:26px;background:linear-gradient(150deg,rgba(15,35,58,.97),rgba(6,17,30,.97));border:1px solid rgba(103,172,239,.18);box-shadow:0 24px 70px rgba(0,0,0,.3)}
+.rules-card h2{font-size:25px;letter-spacing:-.6px;margin:8px 0 12px;color:#f5f8ff}
+.rules-card>p{font-size:13px;line-height:1.65;color:#a9b9cc;margin:0 0 12px}
+.rules-card ul{padding-left:19px;margin:10px 0 20px;color:#c1cede;font-size:13px;line-height:1.7}
+.rules-card li{padding-left:3px;margin:7px 0}
+.rules-card details{border:1px solid rgba(143,190,235,.15);background:rgba(255,255,255,.035);border-radius:15px;margin:10px 0;overflow:hidden}
+.rules-card details summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 14px;color:#f5f8ff;font-size:13px;font-weight:750;cursor:pointer}
+.rules-card details summary::-webkit-details-marker{display:none}
+.rules-card details summary:after{content:"＋";color:#72bdff;font-size:18px;font-weight:500}
+.rules-card details[open] summary:after{content:"−"}
+.rules-card details>p{padding:0 14px 8px;margin:0;color:#a9b9cc;font-size:12px;line-height:1.65}
+.rules-card details>a{display:inline-block;margin:0 14px 15px;color:#82c4ff;text-decoration:none;font-size:12px;font-weight:750}
+.rules-card details>a:focus-visible,.rules-card details summary:focus-visible{outline:2px solid #72bdff;outline-offset:2px}
+.rules-card #rules-play{margin-top:15px;flex-shrink:0}
+@media(max-height:700px){.rules-card{padding:14px 14px 18px}.rules-card h2{font-size:22px}.rules-card ul{margin-bottom:14px}.rules-card details summary{padding:12px}}
