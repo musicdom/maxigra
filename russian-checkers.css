@@ -82,3 +82,9 @@
 .rules-card details a{display:inline-flex;margin:0 14px 14px;color:#82c4ff;font-size:13px;font-weight:750;text-decoration:none}
 .rules-card details a:active{opacity:.72}
 @media (prefers-reduced-motion:reduce){.rules-play-button{transition:none}}
+
+
+/* Compact, always-visible legal links at the bottom of the rules screen */
+.rules-legal-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 8px;margin:13px 0 2px;padding:0 4px;text-align:center;font-size:10px;line-height:1.5;color:#71869e}
+.rules-legal-footer a{color:#8ba9c8;text-decoration:underline;text-decoration-color:rgba(139,169,200,.4);text-underline-offset:2px;font-size:10px;font-weight:500}
+.rules-legal-footer a:active{color:#c2e3ff}
