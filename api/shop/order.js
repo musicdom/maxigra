@@ -1,6 +1,5 @@
 import crypto from 'node:crypto';
 import { auth, body, errorResponse, redis, reply } from '../_lib.js';
-import { BOT_URL, linkKeyboard, sendMaxMessage, supportUrl } from '../_max-bot.js';
 
 const CATALOG = {
   board_90s: { price: 299 },
@@ -11,12 +10,6 @@ const CATALOG = {
   master: { price: 149 },
   hints: { price: 99 },
   starter_pack: { price: 599 }
-};
-const BOARD_MESSAGES = {
-  board_90s: { title: 'СВО', image: 'https://musicdom.github.io/maxigra/assets/boards/IMG_4486.jpeg' },
-  board_svo: { title: '90-е', image: 'https://musicdom.github.io/maxigra/assets/boards/IMG_4487.jpeg' },
-  board_max: { title: 'MAX', image: 'https://musicdom.github.io/maxigra/assets/boards/IMG_4586.jpeg' },
-  board_orbita: { title: 'ОРБИТА', image: 'https://musicdom.github.io/maxigra/assets/boards/IMG_4587.jpeg' }
 };
 const ORDER_TTL = 86400; // Payment window; order history itself is retained.
 const RECEIVER = String(process.env.YOOMONEY_RECEIVER || '').trim();
@@ -42,25 +35,6 @@ async function alreadyOwned(userId, itemId) {
     return Array.isArray(state.owned) && state.owned.includes(itemId);
   } catch { return false; }
 }
-async function sendBoardOrder(userId, order, board, payUrl) {
-  const support = supportUrl();
-  await sendMaxMessage(userId, {
-    text: `🎲 Покупка доски «${board.title}»
-
-Стоимость: ${order.price} ₽
-
-После успешной оплаты доска будет автоматически закреплена за вашим аккаунтом MAX и появится в профиле игры «Шашки».
-
-Если возникнут вопросы, нажмите «Техническая поддержка».`,
-    attachments: [
-      { type: 'image', payload: { url: board.image } },
-      linkKeyboard([
-        [{ text: `Оплатить ${order.price} ₽`, url: payUrl }],
-        [{ text: 'Техническая поддержка', url: support }]
-      ])
-    ]
-  });
-}
 
 export async function POST(request) {
   try {
@@ -84,15 +58,10 @@ export async function POST(request) {
 
     const paymentPage = `${new URL(request.url).origin}/api/shop/pay`;
     const payUrl = paymentUrl(orderId, price, paymentPage);
-    const board = BOARD_MESSAGES[itemId];
-    if (board) {
-      await sendBoardOrder(user.id, order, board, payUrl);
-      return reply({
-        ok: true,
-        order: { id: orderId, itemId, price, currency: 'RUB', status: 'pending', paymentUrl: payUrl, paymentOptions: paymentOptions(orderId, price, paymentPage), sentToBot: true }
-      }, 201);
-    }
+    if (!payUrl) return reply({ ok: false, error: 'PAYMENT_NOT_CONFIGURED' }, 503);
 
+    // Всегда возвращаем ссылку на страницу Vercel прямо в мини-приложение.
+    // Покупка доски не должна зависеть от доставки сообщения через MAX-бот.
     return reply({
       ok: true,
       order: { id: orderId, itemId, price, currency: 'RUB', status: 'pending', paymentUrl: payUrl, paymentOptions: paymentOptions(orderId, price, paymentPage), sentToBot: false }
