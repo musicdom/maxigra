@@ -4,7 +4,7 @@
 .theme-setting-title{font-size:14px;font-weight:850;color:var(--white,#f5f8fc)}
 .theme-setting-caption{font-size:11px;color:var(--muted,#93a4b8);margin-top:4px;line-height:1.4}
 .theme-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.theme-option{min-height:46px;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border-radius:13px;border:1px solid var(--line,rgba(116,180,239,.12));background:rgba(255,255,255,.035);color:var(--white,#f5f8fc);font:750 13px inherit;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
+.theme-option{min-height:46px;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border-radius:13px;border:1px solid var(--line,rgba(116,180,239,.12));background:rgba(255,255,255,.035);color:var(--white,#f5f8fc);font:750 13px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
 .theme-option:active{transform:scale(.98)}
 .theme-option[aria-pressed="true"]{background:rgba(77,163,255,.15);border-color:#4da3ff;box-shadow:inset 0 0 0 1px rgba(77,163,255,.18)}
 .theme-option .theme-option-icon{font-size:17px;line-height:1}
