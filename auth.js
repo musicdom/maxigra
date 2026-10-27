@@ -72,10 +72,10 @@ async function init(){
   window.CheckersAuth={user,registered:!user.guest,ready:true,guest:!!user.guest,max:!!user.max,initData:init};
   document.body.classList.remove('max-auth-blocked');
   window.dispatchEvent(new CustomEvent('max-profile-ready',{detail:user}));
-  // На iOS/Android MAX ждём завершения нативного кэша изображений,
-  // чтобы главное меню не показывалось раньше своих фоновых изображений.
-  try{if(window.MaxAssetCache?.ready)await Promise.race([window.MaxAssetCache.ready,new Promise(resolve=>setTimeout(resolve,6000))])}catch(e){}
+  // Не держим экран авторизации открытым, пока кэширует второстепенные изображения.
+  // Стартовая заставка сама ждёт max-assets-ready и max-profile-ready.
   try{window.MaxAssetCache?.apply?.()}catch(e){}
+  try{window.MaxAssetCache?.ready?.then(()=>window.MaxAssetCache?.apply?.()).catch(()=>{})}catch(e){}
   goMenu();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
