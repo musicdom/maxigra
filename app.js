@@ -49,6 +49,25 @@ function initStarterOffer(){
  q('starter-offer-buy')?.addEventListener('click',async()=>{const b=q('starter-offer-buy');if(!b)return;b.disabled=true;try{const confirmed=await window.CheckersConfirmPurchase?.({title:'Набор новичка',price:599,desc:'25 подсказок и две игровые доски: «90-е» и «СВО».',icon:'🎁'});if(!confirmed){b.disabled=false;return}b.textContent='Подготавливаем оплату…';const order=await window.CheckersShop?.buy?.('starter_pack');const url=order?.paymentUrl||order?.paymentOptions?.wallet;if(url){if(window.WebApp?.openLink)window.WebApp.openLink(url);else window.location.href=url;close()}else{b.disabled=false;b.textContent='Получить набор · 599 ₽'}}catch{b.disabled=false;b.textContent='Получить набор · 599 ₽'}});
  showOffer();
 }
+async function buyTournamentTicket(){
+ const button=q('tournament-buy'),status=q('tournament-status');if(!button||button.disabled)return;
+ button.disabled=true;if(status){status.className='tournament-status';status.textContent='';}
+ try{
+  const confirmed=await window.CheckersConfirmPurchase?.({title:'Билет на турнир «Битва за призы»',price:199,desc:'Билет участника призового турнира по русским шашкам.',icon:'🏆'});
+  if(!confirmed){button.disabled=false;return}
+  button.textContent='Подготавливаем оплату…';
+  const order=await window.CheckersShop?.createOrder?.('tournament_ticket');
+  const url=order?.paymentUrl||order?.paymentOptions?.wallet;
+  if(!url)throw new Error('PAYMENT_NOT_CONFIGURED');
+  if(window.WebApp?.openLink)window.WebApp.openLink(url);else window.location.href=url;
+  if(status){status.className='tournament-status is-info';status.textContent='Заказ создан. После успешной оплаты билет будет закреплён за вашим аккаунтом MAX.'}
+  button.textContent='Открыть оплату · 199 ₽';
+ }catch(error){
+  const message=String(error?.message||'');
+  if(status){status.className='tournament-status is-error';status.textContent=message==='MAX_INIT_DATA_REQUIRED'?'Откройте игру внутри MAX и попробуйте ещё раз.':message==='PAYMENT_NOT_CONFIGURED'?'Оплата временно недоступна. Попробуйте позже.':message==='TOURNAMENT_TICKET_ALREADY_OWNED'?'Вы уже зарегистрированы на этот турнир.':'Не удалось создать заказ. Попробуйте ещё раз.'}
+  button.textContent='Повторить · 199 ₽';
+ }finally{button.disabled=false}
+}
 function startOnlineFromButton(){const openRooms=()=>window.CheckersRooms?.open?.();if(window.CheckersRooms?.open){openRooms();return}show('online-search-screen');const el=q('online-search-text');if(el)el.textContent='Загрузка комнат…';const handler=()=>{window.removeEventListener('checkers-online-ready',handler);openRooms()};window.addEventListener('checkers-online-ready',handler,{once:true})}
 function ensureAdminButton(){
  const panel=q('profile-screen')?.querySelector('.profile-panel');if(!panel)return;
@@ -100,7 +119,7 @@ function lockMenuHorizontalGesture(){
  menu.addEventListener('touchend',()=>{tracking=false},{passive:true});
  menu.addEventListener('touchcancel',()=>{tracking=false},{passive:true});
 }
-function bindNavigation(){q('shop-btn')?.addEventListener('click',()=>show('shop-screen'));q('profile-btn')?.addEventListener('click',()=>{syncProfile();show('profile-screen')});q('rules-btn')?.addEventListener('click',()=>show('rules-screen'));q('shop-back')?.addEventListener('click',()=>show('menu-screen'));q('profile-back')?.addEventListener('click',()=>show('menu-screen'));q('rules-back')?.addEventListener('click',()=>show('menu-screen'));ensureAdminButton();const onlineBtn=q('online-play-btn');if(onlineBtn)onlineBtn.onclick=e=>{e.preventDefault();e.stopPropagation();startOnlineFromButton()};const cancel=q('online-cancel-btn');if(cancel)cancel.onclick=e=>{e.preventDefault();e.stopPropagation();show('menu-screen')}}
+function bindNavigation(){q('tournament-btn')?.addEventListener('click',()=>show('tournament-screen'));q('tournament-back')?.addEventListener('click',()=>show('menu-screen'));q('tournament-cancel')?.addEventListener('click',()=>show('menu-screen'));q('tournament-buy')?.addEventListener('click',buyTournamentTicket);q('shop-btn')?.addEventListener('click',()=>show('shop-screen'));q('profile-btn')?.addEventListener('click',()=>{syncProfile();show('profile-screen')});q('rules-btn')?.addEventListener('click',()=>show('rules-screen'));q('shop-back')?.addEventListener('click',()=>show('menu-screen'));q('profile-back')?.addEventListener('click',()=>show('menu-screen'));q('rules-back')?.addEventListener('click',()=>show('menu-screen'));ensureAdminButton();const onlineBtn=q('online-play-btn');if(onlineBtn)onlineBtn.onclick=e=>{e.preventDefault();e.stopPropagation();startOnlineFromButton()};const cancel=q('online-cancel-btn');if(cancel)cancel.onclick=e=>{e.preventDefault();e.stopPropagation();show('menu-screen')}}
 function boot(){lockMenuHorizontalGesture();bindNavigation();setTimeout(initStarterOffer,900);q('game-back')?.addEventListener('click',gameBack);window.addEventListener('max-profile-ready',()=>{syncProfile();ensureAdminButton();setTimeout(initStarterOffer,180)});window.addEventListener('shop-state-ready',()=>{renderOwnedBoards();syncProfile()});window.addEventListener('online-game-started',()=>show('game-screen'));syncProfile()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
