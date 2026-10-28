@@ -67,28 +67,31 @@ export async function GET(request){
 export async function POST(request){
  try{
   const p=await body(request);admin(request,p?.initData||'');const id=String(p?.userId||'');if(!id)return reply({ok:false,error:'USER_ID_REQUIRED'},400);
-  const state=await readInventory(id),action=String(p?.action||'');
+  const action=String(p?.action||'');
   if(action==='grant-ticket'||action==='revoke-ticket'){
    const amount=Math.max(1,Math.min(100,Math.floor(Number(p?.amount)||1)));
    const ticketsKey=TOURNAMENT_TICKETS_KEY(id);
    const participantKey=`checkers:tournament:prize-battle:participant:${id}`;
    const participantsKey='checkers:tournament:prize-battle:participants';
    const rawTickets=await redis('GET',[ticketsKey]);
-   const participantRaw=await redis('GET',[participantKey]);
-   let legacyTickets=0;try{legacyTickets=Number(JSON.parse(participantRaw||'{}').tickets)||0}catch{}
+   let legacyTickets=0;
+   if(rawTickets===null||rawTickets===undefined){
+    try{const participantRaw=await redis('GET',[participantKey]);legacyTickets=Number(JSON.parse(participantRaw||'{}').tickets)||0}catch{}
+   }
    const current=rawTickets!==null&&rawTickets!==undefined?Math.max(0,Math.floor(Number(rawTickets)||0)):Math.max(0,Math.floor(legacyTickets));
    const tickets=action==='grant-ticket'?current+amount:Math.max(0,current-amount);
-   // Persist a canonical count even at zero, so old participant metadata cannot resurrect a revoked ticket.
+   // The canonical count is authoritative. Persist it before best-effort participant-list maintenance.
    await redis('SET',[ticketsKey,String(tickets)]);
    if(tickets>0){
-    await redis('SADD',[participantsKey,id]);
-    await redis('SET',[participantKey,JSON.stringify({userId:id,tickets,updatedAt:Date.now(),source:'admin'})]);
+    try{await redis('SADD',[participantsKey,id])}catch(error){console.error('Tournament participant index update failed:',error.message)}
+    try{await redis('SET',[participantKey,JSON.stringify({userId:id,tickets,updatedAt:Date.now(),source:'admin'})])}catch(error){console.error('Tournament participant metadata update failed:',error.message)}
    }else{
-    await redis('SREM',[participantsKey,id]);
-    await redis('DEL',[participantKey]);
+    try{await redis('SREM',[participantsKey,id])}catch(error){console.error('Tournament participant index removal failed:',error.message)}
+    try{await redis('DEL',[participantKey])}catch(error){console.error('Tournament participant metadata removal failed:',error.message)}
    }
    return reply({ok:true,userId:id,tickets,granted:action==='grant-ticket'?amount:0,removed:action==='revoke-ticket'?Math.min(current,amount):0});
   }
+  const state=await readInventory(id);
   if(action==='contact'){
    const users=await getUsers(),target=users.find(u=>String(u.id)===id);if(!target)return reply({ok:false,error:'USER_NOT_FOUND'},404);
    const name=escapeHtml(target.name||'Пользователь');await sendMaxMessage(ADMIN_ID,'👤 <a href="max://user/'+encodeURIComponent(id)+'">'+name+'</a>',null,'html');
