@@ -3,6 +3,7 @@ import { send as sendMaxMessage } from '../lib/postings.js';
 
 const ADMIN_ID='163701646';
 const INVENTORY_KEY=id=>`checkers:shop:user:${id}`;
+const TOURNAMENT_TICKETS_KEY=id=>`checkers:tournament:prize-battle:tickets:${id}`;
 const USER_KEY_PREFIX='checkers:user:';
 const CATALOG={
   board_90s:{title:'СВО',image:'assets/boards/IMG_4486.jpeg'},board_svo:{title:'90-е',image:'assets/boards/IMG_4487.jpeg'},board_max:{title:'MAX',image:'assets/boards/IMG_4586.jpeg'},board_orbita:{title:'ОРБИТА',image:'assets/boards/IMG_4587.jpeg'},board_original:{title:'Оригинал',image:'assets/boards/IMG_4589.jpeg'}
@@ -50,15 +51,16 @@ export async function GET(request){
   admin(request);const url=new URL(request.url),userId=String(url.searchParams.get('userId')||'');
   if(userId){
    const users=await getUsers(),user=users.find(u=>String(u.id)===userId);if(!user)return reply({ok:false,error:'USER_NOT_FOUND'},404);
-   const [offline,online,shop]=await Promise.all([readStats(userId,'offline'),readStats(userId,'online'),readInventory(userId,true)]);
+   const [offline,online,shop,ticketRaw]=await Promise.all([readStats(userId,'offline'),readStats(userId,'online'),readInventory(userId,true),redis('GET',[TOURNAMENT_TICKETS_KEY(userId)])]);
+   const tickets=Math.max(0,Number(ticketRaw)||0);
    let orderIds=[];try{const ids=await redis('SMEMBERS',[`checkers:shop:orders:user:${userId}`]);orderIds=Array.isArray(ids)?ids:[]}catch{}
    // Backward compatibility: older orders may exist without a per-user set index.
    if(!orderIds.length){try{const keys=await redis('KEYS',[`checkers:shop:order:*`]);for(const key of(Array.isArray(keys)?keys:[])){const raw=await redis('GET',[key]);if(!raw)continue;try{const order=JSON.parse(raw);if(String(order.userId)===userId)orderIds.push(String(order.id||String(key).split(':').pop()))}catch{}}}catch{}}
    const orders=[];for(const id of [...new Set(orderIds)]){try{const raw=await redis('GET',[`checkers:shop:order:${String(id)}`]);if(!raw)continue;const o=JSON.parse(raw);if(String(o.userId)!==userId)continue;if(o.status==='pending'&&Number(o.expiresAt||0)>0&&Date.now()>Number(o.expiresAt)){o.status='expired';o.expiredAt=Date.now();await redis('SET',[`checkers:shop:order:${String(id)}`,JSON.stringify(o)]);}orders.push({id:String(o.id||id),itemId:String(o.itemId||''),price:Number(o.price)||0,currency:String(o.currency||'RUB'),status:String(o.status||'pending'),createdAt:Number(o.createdAt)||0,paidAt:Number(o.paidAt)||0,expiredAt:Number(o.expiredAt)||0,operationId:String(o.operationId||''),paidAmount:Number(o.withdrawAmount??o.paidAmount)||0});}catch{}}
    orders.sort((a,b)=>b.createdAt-a.createdAt);
-   return reply({ok:true,user,shop,stats:{offline,online},orders});
+   return reply({ok:true,user,shop,tickets,stats:{offline,online},orders});
   }
-  const users=await getUsers(),accounts=[];for(const u of users)accounts.push({...u,shop:await readInventory(u.id)});
+  const users=await getUsers(),accounts=[];for(const u of users){const [shop,ticketRaw]=await Promise.all([readInventory(u.id),redis('GET',[TOURNAMENT_TICKETS_KEY(u.id)])]);accounts.push({...u,shop,tickets:Math.max(0,Number(ticketRaw)||0)});}
   return reply({ok:true,accounts,boards:CATALOG});
  }catch(error){return errorResponse(error);}
 }
@@ -66,6 +68,15 @@ export async function POST(request){
  try{
   const p=await body(request);admin(request,p?.initData||'');const id=String(p?.userId||'');if(!id)return reply({ok:false,error:'USER_ID_REQUIRED'},400);
   const state=await readInventory(id),action=String(p?.action||'');
+  if(action==='grant-ticket'){
+   const amount=Math.max(1,Math.min(100,Math.floor(Number(p?.amount)||1)));
+   const tickets=Math.max(0,Number(await redis('GET',[TOURNAMENT_TICKETS_KEY(id)]))||0)+amount;
+   await redis('SET',[TOURNAMENT_TICKETS_KEY(id),String(tickets)]);
+   await redis('SADD',['checkers:tournament:prize-battle:participants',id]);
+   const participant={userId:id,tickets,updatedAt:Date.now(),source:'admin'};
+   await redis('SET',[`checkers:tournament:prize-battle:participant:${id}`,JSON.stringify(participant)]);
+   return reply({ok:true,userId:id,tickets,granted:amount});
+  }
   if(action==='contact'){
    const users=await getUsers(),target=users.find(u=>String(u.id)===id);if(!target)return reply({ok:false,error:'USER_NOT_FOUND'},404);
    const name=escapeHtml(target.name||'Пользователь');await sendMaxMessage(ADMIN_ID,'👤 <a href="max://user/'+encodeURIComponent(id)+'">'+name+'</a>',null,'html');
