@@ -2,6 +2,7 @@ import https from "https";
 import {handlePostings,handlePostingsCallback,handleChannelUpdate} from "../lib/postings.js";
 import {handlePubl,handlePublCallback,rememberBotUser} from "../lib/publ.js";
 import {handleBotStart,handleBotStop} from "./_retention.js";
+import {handleSupportBot,handleSupportCallback as handleSupportAction} from "../lib/support.js";
 
 async function maxRequest({token,method="GET",apiPath,body=null}){
  if(!token) throw new Error("MAX_BOT_TOKEN not configured");
@@ -37,11 +38,14 @@ export default async function handler(req,res){
    if(!id)continue;
    await rememberBotUser(id);
    if(type==="bot_started"){const result=await handleBotStart(id);console.log("MAX BOT START RESULT",{id,...result});continue}
-   if(type==="message_callback"){const payload=u?.callback?.payload??u?.payload??"";const callbackId=u?.callback?.callback_id??u?.callback?.id??null;if(await handlePublCallback(id,payload,callbackId))continue;await handlePostingsCallback(id,payload,callbackId);continue}
+   if(type==="message_callback"){const payload=u?.callback?.payload??u?.payload??"";const callbackId=u?.callback?.callback_id??u?.callback?.id??null;if(await handleSupportAction(id,payload,callbackId))continue;
+    if(await handlePublCallback(id,payload,callbackId))continue;
+    await handlePostingsCallback(id,payload,callbackId);continue}
    if(type==="message_created"){
     const message=txt(u);
     if(/^(?:\/start(?:@\S+)?|start)(?:\s|$)/i.test(message)){const result=await handleBotStart(id);console.log("MAX MESSAGE START RESULT",{id,...result});}
     else if(/^\/stop(?:@\S+)?(?:\s|$)/i.test(message))await handleBotStop(id);
+    else if(await handleSupportBot(id,message,u)){}
     else if(await handlePubl(id,message)){}
     else await handlePostings(id,message);
    }
