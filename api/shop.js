@@ -3,6 +3,8 @@ import { auth, body, errorResponse, redis, reply } from './_lib.js';
 const CATALOG = { board_90s:{price:299},board_svo:{price:299},board_max:{price:299},board_orbita:{price:299},board_original:{price:0},master:{price:149},hints:{price:99},starter_pack:{price:599} };
 const BOARD_IDS = ['board_90s','board_svo','board_max','board_orbita','board_original'];
 const DEFAULT_BOARD = 'board_original';
+const TOURNAMENT_SETTINGS_KEY='checkers:tournament:prize-battle:settings:v1';
+const TOURNAMENT_SETTINGS_DEFAULTS={title:'Битва за призы',lead:'Проверь свой уровень в русских шашках и поборись за призы. Купи билет, чтобы зарегистрировать участие в турнире.',startDate:'',endDate:'',datesNote:'Дата начала и окончания будут объявлены отдельно.',tableText:'Таблица и результаты появятся после объявления формата турнира.',rulesText:'Подробные правила, порядок определения победителей и выдачи призов будут опубликованы до старта.',prizeTitle:'Призы для лидеров',prizeText:'Фонд формируется из проданных билетов. Сумма и распределение призов будут опубликованы организатором до начала турнира.'};
 function inventoryKey(id) { return `checkers:shop:user:${id}`; }
 function coinsKey(id) { return `checkers:coins:${id}`; }
 const orderKey = id => `checkers:shop:order:${id}`;
@@ -72,6 +74,7 @@ export async function GET(request) {
   try {
     const url = new URL(request.url);
     if (url.searchParams.get('status') === '1') return await paymentStatus(request);
+    if (url.searchParams.get('tournament-settings') === '1') { const raw=await redis('GET',[TOURNAMENT_SETTINGS_KEY]);let saved={};try{saved=raw?JSON.parse(raw):{}}catch{}return reply({ok:true,settings:{...TOURNAMENT_SETTINGS_DEFAULTS,...saved}}); }
     const user = auth(request);
     if (url.searchParams.get('tournament') === '1') {
       const ticketCountKey = `checkers:tournament:prize-battle:tickets:${user.id}`;
