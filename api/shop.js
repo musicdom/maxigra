@@ -77,12 +77,13 @@ export async function GET(request) {
       const ticketCountKey = `checkers:tournament:prize-battle:tickets:${user.id}`;
       const participantKey = `checkers:tournament:prize-battle:participant:${user.id}`;
       const participantsKey = 'checkers:tournament:prize-battle:participants';
-      const [rawTickets, participantCount, registered, participantRaw] = await Promise.all([
-        redis('GET', [ticketCountKey]),
-        redis('SCARD', [participantsKey]),
-        redis('SISMEMBER', [participantsKey, String(user.id)]),
-        redis('GET', [participantKey])
-      ]);
+      // The ticket count is the source of truth. Participant-list metadata is best-effort:
+      // a malformed/legacy Redis set must not break ticket status for every account.
+      const rawTickets = await redis('GET', [ticketCountKey]);
+      let participantCount = 0, registered = 0, participantRaw = null;
+      try { participantCount = await redis('SCARD', [participantsKey]); } catch (error) { console.error('Tournament participant count unavailable:', error.message); }
+      try { registered = await redis('SISMEMBER', [participantsKey, String(user.id)]); } catch (error) { console.error('Tournament participant membership unavailable:', error.message); }
+      try { participantRaw = await redis('GET', [participantKey]); } catch (error) { console.error('Tournament legacy participant record unavailable:', error.message); }
       let savedTickets = 0;
       try { savedTickets = Number(JSON.parse(participantRaw || '{}').tickets) || 0; } catch {}
       const isRegistered = registered === 1 || registered === '1' || registered === true;
