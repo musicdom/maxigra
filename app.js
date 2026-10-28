@@ -4,7 +4,17 @@ const q=id=>document.getElementById(id);
 const show=id=>document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));
 const ACCOUNT_KEY='russian-checkers-account-v2';
 function esc(v){return String(v??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]))}
-function gameBack(){if(window.CheckersOnline?.active){window.CheckersOnline.cancel();return}show('menu-screen')}
+function gameBack(){
+ if(window.CheckersOnline?.active)return;
+ if(!q('game-screen')?.classList.contains('active')){show('menu-screen');return}
+ if(q('offline-exit-dialog'))return;
+ const overlay=document.createElement('div');overlay.id='offline-exit-dialog';overlay.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:22px;box-sizing:border-box;background:rgba(3,9,16,.78);backdrop-filter:blur(12px)';
+ overlay.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="offline-exit-title" style="width:100%;max-width:340px;box-sizing:border-box;padding:24px 20px;border-radius:24px;background:linear-gradient(145deg,#122b46,#081421);border:1px solid rgba(93,174,242,.28);box-shadow:0 24px 80px rgba(0,0,0,.55);color:#f5f8ff;text-align:center"><div style="font-size:34px;margin-bottom:10px">♟</div><h2 id="offline-exit-title" style="font-size:21px;line-height:1.25;margin:0 0 10px">Завершить партию?</h2><p style="font-size:14px;line-height:1.5;color:#a9b9cc;margin:0 0 20px">Если выйти сейчас, будет засчитано поражение. Или можно продолжить игру с текущей позиции.</p><div style="display:flex;flex-direction:column;gap:10px"><button type="button" id="offline-exit-confirm" style="min-height:48px;border:0;border-radius:14px;background:linear-gradient(115deg,#4da3f5,#1768c5);color:#fff;font-weight:800;font-size:14px">Завершить партию</button><button type="button" id="offline-exit-continue" style="min-height:48px;border:1px solid rgba(143,190,235,.2);border-radius:14px;background:rgba(255,255,255,.06);color:#f5f8ff;font-weight:750;font-size:14px">Продолжить</button></div></section>';
+ document.body.appendChild(overlay);
+ const close=()=>overlay.remove();
+ q('offline-exit-continue')?.addEventListener('click',close);
+ q('offline-exit-confirm')?.addEventListener('click',()=>{close();if(window.CheckersOffline?.resign)window.CheckersOffline.resign();else show('menu-screen')});
+}
 function renderOwnedBoards(){
  const box=q('profile-boards'),shop=window.CheckersShop;if(!box||!shop)return;
  const state=shop.state||{},catalog=shop.catalog||{};
