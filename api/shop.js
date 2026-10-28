@@ -70,8 +70,25 @@ async function paymentStatus(request) {
 export async function OPTIONS(){return reply({ok:true});}
 export async function GET(request) {
   try {
-    if (new URL(request.url).searchParams.get('status') === '1') return await paymentStatus(request);
-    const user=auth(request);
+    const url = new URL(request.url);
+    if (url.searchParams.get('status') === '1') return await paymentStatus(request);
+    const user = auth(request);
+    if (url.searchParams.get('tournament') === '1') {
+      const ticketCountKey = `checkers:tournament:prize-battle:tickets:${user.id}`;
+      const participantKey = `checkers:tournament:prize-battle:participant:${user.id}`;
+      const participantsKey = 'checkers:tournament:prize-battle:participants';
+      const [rawTickets, participantCount, registered, participantRaw] = await Promise.all([
+        redis('GET', [ticketCountKey]),
+        redis('SCARD', [participantsKey]),
+        redis('SISMEMBER', [participantsKey, String(user.id)]),
+        redis('GET', [participantKey])
+      ]);
+      let savedTickets = 0;
+      try { savedTickets = Number(JSON.parse(participantRaw || '{}').tickets) || 0; } catch {}
+      const isRegistered = registered === 1 || registered === '1' || registered === true;
+      const tickets = Math.max(0, Number(rawTickets) || 0, savedTickets, isRegistered ? 1 : 0);
+      return reply({ ok: true, tickets, participants: Math.max(0, Number(participantCount) || 0) });
+    }
     return reply({ok:true,state:await readState(user.id)});
   } catch(error) { return errorResponse(error); }
 }
