@@ -95,6 +95,6 @@ async function resetForTest(){
 async function selectPieces(id){if(!owned(id))return false;return request('select',id)}
 function setAI(n){return owned('master')&&((state.ai=Math.max(1,Math.min(4,Number(n)||1))),save(),true)}
 function getProfile(){return {...state,owned:[...state.owned]}}
-window.CheckersShop={catalog,state,boardIds,save,owned,buy,selectBoard,selectPieces,setAI,getProfile,sync,getInitData,resetForTest,DEFAULT_BOARD};
+window.CheckersShop={catalog,state,boardIds,save,owned,buy,createOrder,selectBoard,selectPieces,setAI,getProfile,sync,getInitData,resetForTest,DEFAULT_BOARD};
 save();sync().catch(()=>{});
 })();
