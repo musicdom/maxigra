@@ -9,7 +9,7 @@ const operationKey = id => `checkers:shop:payment:${id}`;
 const lockKey = id => `checkers:shop:payment-lock:${id}`;
 const grantKey = id => `checkers:shop:grant:${id}`;
 const notifyLockKey = id => `checkers:shop:notify-lock:${id}`;
-const ITEM_TITLES = { board_90s: 'СВО', board_svo: '90-е', board_max: 'MAX', board_orbita: 'ОРБИТА', board_original: 'Оригинал', master: 'Гроссмейстер', hints: '50 подсказок', starter_pack: 'Набор новичка' };
+const ITEM_TITLES = { board_90s: 'СВО', board_svo: '90-е', board_max: 'MAX', board_orbita: 'ОРБИТА', board_original: 'Оригинал', master: 'Гроссмейстер', hints: '50 подсказок', starter_pack: 'Набор новичка', tournament_ticket: 'Билет на турнир «Битва за призы»' };
 
 async function notifyPaid(order) {
   if (order.notificationSentAt) return order;
@@ -18,9 +18,11 @@ async function notifyPaid(order) {
   try {
     const title = ITEM_TITLES[String(order.itemId)] || 'покупка';
     const isBoard = String(order.itemId).startsWith('board_');
-    const text = isBoard
-      ? `✅ Оплата прошла успешно!\n\nДоска «${title}» за ${Number(order.price).toFixed(0)} ₽ закреплена за вашим аккаунтом MAX. Она уже доступна в профиле игры «Шашки».\n\nЕсли возникли проблемы, нажмите «Техническая поддержка».`
-      : `✅ Оплата прошла успешно!\n\nПокупка «${title}» за ${Number(order.price).toFixed(0)} ₽ закреплена за вашим аккаунтом MAX.\n\nЕсли возникли проблемы, нажмите «Техническая поддержка».`;
+    const text = String(order.itemId) === 'tournament_ticket'
+      ? `🏆 Оплата прошла успешно!\n\nБилет на турнир «Битва за призы» за ${Number(order.price).toFixed(0)} ₽ подтверждён. Вы зарегистрированы на турнир под своим аккаунтом MAX.\n\nУсловия и сроки проведения будут опубликованы организатором отдельно. Если возникли вопросы, нажмите «Техническая поддержка».`
+      : isBoard
+        ? `✅ Оплата прошла успешно!\n\nДоска «${title}» за ${Number(order.price).toFixed(0)} ₽ закреплена за вашим аккаунтом MAX. Она уже доступна в профиле игры «Шашки».\n\nЕсли возникли проблемы, нажмите «Техническая поддержка».`
+        : `✅ Оплата прошла успешно!\n\nПокупка «${title}» за ${Number(order.price).toFixed(0)} ₽ закреплена за вашим аккаунтом MAX.\n\nЕсли возникли проблемы, нажмите «Техническая поддержка».`;
     await sendMaxMessage(order.userId, {
       text,
       attachments: [linkKeyboard([
@@ -67,6 +69,12 @@ async function grant(order) {
 
   const owned = Array.isArray(state.owned) ? state.owned.filter(Boolean) : [];
   const itemId = String(order.itemId);
+  if (itemId === 'tournament_ticket') {
+    const participant = { userId: String(order.userId), orderId: String(order.id), price: Number(order.price), registeredAt: Date.now(), status: 'registered' };
+    await redis('SADD', ['checkers:tournament:prize-battle:participants', String(order.userId)]);
+    await redis('SET', [`checkers:tournament:prize-battle:participant:${order.userId}`, JSON.stringify(participant)]);
+    return { tournamentTicket: true };
+  }
   if (itemId === 'hints') {
     state.hints = Math.max(0, Number(state.hints) || 0) + 50;
   } else if (itemId === 'starter_pack') {
