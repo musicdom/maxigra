@@ -86,7 +86,11 @@ export async function GET(request) {
       let savedTickets = 0;
       try { savedTickets = Number(JSON.parse(participantRaw || '{}').tickets) || 0; } catch {}
       const isRegistered = registered === 1 || registered === '1' || registered === true;
-      const tickets = Math.max(0, Number(rawTickets) || 0, savedTickets, isRegistered ? 1 : 0);
+      // An existing numeric key is authoritative, including 0 after admin revocation.
+      // Legacy participant records are consulted only when the canonical key is absent.
+      const tickets = rawTickets !== null && rawTickets !== undefined
+        ? Math.max(0, Math.floor(Number(rawTickets) || 0))
+        : Math.max(0, Math.floor(savedTickets), isRegistered ? 1 : 0);
       return reply({ ok: true, tickets, participants: Math.max(0, Number(participantCount) || 0) });
     }
     return reply({ok:true,state:await readState(user.id)});
