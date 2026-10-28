@@ -11,7 +11,8 @@ const catalog={
   board_original:{title:'Оригинал',price:0,image:'assets/boards/IMG_4589.jpeg',tag:'ДОСКА',desc:'Оригинальное оформление игры.'},
   master:{title:'Гроссмейстер',price:149,icon:'🏆',tag:'ИИ',desc:'Открывает максимальный уровень компьютера.'},
   hints:{title:'50 подсказок',price:99,icon:'💡',tag:'ПАКЕТ',desc:'50 подсказок для сложных позиций.'},
-  starter_pack:{title:'Набор новичка',price:599,icon:'🎁',tag:'СТАРТ',desc:'25 подсказок + доски 90-е и СВО.'}
+  starter_pack:{title:'Набор новичка',price:599,icon:'🎁',tag:'СТАРТ',desc:'25 подсказок + доски 90-е и СВО.'},
+  tournament_ticket:{title:'Призовой турнир',price:199,icon:'🏆',tag:'БИЛЕТ',desc:'Билет на турнир «Битва за призы». Продажа скоро откроется.'}
 };
 const boardIds=['board_90s','board_svo','board_max','board_orbita','board_original'];
 // В MAX используем DeviceStorage для сохранения уже загруженных изображений между запусками.
