@@ -8,6 +8,7 @@ const inventoryKey = id => `checkers:shop:user:${id}`;
 const operationKey = id => `checkers:shop:payment:${id}`;
 const lockKey = id => `checkers:shop:payment-lock:${id}`;
 const grantKey = id => `checkers:shop:grant:${id}`;
+const ticketCountKey = id => `checkers:tournament:prize-battle:tickets:${id}`;
 const notifyLockKey = id => `checkers:shop:notify-lock:${id}`;
 const ITEM_TITLES = { board_90s: 'СВО', board_svo: '90-е', board_max: 'MAX', board_orbita: 'ОРБИТА', board_original: 'Оригинал', master: 'Гроссмейстер', hints: '50 подсказок', starter_pack: 'Набор новичка', tournament_ticket: 'Билет на турнир «Битва за призы»' };
 
@@ -70,9 +71,13 @@ async function grant(order) {
   const owned = Array.isArray(state.owned) ? state.owned.filter(Boolean) : [];
   const itemId = String(order.itemId);
   if (itemId === 'tournament_ticket') {
-    const participant = { userId: String(order.userId), orderId: String(order.id), price: Number(order.price), registeredAt: Date.now(), status: 'registered' };
-    await redis('SADD', ['checkers:tournament:prize-battle:participants', String(order.userId)]);
-    await redis('SET', [`checkers:tournament:prize-battle:participant:${order.userId}`, JSON.stringify(participant)]);
+    const userId=String(order.userId);
+    const current=Math.max(0,Number(await redis('GET',[ticketCountKey(userId)]))||0);
+    const tickets=current+1;
+    const participant = { userId, orderId: String(order.id), price: Number(order.price), tickets, registeredAt: Date.now(), status: 'registered' };
+    await redis('SET',[ticketCountKey(userId),String(tickets)]);
+    await redis('SADD', ['checkers:tournament:prize-battle:participants', userId]);
+    await redis('SET', [`checkers:tournament:prize-battle:participant:${userId}`, JSON.stringify(participant)]);
     return { tournamentTicket: true };
   }
   if (itemId === 'hints') {
