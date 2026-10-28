@@ -68,14 +68,26 @@ export async function POST(request){
  try{
   const p=await body(request);admin(request,p?.initData||'');const id=String(p?.userId||'');if(!id)return reply({ok:false,error:'USER_ID_REQUIRED'},400);
   const state=await readInventory(id),action=String(p?.action||'');
-  if(action==='grant-ticket'){
+  if(action==='grant-ticket'||action==='revoke-ticket'){
    const amount=Math.max(1,Math.min(100,Math.floor(Number(p?.amount)||1)));
-   const tickets=Math.max(0,Number(await redis('GET',[TOURNAMENT_TICKETS_KEY(id)]))||0)+amount;
-   await redis('SET',[TOURNAMENT_TICKETS_KEY(id),String(tickets)]);
-   await redis('SADD',['checkers:tournament:prize-battle:participants',id]);
-   const participant={userId:id,tickets,updatedAt:Date.now(),source:'admin'};
-   await redis('SET',[`checkers:tournament:prize-battle:participant:${id}`,JSON.stringify(participant)]);
-   return reply({ok:true,userId:id,tickets,granted:amount});
+   const ticketsKey=TOURNAMENT_TICKETS_KEY(id);
+   const participantKey=`checkers:tournament:prize-battle:participant:${id}`;
+   const participantsKey='checkers:tournament:prize-battle:participants';
+   const rawTickets=await redis('GET',[ticketsKey]);
+   const participantRaw=await redis('GET',[participantKey]);
+   let legacyTickets=0;try{legacyTickets=Number(JSON.parse(participantRaw||'{}').tickets)||0}catch{}
+   const current=rawTickets!==null&&rawTickets!==undefined?Math.max(0,Math.floor(Number(rawTickets)||0)):Math.max(0,Math.floor(legacyTickets));
+   const tickets=action==='grant-ticket'?current+amount:Math.max(0,current-amount);
+   // Persist a canonical count even at zero, so old participant metadata cannot resurrect a revoked ticket.
+   await redis('SET',[ticketsKey,String(tickets)]);
+   if(tickets>0){
+    await redis('SADD',[participantsKey,id]);
+    await redis('SET',[participantKey,JSON.stringify({userId:id,tickets,updatedAt:Date.now(),source:'admin'})]);
+   }else{
+    await redis('SREM',[participantsKey,id]);
+    await redis('DEL',[participantKey]);
+   }
+   return reply({ok:true,userId:id,tickets,granted:action==='grant-ticket'?amount:0,removed:action==='revoke-ticket'?Math.min(current,amount):0});
   }
   if(action==='contact'){
    const users=await getUsers(),target=users.find(u=>String(u.id)===id);if(!target)return reply({ok:false,error:'USER_NOT_FOUND'},404);
