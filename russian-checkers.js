@@ -5,7 +5,7 @@ const {W,B,K,color,isKing,copy,pieces,key,applyMove,captures,simpleMoves,hasCapt
 let boardState=[],turn=W,selected=null,chain=null,gameOver=false,thinking=false,history=[],lastMove=null,halfMoves=0,repetitions=new Map(),aiTimer=null,hintTimer=null,stickerTimer=null,stickerNode=null;
 const board=$('board'),turnEl=$('turn-indicator'),whiteEl=$('white-score'),blackEl=$('black-score'),infoEl=$('capture-info'),thinkingEl=$('thinking');
 const STICKER_BASE='assets/Стикеры/';
-function showSticker(file,aiCapture=false){
+function showSticker(file,aiCapture=false,hold=false){
  if(window.CheckersOnline?.active)return;
  const screen=$('game-screen');if(!screen)return;
  if(!stickerNode){stickerNode=document.createElement('img');stickerNode.id='game-sticker';stickerNode.className='game-sticker';stickerNode.alt='';stickerNode.setAttribute('aria-hidden','true');screen.appendChild(stickerNode)}
@@ -13,7 +13,7 @@ function showSticker(file,aiCapture=false){
  stickerNode.onload=()=>{stickerNode.classList.add('is-visible')};
  stickerNode.onerror=()=>{stickerNode.classList.remove('is-visible')};
  stickerNode.src=encodeURI(STICKER_BASE+file);
- stickerTimer=setTimeout(()=>stickerNode?.classList.remove('is-visible'),2800);
+ if(!hold)stickerTimer=setTimeout(()=>stickerNode?.classList.remove('is-visible'),2800);
 }
 function applyTheme(){
  if(!board)return;
@@ -75,7 +75,7 @@ function resultModal(result){let box=$('game-result');if(!box){box=document.crea
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id)?.classList.add('active')}
 function stopGame(){clearTimeout(aiTimer);clearTimeout(stickerTimer);stickerNode?.classList.remove('is-visible');thinking=false;selected=chain=null}
 function startGame(){clearTimeout(stickerTimer);if(stickerNode)stickerNode.classList.remove('is-visible');showScreen('game-screen');boardState=Array.from({length:8},()=>Array(8).fill(0));for(let r=0;r<8;r++)for(let c=0;c<8;c++)if((r+c)%2){if(r<3)boardState[r][c]=B;else if(r>4)boardState[r][c]=W}turn=W;selected=chain=null;gameOver=false;thinking=false;history=[];lastMove=null;halfMoves=0;repetitions=new Map([[key(boardState,turn),1]]);render();update();showSticker('Мой ход.png');sound('start')}
-function choose(r,c){if(window.CheckersOnline?.active)return;if(gameOver||thinking||turn!==W)return;const p=boardState[r][c];if(selected){const m=legalFor(W,selected.r,selected.c,boardState,!!chain).find(x=>x.r===r&&x.c===c);if(m){history.push(snapshot());const from={...selected},wasCapture=!!m.cap;boardState=applyMove(boardState,selected,m);lastMove={from,to:{r,c}};halfMoves=wasCapture?0:halfMoves+1;sound(wasCapture?'capture':'move');if(wasCapture)showSticker('Попался.png');if(wasCapture&&captures(r,c,boardState).length){selected={r,c};chain={r,c};render();update();return}selected=chain=null;turn=B;record();render();update();checkEnd();if(!gameOver)aiMove();return}if(!chain&&p&&color(p)===W){selected={r,c};render()}return}if(p&&color(p)===W&&(!hasCapture(W,boardState)||captures(r,c,boardState).length)){selected={r,c};render()}}
+function choose(r,c){if(window.CheckersOnline?.active)return;if(gameOver||thinking||turn!==W)return;const p=boardState[r][c];if(selected){const m=legalFor(W,selected.r,selected.c,boardState,!!chain).find(x=>x.r===r&&x.c===c);if(m){history.push(snapshot());const from={...selected},wasCapture=!!m.cap;boardState=applyMove(boardState,selected,m);lastMove={from,to:{r,c}};halfMoves=wasCapture?0:halfMoves+1;sound(wasCapture?'capture':'move');const canContinueCapture=wasCapture&&captures(r,c,boardState).length>0;if(wasCapture)showSticker('Попался.png',false,canContinueCapture);if(canContinueCapture){selected={r,c};chain={r,c};render();update();return}selected=chain=null;turn=B;record();render();update();checkEnd();if(!gameOver)aiMove();return}if(!chain&&p&&color(p)===W){selected={r,c};render()}return}if(p&&color(p)===W&&(!hasCapture(W,boardState)||captures(r,c,boardState).length)){selected={r,c};render()}}
 function hint(){if(gameOver||thinking||turn!==W)return;const s=window.CheckersShop?.state;if(s&&Number(s.hints||0)<=0){showToast('Подсказки закончились');return}const m=allMoves(W,boardState)[0];if(!m)return;if(s){s.hints--;window.CheckersShop.save()}selected=m.from;render();const target=board.querySelector('.cell[data-r="'+m.move.r+'"][data-c="'+m.move.c+'"]');if(target)target.classList.add('hint');clearTimeout(hintTimer);hintTimer=setTimeout(render,1800);update();sound('hint')}
 function showToast(text){let t=$('checkers-toast');if(!t){t=document.createElement('div');t.id='checkers-toast';t.className='checkers-toast';document.body.appendChild(t)}t.textContent=text;t.style.display='block';clearTimeout(t._timer);t._timer=setTimeout(()=>t.style.display='none',1800)}
 function resign(){if(gameOver||thinking)return;if(window.confirm('Сдаться и завершить партию?'))finish('Чёрные')}
