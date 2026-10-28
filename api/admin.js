@@ -71,7 +71,7 @@ export async function POST(request){
   const p=await body(request);admin(request,p?.initData||'');const action=String(p?.action||'');
   if(action==='save-tournament-settings'){
    const startDate=String(p?.startDate||'').trim(),endDate=String(p?.endDate||'').trim();
-   const validDate=value=>!value||/^\\d{4}-\\d{2}-\\d{2}$/.test(value);
+   const validDate=value=>!value||/^\d{4}-\d{2}-\d{2}$/.test(value);
    if(!validDate(startDate)||!validDate(endDate))return reply({ok:false,error:'INVALID_DATE'},400);
    if(startDate&&endDate&&endDate<startDate)return reply({ok:false,error:'END_DATE_BEFORE_START'},400);
    const limits={title:100,lead:700,datesNote:500,tableText:1200,rulesText:3000,prizeTitle:100,prizeText:2000},settings={};
