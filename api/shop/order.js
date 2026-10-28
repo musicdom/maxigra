@@ -9,7 +9,8 @@ const CATALOG = {
   board_original: { price: 0 },
   master: { price: 149 },
   hints: { price: 99 },
-  starter_pack: { price: 599 }
+  starter_pack: { price: 599 },
+  tournament_ticket: { price: 199 }
 };
 const ORDER_TTL = 86400; // Payment window; order history itself is retained.
 const RECEIVER = String(process.env.YOOMONEY_RECEIVER || '').trim();
@@ -36,6 +37,10 @@ function paymentOptions(orderId, price) {
   return { wallet: url, card: url };
 }
 async function alreadyOwned(userId, itemId) {
+  if (itemId === 'tournament_ticket') {
+    const registered = await redis('SISMEMBER', ['checkers:tournament:prize-battle:participants', String(userId)]);
+    return registered === 1 || registered === '1' || registered === true;
+  }
   if (itemId === 'hints') return false;
   const raw = await redis('GET', [inventoryKey(userId)]);
   if (!raw) return false;
@@ -60,7 +65,7 @@ export async function POST(request) {
     if (price == null) return reply({ ok: false, error: 'ITEM_NOT_FOUND' }, 404);
     if (price <= 0) return reply({ ok: false, error: 'ITEM_ALREADY_OWNED' }, 409);
     if (!RECEIVER) return reply({ ok: false, error: 'PAYMENT_NOT_CONFIGURED' }, 503);
-    if (await alreadyOwned(user.id, itemId)) return reply({ ok: false, error: 'ITEM_ALREADY_OWNED' }, 409);
+    if (await alreadyOwned(user.id, itemId)) return reply({ ok: false, error: itemId === 'tournament_ticket' ? 'TOURNAMENT_TICKET_ALREADY_OWNED' : 'ITEM_ALREADY_OWNED' }, 409);
 
     const orderId = `mx_${crypto.randomUUID().replaceAll('-', '')}`;
     const createdAt = Date.now();
