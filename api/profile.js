@@ -1,5 +1,6 @@
 import { auth, body, errorResponse, redis, reply } from './_lib.js';
 import { recordGameActivity } from './_retention.js';
+import { submitAppSupport } from '../lib/support.js';
 
 const statsKey = (id,mode='offline') => `checkers:stats:${mode}:${id}`;
 
@@ -62,6 +63,10 @@ export async function POST(request){
   try{
     const payload=await body(request);
     const user=auth(request,payload?.initData||'');
+    if(payload?.action==='support'){
+      await submitAppSupport(user, String(payload.message||''));
+      return reply({ok:true});
+    }
     if(payload?.action==='reset_season'){
       if(String(user.id)!=='163701646')throw Object.assign(new Error('FORBIDDEN'),{status:403});
       const modes=['offline','online'];
