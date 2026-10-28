@@ -55,7 +55,9 @@ export async function GET(request){
     }
     const raw=await redis('GET',[statsKey(user.id)]);
     let stats=null;try{stats=raw?JSON.parse(raw):null}catch{}
-    return reply({ok:true,stats:stats||emptyStats(user)});
+    const ticketRaw=await redis('GET',[`checkers:tournament:prize-battle:tickets:${user.id}`]);
+    const tickets=Math.max(0,Math.floor(Number(ticketRaw)||0));
+    return reply({ok:true,stats:stats||emptyStats(user),tickets});
   }catch(error){return errorResponse(error)}
 }
 
