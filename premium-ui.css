@@ -165,3 +165,7 @@ body:before{
 @media(max-width:380px){
   .starter-offer-art-wrap{height:198px!important}
 }
+
+
+/* Prize tournament menu button artwork — same treatment as the other menu buttons. */
+.menu-card #tournament-btn{background-image:url("assets/кнопки/IMG_4880.jpeg")!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;border-color:rgba(111,185,255,.38)!important;color:#fff!important;text-shadow:0 1px 3px rgba(0,0,0,.55)!important;}
