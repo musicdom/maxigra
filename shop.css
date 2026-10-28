@@ -97,3 +97,5 @@ html[data-theme="light"] .purchase-confirm-cancel{background:#f2f6fa;color:#1725
 /* The shared confirmation helper inserts the dialog already open. */
 .purchase-confirm-overlay{opacity:1!important}
 .purchase-confirm-dialog{display:none}
+
+.tournament-shop-item{display:grid;grid-template-columns:54px minmax(0,1fr);gap:12px;align-items:start;padding:15px;border:1px solid rgba(77,163,245,.3);border-radius:18px;background:linear-gradient(135deg,rgba(77,163,245,.1),rgba(255,255,255,.025))}.tournament-shop-item .shop-item-icon{display:grid;place-items:center;width:52px;height:52px;border-radius:15px;background:rgba(77,163,245,.15);font-size:27px}.tournament-shop-item .shop-item-main{min-width:0}.tournament-shop-item .shop-buy{grid-column:1/-1;width:100%;min-height:46px}.tournament-shop-item .shop-buy:disabled{opacity:.6;cursor:not-allowed}.tournament-shop-note{font-size:11px;opacity:.78;margin-top:7px}
