@@ -24,7 +24,8 @@ form.addEventListener('submit',async e=>{
  if(!initData){status.textContent='Не удалось проверить профиль MAX. Открой бота и отправь команду /support.';return}
  send.disabled=true;send.textContent='Отправляем…';status.classList.remove('is-success');status.textContent='';
  try{
-  const requestOptions={method:'POST',headers:{'content-type':'text/plain;charset=UTF-8'},body:JSON.stringify({message,initData}),cache:'no-store'};\n  const response=window.maxigraFetch?await window.maxigraFetch('/api/support',requestOptions):await fetch(window.maxigraApiUrl('/api/support'),requestOptions);
+  const requestOptions={method:'POST',headers:{'content-type':'text/plain;charset=UTF-8'},body:JSON.stringify({message,initData}),cache:'no-store'};
+  const response=window.maxigraFetch?await window.maxigraFetch('/api/support',requestOptions):await fetch(window.maxigraApiUrl('/api/support'),requestOptions);
   const data=await response.json().catch(()=>({}));
   if(!response.ok||!data.ok){const reason=String(data.error||'');throw new Error(reason==='MAX_INIT_DATA_REQUIRED'||reason==='INVALID_INIT_DATA'||reason==='INIT_DATA_EXPIRED'?'Не удалось проверить профиль MAX. Полностью закрой и снова открой приложение.':reason==='MAX_BOT_TOKEN_NOT_CONFIGURED'?'Поддержка временно недоступна: не настроен бот.':reason==='REDIS_NOT_CONFIGURED'||reason.includes('Redis')?'Поддержка временно недоступна: проблема с хранилищем.':reason==='MAX_USER_ID_REQUIRED'?'Не удалось определить твой MAX-профиль. Открой приложение из MAX.':`Не удалось отправить сообщение (${reason||response.status}). Попробуй ещё раз.`)}
   field.value='';status.classList.add('is-success');status.textContent='Готово! Обращение отправлено. Ответ придёт в бот MAX.';send.textContent='Отправлено';
