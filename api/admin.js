@@ -5,6 +5,8 @@ const ADMIN_ID='163701646';
 const INVENTORY_KEY=id=>`checkers:shop:user:${id}`;
 const TOURNAMENT_TICKETS_KEY=id=>`checkers:tournament:prize-battle:tickets:${id}`;
 const USER_KEY_PREFIX='checkers:user:';
+const TOURNAMENT_SETTINGS_KEY='checkers:tournament:prize-battle:settings:v1';
+const TOURNAMENT_SETTINGS_DEFAULTS={title:'Битва за призы',lead:'Проверь свой уровень в русских шашках и поборись за призы. Купи билет, чтобы зарегистрировать участие в турнире.',startDate:'',endDate:'',datesNote:'Дата начала и окончания будут объявлены отдельно.',tableText:'Таблица и результаты появятся после объявления формата турнира.',rulesText:'Подробные правила, порядок определения победителей и выдачи призов будут опубликованы до старта.',prizeTitle:'Призы для лидеров',prizeText:'Фонд формируется из проданных билетов. Сумма и распределение призов будут опубликованы организатором до начала турнира.'};
 const CATALOG={
   board_90s:{title:'СВО',image:'assets/boards/IMG_4486.jpeg'},board_svo:{title:'90-е',image:'assets/boards/IMG_4487.jpeg'},board_max:{title:'MAX',image:'assets/boards/IMG_4586.jpeg'},board_orbita:{title:'ОРБИТА',image:'assets/boards/IMG_4587.jpeg'},board_original:{title:'Оригинал',image:'assets/boards/IMG_4589.jpeg'}
 };
@@ -66,8 +68,18 @@ export async function GET(request){
 }
 export async function POST(request){
  try{
-  const p=await body(request);admin(request,p?.initData||'');const id=String(p?.userId||'');if(!id)return reply({ok:false,error:'USER_ID_REQUIRED'},400);
-  const action=String(p?.action||'');
+  const p=await body(request);admin(request,p?.initData||'');const action=String(p?.action||'');
+  if(action==='save-tournament-settings'){
+   const startDate=String(p?.startDate||'').trim(),endDate=String(p?.endDate||'').trim();
+   const validDate=value=>!value||/^\\d{4}-\\d{2}-\\d{2}$/.test(value);
+   if(!validDate(startDate)||!validDate(endDate))return reply({ok:false,error:'INVALID_DATE'},400);
+   if(startDate&&endDate&&endDate<startDate)return reply({ok:false,error:'END_DATE_BEFORE_START'},400);
+   const limits={title:100,lead:700,datesNote:500,tableText:1200,rulesText:3000,prizeTitle:100,prizeText:2000},settings={};
+   for(const [key,max] of Object.entries(limits))settings[key]=String(p?.[key]??TOURNAMENT_SETTINGS_DEFAULTS[key]).trim().slice(0,max);
+   settings.startDate=startDate;settings.endDate=endDate;settings.updatedAt=Date.now();settings.updatedBy=ADMIN_ID;
+   await redis('SET',[TOURNAMENT_SETTINGS_KEY,JSON.stringify(settings)]);return reply({ok:true,settings});
+  }
+  const id=String(p?.userId||'');if(!id)return reply({ok:false,error:'USER_ID_REQUIRED'},400);
   if(action==='grant-ticket'||action==='revoke-ticket'){
    const amount=Math.max(1,Math.min(100,Math.floor(Number(p?.amount)||1)));
    const ticketsKey=TOURNAMENT_TICKETS_KEY(id);
