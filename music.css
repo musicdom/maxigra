@@ -1,0 +1,8 @@
+#music-toggle{position:absolute;z-index:5;top:12px;right:12px;display:flex;align-items:center;gap:7px;max-width:154px;min-height:34px;padding:7px 10px;border:1px solid rgba(112,190,255,.28);border-radius:999px;background:rgba(8,22,38,.84);color:#eaf5ff;font:700 10px/1.1 var(--font,system-ui,sans-serif);letter-spacing:.01em;box-shadow:0 6px 20px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.06);backdrop-filter:blur(12px);cursor:pointer;transition:background .2s,border-color .2s,opacity .2s}
+#music-toggle:active{transform:scale(.97)}
+#music-toggle .music-toggle-icon{display:grid;place-items:center;flex:0 0 20px;width:20px;height:20px;border-radius:50%;background:rgba(77,163,255,.18);color:#7fc5ff;font-size:15px}
+#music-toggle .music-toggle-state{white-space:nowrap}
+#music-toggle.is-off{border-color:rgba(255,255,255,.12);color:#a8b4c3;background:rgba(8,15,25,.8)}
+#music-toggle.is-off .music-toggle-icon{background:rgba(255,255,255,.07);color:#8492a3}
+.menu-logo{padding-right:112px}
+@media(max-width:360px){#music-toggle{max-width:132px;padding:6px 8px;gap:5px;font-size:9px}#music-toggle .music-toggle-icon{width:18px;height:18px;flex-basis:18px}.menu-logo{padding-right:92px}}
