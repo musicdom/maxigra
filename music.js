@@ -53,7 +53,7 @@ function toggle(){
  else{play(currentMode,true)}
 }
 function unlock(){if(!enabled||!pendingGesture)return;play(currentMode,true)}
-document.addEventListener('DOMContentLoaded',()=>{
+function init(){
  const b=document.getElementById('music-toggle');
  b?.addEventListener('click',toggle);
  updateButton();
@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  syncScreen();
  // Attempt autoplay immediately; mobile/MAX may require the first user gesture.
  if(enabled)play('common');
-});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 window.addEventListener('pageshow',()=>{if(enabled&&audio?.paused)play(currentMode,true)});
 })();
