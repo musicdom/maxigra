@@ -120,9 +120,35 @@ export async function POST(request) {
   const withdrawAmount = Number(formValue(form, 'withdraw_amount'));
 
   if (!['p2p-incoming', 'card-incoming'].includes(notificationType)) return reply({ ok: false, error: 'UNSUPPORTED_NOTIFICATION' }, 400);
-  if (!operationId || !/^mx_[a-f0-9]{32}$/.test(orderId)) return reply({ ok: false, error: 'INVALID_PAYMENT_REFERENCE' }, 400);
+  if (!operationId || !orderId) return reply({ ok: false, error: 'INVALID_PAYMENT_REFERENCE' }, 400);
   if (currency !== '643' || unaccepted === 'true' || codepro === 'true' || !Number.isFinite(amount) || amount <= 0) return reply({ ok: false, error: 'INVALID_PAYMENT' }, 400);
   if (!Number.isFinite(withdrawAmount) || withdrawAmount < 0) return reply({ ok: false, error: 'INVALID_PAYMENT' }, 400);
+
+  // Norka orders use a separate prefix and are settled in Norka's own Redis.
+  // YooMoney still calls this single webhook; after validating the original
+  // signature and notification fields we forward the signed payload to Norka.
+  if (/^nk_[a-f0-9]{32}$/.test(orderId)) {
+    const fields = Object.fromEntries([...form.entries()].map(([key, value]) => [key, String(value)]));
+    let forwarded;
+    try {
+      forwarded = await fetch('https://franshiza.vercel.app/api/yoomoney/notify', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ fields })
+      });
+    } catch (error) {
+      console.error('Norka YooMoney forwarding failed', { orderId, error: error.message });
+      return reply({ ok: false, error: 'NORKA_PAYMENT_FORWARD_FAILED' }, 502);
+    }
+    const result = await forwarded.json().catch(() => ({}));
+    if (!forwarded.ok || result.ok !== true) {
+      console.error('Norka YooMoney handler rejected notification', { orderId, status: forwarded.status, error: result.error });
+      return reply({ ok: false, error: 'NORKA_PAYMENT_FORWARD_FAILED' }, 502);
+    }
+    return reply({ ok: true, app: 'norka', status: result.status || 'paid' });
+  }
+
+  if (!/^mx_[a-f0-9]{32}$/.test(orderId)) return reply({ ok: false, error: 'INVALID_PAYMENT_REFERENCE' }, 400);
 
   const orderRaw = await redis('GET', [orderKey(orderId)]);
   if (!orderRaw) return reply({ ok: false, error: 'ORDER_NOT_FOUND' }, 404);
