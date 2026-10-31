@@ -2,7 +2,6 @@ import { redis, reply } from './_lib.js';
 import { linkKeyboard, sendMaxMessage } from './_max-bot.js';
 
 const CRON_SECRET = String(process.env.CRON_SECRET || '').trim();
-const GAME_URL = String(process.env.MAXIGRA_GAME_URL || 'https://musicdom.github.io/maxigra/').trim();
 const KEY_PREFIX = 'checkers:retention:';
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -11,15 +10,6 @@ const messages = {
   7: '♟️ Пора снова за доску!\n\nКаждая партия — возможность сыграть лучше и подняться в рейтинге. Не откладывай следующий ход! 🏆',
   30: 'Мы давно не виделись! 👋\n\nВ «Шашках» тебя ждут новые партии и борьба за место в рейтинге. Возвращайся, пора сделать следующий ход! ♟️'
 };
-
-function validGameUrl() {
-  try {
-    const url = new URL(GAME_URL);
-    return ['https:', 'http:'].includes(url.protocol) ? url.toString() : 'https://musicdom.github.io/maxigra/';
-  } catch {
-    return 'https://musicdom.github.io/maxigra/';
-  }
-}
 
 function dueDay(daysInactive) {
   if (daysInactive >= 30) return 30;
@@ -66,7 +56,7 @@ export async function GET(request) {
         try {
           await sendMaxMessage(state.userId || String(key).slice(KEY_PREFIX.length), {
             text: messages[day],
-            attachments: [linkKeyboard([[{ text: 'Вернуться в шашки', url: validGameUrl() }]])]
+            attachments: [linkKeyboard([[{ type: 'open_app', text: 'Вернуться в шашки', webApp: 'se13360501_bot' }]])]
           });
           state.reminderSentDays = [...new Set([...sentDays, day])].sort((a, b) => a - b);
           state.reminderAttempts = attempts;
