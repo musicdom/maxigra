@@ -2,7 +2,6 @@ import { redis } from './_lib.js';
 import { BOT_URL, linkKeyboard, sendMaxMessage } from './_max-bot.js';
 
 const retentionKey = id => `checkers:retention:${String(id)}`;
-const GAME_URL = String(process.env.MAXIGRA_GAME_URL || 'https://musicdom.github.io/maxigra/').trim();
 const CHANNEL_URL = String(process.env.MAXIGRA_CHANNEL_URL || process.env.MAX_CHANNEL_URL || 'https://max.ru/channel_RusShashki').trim();
 
 function validHttpUrl(value) {
