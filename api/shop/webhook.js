@@ -55,12 +55,34 @@ function signPayload(form) {
     .join('&');
 }
 
+function safeHexEqual(expected, received) {
+  const value = String(received || '').toLowerCase();
+  return /^[a-f0-9]+$/.test(value)
+    && expected.length === value.length
+    && crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(value, 'hex'));
+}
+
 function validSign(form) {
   if (!SECRET) return false;
-  const received = formValue(form, 'sign').toLowerCase();
-  if (!/^[a-f0-9]{64}$/.test(received)) return false;
-  const calculated = crypto.createHmac('sha256', SECRET).update(signPayload(form)).digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(calculated, 'hex'), Buffer.from(received, 'hex'));
+
+  // YooMoney's standard HTTP notifications use sha1_hash.
+  const sha1Parts = [
+    formValue(form, 'notification_type'),
+    formValue(form, 'operation_id'),
+    formValue(form, 'amount'),
+    formValue(form, 'currency'),
+    formValue(form, 'datetime'),
+    formValue(form, 'sender'),
+    formValue(form, 'codepro'),
+    SECRET,
+    formValue(form, 'label')
+  ];
+  const expectedSha1 = crypto.createHash('sha1').update(sha1Parts.join('&'), 'utf8').digest('hex');
+  if (safeHexEqual(expectedSha1, formValue(form, 'sha1_hash'))) return true;
+
+  // Keep compatibility with already-integrated HMAC-signed notifications.
+  const expectedHmac = crypto.createHmac('sha256', SECRET).update(signPayload(form)).digest('hex');
+  return safeHexEqual(expectedHmac, formValue(form, 'sign'));
 }
 
 async function grant(order) {
