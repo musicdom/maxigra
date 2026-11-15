@@ -124,6 +124,29 @@ export async function POST(request) {
   if (currency !== '643' || unaccepted === 'true' || codepro === 'true' || !Number.isFinite(amount) || amount <= 0) return reply({ ok: false, error: 'INVALID_PAYMENT' }, 400);
   if (!Number.isFinite(withdrawAmount) || withdrawAmount < 0) return reply({ ok: false, error: 'INVALID_PAYMENT' }, 400);
 
+  // Podaris orders are settled by its Yandex Cloud Function and its own Redis.
+  // This Vercel endpoint remains the single YooMoney notification URL.
+  if (/^pd_[a-f0-9]{32}$/i.test(orderId)) {
+    const fields = Object.fromEntries([...form.entries()].map(([key, value]) => [key, String(value)]));
+    let forwarded;
+    try {
+      forwarded = await fetch('https://functions.yandexcloud.net/d4eu88tanqd001ko5llp?route=api&endpoint=yoomoney/notify', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ fields })
+      });
+    } catch (error) {
+      console.error('Podaris YooMoney forwarding failed', { orderId, error: error.message });
+      return reply({ ok: false, error: 'PODARIS_PAYMENT_FORWARD_FAILED' }, 502);
+    }
+    const result = await forwarded.json().catch(() => ({}));
+    if (!forwarded.ok || result.ok !== true) {
+      console.error('Podaris YooMoney handler rejected notification', { orderId, status: forwarded.status, error: result.error });
+      return reply({ ok: false, error: 'PODARIS_PAYMENT_FORWARD_FAILED' }, 502);
+    }
+    return reply({ ok: true, app: 'podaris', status: result.paid ? 'paid' : result.alreadyProcessed ? 'paid' : 'processing' });
+  }
+
   // Norka orders use a separate prefix and are settled in Norka's own Redis.
   // YooMoney still calls this single webhook; after validating the original
   // signature and notification fields we forward the signed payload to Norka.
