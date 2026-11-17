@@ -124,30 +124,14 @@ async function grant(order) {
 }
 
 export async function POST(request) {
-  if (!SECRET) return reply({ ok: false, error: 'PAYMENT_WEBHOOK_NOT_CONFIGURED' }, 503);
-
   let form;
   try { form = await request.formData(); }
   catch { return reply({ ok: false, error: 'BAD_NOTIFICATION' }, 400); }
 
-  if (!validSign(form)) return reply({ ok: false, error: 'INVALID_NOTIFICATION_SIGNATURE' }, 401);
-
-  const notificationType = formValue(form, 'notification_type');
-  const operationId = formValue(form, 'operation_id');
+  // ЛовиДай uses its own Yandex backend, Redis and HMAC verifier.
+  // Keep YooMoney's existing MAXИГРА callback URL, but delegate pd_* orders
+  // before MAXИГРА's legacy SHA-1/HMAC compatibility checks.
   const orderId = formValue(form, 'label');
-  const currency = formValue(form, 'currency');
-  const unaccepted = formValue(form, 'unaccepted').toLowerCase();
-  const codepro = formValue(form, 'codepro').toLowerCase();
-  const amount = Number(formValue(form, 'amount'));
-  const withdrawAmount = Number(formValue(form, 'withdraw_amount'));
-
-  if (!['p2p-incoming', 'card-incoming'].includes(notificationType)) return reply({ ok: false, error: 'UNSUPPORTED_NOTIFICATION' }, 400);
-  if (!operationId || !orderId) return reply({ ok: false, error: 'INVALID_PAYMENT_REFERENCE' }, 400);
-  if (currency !== '643' || unaccepted === 'true' || codepro === 'true' || !Number.isFinite(amount) || amount <= 0) return reply({ ok: false, error: 'INVALID_PAYMENT' }, 400);
-  if (!Number.isFinite(withdrawAmount) || withdrawAmount < 0) return reply({ ok: false, error: 'INVALID_PAYMENT' }, 400);
-
-  // Podaris orders are settled by its Yandex Cloud Function and its own Redis.
-  // This Vercel endpoint remains the single YooMoney notification URL.
   if (/^pd_[a-f0-9]{32}$/i.test(orderId)) {
     const fields = Object.fromEntries([...form.entries()].map(([key, value]) => [key, String(value)]));
     let forwarded;
@@ -166,8 +150,26 @@ export async function POST(request) {
       console.error('Podaris YooMoney handler rejected notification', { orderId, status: forwarded.status, error: result.error });
       return reply({ ok: false, error: 'PODARIS_PAYMENT_FORWARD_FAILED' }, 502);
     }
-    return reply({ ok: true, app: 'podaris', status: result.paid ? 'paid' : result.alreadyProcessed ? 'paid' : 'processing' });
+    return reply({ ok: true, app: 'podaris', status: result.paid || result.alreadyProcessed ? 'paid' : 'processing' });
   }
+
+  if (!SECRET) return reply({ ok: false, error: 'PAYMENT_WEBHOOK_NOT_CONFIGURED' }, 503);
+
+  if (!validSign(form)) return reply({ ok: false, error: 'INVALID_NOTIFICATION_SIGNATURE' }, 401);
+
+  const notificationType = formValue(form, 'notification_type');
+  const operationId = formValue(form, 'operation_id');
+  const orderId = formValue(form, 'label');
+  const currency = formValue(form, 'currency');
+  const unaccepted = formValue(form, 'unaccepted').toLowerCase();
+  const codepro = formValue(form, 'codepro').toLowerCase();
+  const amount = Number(formValue(form, 'amount'));
+  const withdrawAmount = Number(formValue(form, 'withdraw_amount'));
+
+  if (!['p2p-incoming', 'card-incoming'].includes(notificationType)) return reply({ ok: false, error: 'UNSUPPORTED_NOTIFICATION' }, 400);
+  if (!operationId || !orderId) return reply({ ok: false, error: 'INVALID_PAYMENT_REFERENCE' }, 400);
+  if (currency !== '643' || unaccepted === 'true' || codepro === 'true' || !Number.isFinite(amount) || amount <= 0) return reply({ ok: false, error: 'INVALID_PAYMENT' }, 400);
+  if (!Number.isFinite(withdrawAmount) || withdrawAmount < 0) return reply({ ok: false, error: 'INVALID_PAYMENT' }, 400);
 
   // Norka orders use a separate prefix and are settled in Norka's own Redis.
   // YooMoney still calls this single webhook; after validating the original
