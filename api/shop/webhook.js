@@ -131,8 +131,8 @@ export async function POST(request) {
   // ЛовиДай uses its own Yandex backend, Redis and HMAC verifier.
   // Keep YooMoney's existing MAXИГРА callback URL, but delegate pd_* orders
   // before MAXИГРА's legacy SHA-1/HMAC compatibility checks.
-  const orderId = formValue(form, 'label');
-  if (/^pd_[a-f0-9]{32}$/i.test(orderId)) {
+  const callbackLabel = formValue(form, 'label');
+  if (/^pd_[a-f0-9]{32}$/i.test(callbackLabel)) {
     const fields = Object.fromEntries([...form.entries()].map(([key, value]) => [key, String(value)]));
     let forwarded;
     try {
@@ -142,12 +142,12 @@ export async function POST(request) {
         body: JSON.stringify({ fields })
       });
     } catch (error) {
-      console.error('Podaris YooMoney forwarding failed', { orderId, error: error.message });
+      console.error('Podaris YooMoney forwarding failed', { orderId: callbackLabel, error: error.message });
       return reply({ ok: false, error: 'PODARIS_PAYMENT_FORWARD_FAILED' }, 502);
     }
     const result = await forwarded.json().catch(() => ({}));
     if (!forwarded.ok || result.ok !== true) {
-      console.error('Podaris YooMoney handler rejected notification', { orderId, status: forwarded.status, error: result.error });
+      console.error('Podaris YooMoney handler rejected notification', { orderId: callbackLabel, status: forwarded.status, error: result.error });
       return reply({ ok: false, error: 'PODARIS_PAYMENT_FORWARD_FAILED' }, 502);
     }
     return reply({ ok: true, app: 'podaris', status: result.paid || result.alreadyProcessed ? 'paid' : 'processing' });
@@ -184,12 +184,12 @@ export async function POST(request) {
         body: JSON.stringify({ fields })
       });
     } catch (error) {
-      console.error('Norka YooMoney forwarding failed', { orderId, error: error.message });
+      console.error('Norka YooMoney forwarding failed', { orderId: callbackLabel, error: error.message });
       return reply({ ok: false, error: 'NORKA_PAYMENT_FORWARD_FAILED' }, 502);
     }
     const result = await forwarded.json().catch(() => ({}));
     if (!forwarded.ok || result.ok !== true) {
-      console.error('Norka YooMoney handler rejected notification', { orderId, status: forwarded.status, error: result.error });
+      console.error('Norka YooMoney handler rejected notification', { orderId: callbackLabel, status: forwarded.status, error: result.error });
       return reply({ ok: false, error: 'NORKA_PAYMENT_FORWARD_FAILED' }, 502);
     }
     return reply({ ok: true, app: 'norka', status: result.status || 'paid' });
